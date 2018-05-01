@@ -1,0 +1,9 @@
+[package]
+name = "pi3d"
+version = "0.1.0"
+authors = ["paddywwof <patrick@eldwick.org.uk>"]
+
+[dependencies]
+sdl2 = { version = "0.31.0" }
+gl = "0.10.0"
+ndarray = "0.11"
