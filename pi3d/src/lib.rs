@@ -1,3 +1,5 @@
+#[macro_use(s)]
+extern crate ndarray;
 extern crate gl;
 
 pub mod display;

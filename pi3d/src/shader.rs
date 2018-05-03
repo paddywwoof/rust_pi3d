@@ -13,15 +13,37 @@ pub enum Error {
 }
 
 pub struct Program {
-    id: GLuint,
+    id: GLuint, // start value -1
     attribute_names: Vec<String>,
     attribute_values: Vec<GLint>,
     uniform_names: Vec<String>,
     uniform_values: Vec<GLint>,
 }
 
+impl Clone for Program {
+    fn clone(&self) -> Program {
+        Program {
+            id: self.id,
+            attribute_names: self.attribute_names.iter().map(|s| {s.to_string()}).collect(),
+            attribute_values: self.attribute_values.clone(),
+            uniform_names: self.uniform_names.iter().map(|s| {s.to_string()}).collect(),
+            uniform_values: self.uniform_values.clone(),
+        }
+    }
+}
+
 impl Program {
-    pub fn from_res(res: &Resources, name: &str) -> Result<Program, Error> {
+    pub fn new() -> Program {
+        Program {
+            id: 0,
+            attribute_names: vec![],
+            attribute_values: vec![],
+            uniform_names: vec![],
+            uniform_values: vec![],
+        }
+    }
+
+    pub fn from_res(display: &::display::Display, name: &str) -> Result<Program, Error> {
         const POSSIBLE_EXT: [&str; 2] = [
             ".vs",
             ".fs",
@@ -33,7 +55,7 @@ impl Program {
 
         let shaders = resource_names.iter()
             .map(|resource_name| {
-                Shader::from_res(res, resource_name)
+                Shader::from_res(&display.res, resource_name)
             })
             .collect::<Result<Vec<Shader>, Error>>()?;
 
@@ -94,7 +116,6 @@ impl Program {
             for i in 0..p_unif_names.len() {
                 p_unif_vals[i] = gl::GetUniformLocation(program_id,
                 p_unif_names[i].as_bytes().as_ptr() as *const GLchar);
-                println!("{:?}", p_unif_vals[i]);
             }
         }
 
@@ -105,14 +126,14 @@ impl Program {
                      uniform_values: p_unif_vals })
     }
 
-    pub fn id(&self) -> GLuint {
+    pub fn id(&self) -> GLuint { //TODO allow -1 to be used for empty shaders
         self.id
     }
 
     pub fn get_attribute_location(&self, attrib_name: &str) -> GLuint {
         for i in 0..self.attribute_names.len() {
             if self.attribute_names[i] == attrib_name {
-                return self.attribute_values[i] as GLuint;
+                return self.attribute_values[i] as GLuint; // TODO both these fn return -1 and buffer.draw converts attribute_location
             }
         }
         0
@@ -129,7 +150,7 @@ impl Program {
 
     pub fn set_used(&self) {
         unsafe {
-            gl::UseProgram(self.id);
+            gl::UseProgram(self.id); // TODO change to GLuint here if >= 0
         }
     }
 }
