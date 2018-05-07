@@ -13,7 +13,7 @@ pub enum Error {
 }
 
 pub struct Program {
-    id: GLuint, // start value -1
+    id: GLuint,
     attribute_names: Vec<String>,
     attribute_values: Vec<GLint>,
     uniform_names: Vec<String>,
@@ -35,7 +35,7 @@ impl Clone for Program {
 impl Program {
     pub fn new() -> Program {
         Program {
-            id: 0,
+            id: 0, // glCreateProgram returns non-zero number so this identifies uninitiated buffer
             attribute_names: vec![],
             attribute_values: vec![],
             uniform_names: vec![],
@@ -48,15 +48,13 @@ impl Program {
             ".vs",
             ".fs",
         ];
-
         let resource_names = POSSIBLE_EXT.iter()
             .map(|file_extension| format!("{}{}", name, file_extension))
             .collect::<Vec<String>>();
-
         let shaders = resource_names.iter()
             .map(|resource_name| {
-                Shader::from_res(&display.res, resource_name)
-            })
+                  Shader::from_res(&display.res, resource_name)
+                })
             .collect::<Result<Vec<Shader>, Error>>()?;
 
         Program::from_shaders(&shaders[..])
@@ -65,13 +63,10 @@ impl Program {
 
     pub fn from_shaders(shaders: &[Shader]) -> Result<Program, String> {
         let program_id = unsafe { gl::CreateProgram() };
-
         for shader in shaders {
             unsafe { gl::AttachShader(program_id, shader.id()); }
         }
-
         unsafe { gl::LinkProgram(program_id); }
-
         let mut success: GLint = 1;
         unsafe {
             gl::GetProgramiv(program_id, gl::LINK_STATUS, &mut success);
@@ -84,7 +79,6 @@ impl Program {
             }
 
             let error = create_whitespace_cstring_with_len(len as usize);
-
             unsafe {
                 gl::GetProgramInfoLog(
                     program_id,
@@ -96,15 +90,14 @@ impl Program {
 
             return Err(error.to_string_lossy().into_owned());
         }
-        println!("success={:?}", success);
         for shader in shaders {
             unsafe { gl::DetachShader(program_id, shader.id()); }
         }
 
-        let p_attrib_names: Vec<String> = ["vertex", "normal", "texcoord"]
+        let p_attrib_names: Vec<String> = ["vertex\0", "normal\0", "texcoord\0"]
             .iter().map(|&s| {s.to_string()}).collect();
-        let p_unif_names: Vec<String> = ["modelviewmatrix", "unib", "unif",
-              "tex0", "tex1", "tex2", "tex3", "tex4", "tex5", "tex6", "tex7"]
+        let p_unif_names: Vec<String> = ["modelviewmatrix\0", "unib\0", "unif\0",
+              "tex0\0", "tex1\0", "tex2\0", "tex3\0", "tex4\0", "tex5\0", "tex6\0", "tex7\0"]
             .iter().map(|&s| {s.to_string()}).collect();
         let mut p_attrib_vals: Vec<GLint> = vec![-1; 3];
         let mut p_unif_vals: Vec<GLint> = vec![-1; 11];
@@ -126,17 +119,25 @@ impl Program {
                      uniform_values: p_unif_vals })
     }
 
-    pub fn id(&self) -> GLuint { //TODO allow -1 to be used for empty shaders
+    pub fn id(&self) -> GLuint {
         self.id
+    }
+
+    pub fn get_attribute_list(&self) -> Vec<GLint> {
+        self.attribute_values.clone()
     }
 
     pub fn get_attribute_location(&self, attrib_name: &str) -> GLuint {
         for i in 0..self.attribute_names.len() {
             if self.attribute_names[i] == attrib_name {
-                return self.attribute_values[i] as GLuint; // TODO both these fn return -1 and buffer.draw converts attribute_location
+                return self.attribute_values[i] as GLuint;
             }
         }
         0
+    }
+
+    pub fn get_uniform_list(&self) -> Vec<GLint> {
+        self.uniform_values.clone()
     }
   
     pub fn get_uniform_location(&self, unif_name: &str) -> GLint { // this needs to be int but attribs need uint!!
@@ -150,7 +151,7 @@ impl Program {
 
     pub fn set_used(&self) {
         unsafe {
-            gl::UseProgram(self.id); // TODO change to GLuint here if >= 0
+            gl::UseProgram(self.id);
         }
     }
 }
@@ -220,27 +221,21 @@ fn shader_from_source(source: &CStr, kind: GLenum) -> Result<GLuint, String> {
         gl::ShaderSource(id, 1, &source.as_ptr(), std::ptr::null());
         gl::CompileShader(id);
     }
-
     let mut success: GLint = 1;
     unsafe {
         gl::GetShaderiv(id, gl::COMPILE_STATUS, &mut success);
     }
-
     if success == 0 {
         let mut len: GLint = 0;
         unsafe {
             gl::GetShaderiv(id, gl::INFO_LOG_LENGTH, &mut len);
         }
-
         let error = create_whitespace_cstring_with_len(len as usize);
-
         unsafe {
             gl::GetShaderInfoLog(id, len, std::ptr::null_mut(), error.as_ptr() as *mut GLchar);
         }
-
         return Err(error.to_string_lossy().into_owned());
     }
-
     Ok(id)
 }
 

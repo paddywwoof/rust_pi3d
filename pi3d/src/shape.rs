@@ -4,21 +4,30 @@ extern crate ndarray;
 use std;
 use std::f32;
 use gl::types::*;
+use ndarray as nda;
 
 pub struct Shape {
-    unif: ndarray::Array2<f32>,
+    pub unif: nda::Array2<f32>,
     pub buf: Vec<::buffer::Buffer>,
-    rox: ndarray::Array2<f32>,
-    roy: ndarray::Array2<f32>,
-    roz: ndarray::Array2<f32>,
-    tr1: ndarray::Array2<f32>,
+    rox: nda::Array2<f32>,
+    roy: nda::Array2<f32>,
+    roz: nda::Array2<f32>,
+    tr1: nda::Array2<f32>,
+    pub m_flag: bool,
+    pub matrix: nda::Array3<f32>,
 }
 
 impl Shape {
-    pub fn draw(&self) {
-        let matrix = self.roy.dot(&self.rox.dot(&self.roz.dot(&self.tr1)));
+    pub fn draw(&mut self, camera: &mut ::camera::Camera) {
+        if !camera.mtrx_made {
+            camera.make_mtrx();
+        }
+        self.unif.slice_mut(s![6, ..]).assign(&camera.eye);
+        let m = &self.roy.dot(&self.rox.dot(&self.roz.dot(&self.tr1)));
+        self.matrix.slice_mut(s![0, .., ..]).assign(m);
+        self.matrix.slice_mut(s![1, .., ..]).assign(&m.dot(&camera.mtrx));
         for i in 0..self.buf.len() {
-            self.buf[i].draw(&matrix);
+            self.buf[i].draw(&self.matrix, &self);
         }
     }
     pub fn set_shader(&mut self, shader_program: &::shader::Program) {
@@ -59,50 +68,50 @@ impl Shape {
         self.unif[[0, 2]] = pos;
         self.tr1[[3, 2]] = self.unif[[0, 2]];
     }
+    //pub fn position(&mut self, pos: &nda::Array1<f32>) {
+    //    sel
+    //}
+    pub fn set_light(&mut self, num: usize, posn: &[f32],
+                    rgb: &[f32], amb: &[f32], point: bool) {
+        self.unif[[7, num]] = if point {1.0} else {0.0};
+        self.unif.slice_mut(s![8 + num * 2, ..]).assign(&nda::arr1(posn));
+        self.unif.slice_mut(s![9 + num * 2, ..]).assign(&nda::arr1(rgb));
+        self.unif.slice_mut(s![10 + num * 2, ..]).assign(&nda::arr1(amb));
+    }
 }
 
 pub fn create(buf: Vec<::buffer::Buffer>) -> Shape {
     Shape {
-        unif: ndarray::arr2(&[[0.0, 0.0, 0.0],
-                              [0.0, 0.0, 0.0],
-                              [1.0, 1.0, 1.0],
-                              [0.0, 0.0, 0.0]]),
+        unif: nda::arr2(&[
+                [0.0, 0.0, 0.0], //00 location
+                [0.0, 0.0, 0.0], //01 rotation
+                [1.0, 1.0, 1.0], //02 scale
+                [0.0, 0.0, 0.0], //03 offset
+                [0.4, 0.4, 0.6], //04 fog shade
+                [10.0, 0.6, 1.0], //05 fog dist, fog alpha, shape alpha
+                [0.0, 0.0, -0.1], //06 camera position (eye location) TODO pick up from camera default
+                [0.0, 0.0, 0.0], //07 point light flags: light0, light1, unused
+                [10.0, -10.0, -5.0], //08 light0 position or direction vector
+                [1.0, 1.0, 1.0], //09 light0 RGB strength
+                [0.1, 0.1, 0.2], //10 light0 ambient RBG strength
+                [0.0, 0.0, 0.0], //11 light1 position or direction vector - TODO shaders to use light > 0
+                [0.0, 0.0, 0.0], //12 light1 RGB strength
+                [0.0, 0.0, 0.0], //13 light1 ambient RBG strength
+                [0.0, 0.0, 0.0], //14 defocus [dist from, dist to, amount] also 2D x, y
+                [0.0, 0.0, 0.0], //15 defocus [blur width, blur height, unused] also 2D w, h, tot_h
+                [0.0, 0.0, 0.0], //16 available for custom shaders
+                [0.0, 0.0, 0.0], //17 available
+                [0.0, 0.0, 0.0], //18 available
+                [0.0, 0.0, 0.0], //19 available
+                ]),//
         buf: buf,
-        rox: ndarray::Array::eye(4),
-        roy: ndarray::Array::eye(4),
-        roz: ndarray::Array::eye(4),
-        tr1: ndarray::Array::eye(4),
+        rox: nda::Array::eye(4),
+        roy: nda::Array::eye(4),
+        roz: nda::Array::eye(4),
+        tr1: nda::Array::eye(4),
+        m_flag: true,
+        matrix: nda::Array::zeros((3, 4, 4)),
     }
 }
 
 
-pub fn cuboid(w: f32, h: f32, d: f32) -> Shape {
-    let wh = w * 0.5; let hh = h * 0.5; let dh = d * 0.5;
-    let verts: ndarray::Array2<f32> = ndarray::arr2(
-                                &[[-wh, -hh, -dh],
-                                   [wh, -hh, -dh],
-                                   [wh,  hh, -dh],
-                                  [-wh,  hh, -dh],
-                                  [-wh, -hh,  dh],
-                                   [wh, -hh,  dh],
-                                   [wh,  hh,  dh],
-                                  [-wh,  hh,  dh]]);
-    let norms: ndarray::Array2<f32> = ndarray::arr2(
-                                &[[1.0, 0.0, 0.0],
-                                  [0.0, 1.0, 0.0],
-                                  [0.0, 0.0, 1.0],
-                                  [1.0, 0.0, 1.0],
-                                  [1.0, 1.0, 0.0],
-                                  [0.0, 1.0, 1.0],
-                                  [1.0, 1.0, 1.0],
-                                  [0.0, 0.0, 1.0]]);
-    let faces: ndarray::Array2<u16> = ndarray::arr2(
-                                &[[0, 3, 2], [0, 2, 1],
-                                  [4, 7, 3], [4, 3, 0],
-                                  [0, 1, 5], [0, 5, 4],
-                                  [1, 2, 6], [1, 6, 5],
-                                  [5, 6, 7], [5, 7, 4],
-                                  [3, 7, 6], [3, 6 ,2]]);
-    let mut new_buffer = ::buffer::create(::shader::Program::new(), verts, norms, faces);
-    create(vec![new_buffer])
-}

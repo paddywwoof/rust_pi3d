@@ -33,6 +33,6 @@ into a module called pi3d so I can do something like::
         }
     }
 
-As at commit #2 this is now working but it needs a fair bit of additional
+As at commit dc84106 this is now working but it needs a fair bit of additional
 functionality putting in. Specifically the camera, texture and light components
 are empty!

@@ -2,9 +2,12 @@
 extern crate ndarray;
 extern crate gl;
 
+pub mod buffer;
+pub mod camera;
 pub mod display;
 pub mod shader;
 pub mod shape;
-pub mod buffer;
+pub mod texture;
 
 pub mod util;
+pub mod shapes;
