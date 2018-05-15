@@ -1,10 +1,9 @@
 extern crate gl;
 extern crate ndarray;
 
-use std;
 use std::f32;
-use gl::types::*;
 use ndarray as nda;
+use gl::types::*;
 
 pub struct Shape {
     pub unif: nda::Array2<f32>,
@@ -12,7 +11,7 @@ pub struct Shape {
     rox: nda::Array2<f32>,
     roy: nda::Array2<f32>,
     roz: nda::Array2<f32>,
-    tr1: nda::Array2<f32>,
+    tr1: nda::Array2<f32>, //TODO offset and scale matrices
     pub m_flag: bool,
     pub matrix: nda::Array3<f32>,
 }
@@ -23,39 +22,65 @@ impl Shape {
             camera.make_mtrx();
         }
         self.unif.slice_mut(s![6, ..]).assign(&camera.eye);
-        let m = &self.roy.dot(&self.rox.dot(&self.roz.dot(&self.tr1)));
+        let m = &self.roy.dot(
+                    &self.rox.dot(
+                        &self.roz.dot(
+                            &self.tr1)));
         self.matrix.slice_mut(s![0, .., ..]).assign(m);
         self.matrix.slice_mut(s![1, .., ..]).assign(&m.dot(&camera.mtrx));
         for i in 0..self.buf.len() {
             self.buf[i].draw(&self.matrix, &self);
         }
     }
+
     pub fn set_shader(&mut self, shader_program: &::shader::Program) {
         for i in 0..self.buf.len() {
             self.buf[i].set_shader(shader_program.clone());
         }
     }
+    pub fn set_draw_details(&mut self, shader_program: &::shader::Program,
+        textures: &Vec<GLuint>, ntiles: f32, shiny: f32, umult: f32,
+        vmult:f32, bump_factor: f32) {
+        for i in 0..self.buf.len() {
+            self.buf[i].set_draw_details(shader_program.clone(), textures,
+                ntiles, shiny, umult, vmult, bump_factor);
+        }
+    }
+
     pub fn rotate_inc_x(&mut self, da: f32) {
-        self.unif[[1, 0]] += da;
+        let a = self.unif[[1, 0]] + da;
+        self.rotate_to_x(a);
+    }
+    pub fn rotate_inc_y(&mut self, da: f32) {
+        let a = self.unif[[1, 1]] + da;
+        self.rotate_to_y(a);
+    }
+    pub fn rotate_inc_z(&mut self, da: f32) {
+        let a = self.unif[[1, 2]] + da;
+        self.rotate_to_z(a);
+    }
+    pub fn rotate_to_x(&mut self, a: f32) {
+        self.unif[[1, 0]] = a;
         let c = self.unif[[1, 0]].cos();
         let s = self.unif[[1, 0]].sin();
         self.rox[[1, 1]] = c; self.rox[[2, 2]] = c;
         self.rox[[1, 2]] = s; self.rox[[2, 1]] = -s;
     }
-    pub fn rotate_inc_y(&mut self, da: f32) {
-        self.unif[[1, 1]] += da;
+    pub fn rotate_to_y(&mut self, a: f32) {
+        self.unif[[1, 1]] = a;
         let c = self.unif[[1, 1]].cos();
         let s = self.unif[[1, 1]].sin();
         self.roy[[0, 0]] = c; self.roy[[2, 2]] = c;
         self.roy[[0, 2]] = s; self.roy[[2, 0]] = -s;
     }
-    pub fn rotate_inc_z(&mut self, da: f32) {
-        self.unif[[1, 2]] += da;
+    pub fn rotate_to_z(&mut self, a: f32) {
+        self.unif[[1, 2]] = a;
         let c = self.unif[[1, 2]].cos();
         let s = self.unif[[1, 2]].sin();
         self.roz[[0, 0]] = c; self.roz[[1, 1]] = c;
         self.roz[[0, 1]] = s; self.roz[[1, 0]] = -s;
     }
+
     pub fn position_x(&mut self, pos: f32) {
         self.unif[[0, 0]] = pos;
         self.tr1[[3, 0]] = self.unif[[0, 0]];
@@ -68,9 +93,12 @@ impl Shape {
         self.unif[[0, 2]] = pos;
         self.tr1[[3, 2]] = self.unif[[0, 2]];
     }
-    //pub fn position(&mut self, pos: &nda::Array1<f32>) {
-    //    sel
-    //}
+    pub fn position(&mut self, pos: &[f32; 3]) {
+        self.position_x(pos[0]);
+        self.position_y(pos[1]);
+        self.position_z(pos[2]);
+    }
+
     pub fn set_light(&mut self, num: usize, posn: &[f32],
                     rgb: &[f32], amb: &[f32], point: bool) {
         self.unif[[7, num]] = if point {1.0} else {0.0};

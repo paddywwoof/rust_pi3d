@@ -13,7 +13,7 @@ pub fn sub(a: &nda::Array1<f32>, b: &nda::Array1<f32>) -> nda::Array1<f32> {
 }
 
 pub fn len(a: &nda::Array1<f32>) -> f32 {
-    let mut len: f32 = a.iter().map(|x| x * x).sum();
+    let len: f32 = a.iter().map(|x| x * x).sum();
     len.sqrt()
 }
 
@@ -32,4 +32,3 @@ pub fn cross(a: &nda::Array1<f32>, b: &nda::Array1<f32>) -> nda::Array1<f32> {
                a[2] * b[0] - a[0] * b[2],
                a[0] * b[1] - a[1] * b[0]])
 }
-

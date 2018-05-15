@@ -44,16 +44,9 @@ impl Program {
     }
 
     pub fn from_res(display: &::display::Display, name: &str) -> Result<Program, Error> {
-        const POSSIBLE_EXT: [&str; 2] = [
-            ".vs",
-            ".fs",
-        ];
-        let resource_names = POSSIBLE_EXT.iter()
-            .map(|file_extension| format!("{}{}", name, file_extension))
-            .collect::<Vec<String>>();
-        let shaders = resource_names.iter()
-            .map(|resource_name| {
-                  Shader::from_res(&display.res, resource_name)
+        let shaders = [".vs", ".fs"].iter()
+            .map(|extn| {
+                  Shader::from_res(&display.res, &format!("{}{}", name, extn))
                 })
             .collect::<Result<Vec<Shader>, Error>>()?;
 
@@ -194,13 +187,13 @@ impl Shader {
         Ok(Shader { id })
     }
 
-    pub fn from_vert_source(source: &CStr) -> Result<Shader, String> {
+    /*pub fn from_vert_source(source: &CStr) -> Result<Shader, String> {
         Shader::from_source(source, gl::VERTEX_SHADER)
     }
 
     pub fn from_frag_source(source: &CStr) -> Result<Shader, String> {
         Shader::from_source(source, gl::FRAGMENT_SHADER)
-    }
+    }*/
 
     pub fn id(&self) -> GLuint {
         self.id

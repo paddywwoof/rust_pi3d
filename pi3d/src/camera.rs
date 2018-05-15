@@ -28,11 +28,11 @@ pub struct Camera {
 
 impl Camera {
     pub fn reset(&mut self) {
-        let mut view = look_at_matrix(&self.at, &self.eye, &nda::arr1(&[0.0, 1.0, 0.0]));
-        let mut projection = if self.is_3d {
-          projection_matrix(self.lens[0], self.lens[1], self.lens[2] / self.scale, self.lens[3])
+        let view = look_at_matrix(&self.at, &self.eye, &nda::arr1(&[0.0, 1.0, 0.0]));
+        let projection = if self.is_3d {
+            projection_matrix(self.lens[0], self.lens[1], self.lens[2] / self.scale, self.lens[3])
         } else {
-          orthographic_matrix(self.scale, self.width, self.height)
+            orthographic_matrix(self.scale, self.width, self.height)
         };
         self.mtrx = view.dot(&projection);
         self.was_moved = true;

@@ -10,4 +10,6 @@ pub mod shape;
 pub mod texture;
 
 pub mod util;
+pub mod shaders;
 pub mod shapes;
+

@@ -4,10 +4,8 @@ extern crate gl;
 use std;
 use gl::types::*;
 
-use ::util::resources::Resources;
-
 pub struct Display {
-    pub res: Resources,
+    pub res: ::util::resources::Resources,
     sdl: sdl2::Sdl,
     pub window: sdl2::video::Window,
     event_pump: sdl2::EventPump,
@@ -17,6 +15,11 @@ pub struct Display {
     pub near: f32,
     pub far: f32,
     pub fov: f32,
+    pub keys_pressed: Vec<sdl2::keyboard::Keycode>, // since last frame
+    pub keys_down: Vec<sdl2::keyboard::Keycode>, // currently down, not released
+    pub mouse_moved: bool,
+    pub mouse_x: i32,
+    pub mouse_y: i32,
 }
 
 impl Display {
@@ -25,18 +28,57 @@ impl Display {
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
+        self.keys_pressed.clear();
+        self.mouse_moved = false;
         for event in self.event_pump.poll_iter() {
             match event {
                 sdl2::event::Event::Quit {..} => {return false;},
-                _ => {}, // TODO hold keys_down, keys_pressed, mouse stuff etc?
+                sdl2::event::Event::KeyDown {keycode, ..} => {
+                    let key = keycode.unwrap();
+                    if !self.keys_pressed.contains(&key) {
+                        self.keys_pressed.push(key);
+                    }
+                    if !self.keys_down.contains(&key) {
+                        self.keys_down.push(key);
+                    }
+                }
+                sdl2::event::Event::KeyUp {keycode, ..} => {
+                    let key = keycode.unwrap();
+                    self.keys_down.retain(|&x| x != key);
+                }
+                sdl2::event::Event::MouseMotion {x, y, ..} => {
+                    self.mouse_moved = true;
+                    self.mouse_x = x;
+                    self.mouse_y = y;
+                }
+                //sdl2::event::Event::MouseButtonDown {} => {
+                //}
+                sdl2::event::Event::Window {..} => {
+                    let (w, h) = self.window.drawable_size();
+                    if w != self.width as u32 || h != self.height as u32 {
+                        self.width = w as f32;
+                        self.height = h as f32;
+                        unsafe {
+                            gl::Viewport(0, 0, w as GLsizei, h as GLsizei);
+                            // TODO change camera lens settings somehow.
+                        }
+                    }
+                }
+                _ => {}, // TODO mouse buttons, relative motion and SDL_GetGlobalMouseState?
             }
         }
         true
     }
-}
 
-pub fn create(name: &str, w: f32, h: f32) -> Display { // TODO set x, y, w, h, background etc
-    let res = Resources::from_exe_path().unwrap();
+    pub fn set_background(&mut self, rgba: &[f32]) {
+        unsafe {
+            gl::ClearColor(rgba[0], rgba[1], rgba[2], rgba[3]);
+        }
+    }
+} // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
+
+pub fn create(name: &str, w: f32, h: f32) -> Display {
+    let res = ::util::resources::from_exe_path().unwrap();
     let sdl = sdl2::init().unwrap();
     let video_subsystem = sdl.video().unwrap();
     let gl_attr = video_subsystem.gl_attr();
@@ -55,6 +97,7 @@ pub fn create(name: &str, w: f32, h: f32) -> Display { // TODO set x, y, w, h, b
         gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
         gl::Enable(gl::CULL_FACE);
         gl::Enable(gl::DEPTH_TEST);
+        gl::Enable(gl::VERTEX_PROGRAM_POINT_SIZE);
         gl::DepthFunc(gl::LESS);
         gl::DepthMask(1);
         gl::CullFace(gl::FRONT);
@@ -75,5 +118,10 @@ pub fn create(name: &str, w: f32, h: f32) -> Display { // TODO set x, y, w, h, b
         near: 1.0,
         far: 1000.0,
         fov: 45.0,
+        keys_pressed: vec![],
+        keys_down: vec![],
+        mouse_moved: false,
+        mouse_x: 0,
+        mouse_y: 0,
     }
 }

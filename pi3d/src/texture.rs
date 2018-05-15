@@ -2,11 +2,9 @@ extern crate gl;
 extern crate ndarray;
 extern crate image;
 
-use std;
-use std::f32;
 use gl::types::*;
 use ndarray as nda;
-use texture::image::GenericImage;
+use texture::image::GenericImage; // confusing name texture
 
 pub struct Texture {
     pub id: GLuint,
@@ -41,12 +39,15 @@ pub fn create_from_array(image: nda::Array3<u8>) -> Texture {
     }
 }
 
-pub fn create_from_file(name: &str) -> Texture {
-    let im = image::open(name).unwrap(); //TODO use resources to load from path relative to exe file
+pub fn create_from_file(disp: &::display::Display, name: &str) -> Texture {
+    let im = image::open(disp.res.resource_name_to_path(name)).unwrap();
     let (w, h) = im.dimensions();
     let c_type: usize = match im.color() {
-        image::ColorType::RGB(u8) => 3,
-        _ => 4, // TODO catch unrecognised types
+        image::ColorType::Gray(_u8) => 1,
+        image::ColorType::GrayA(_u8) => 2,
+        image::ColorType::RGB(_u8) => 3,
+        image::ColorType::RGBA(_u8) => 4,
+        _ => 4, // TODO catch unrecognised types, need to cope with indexed
     };
     let image = nda::Array::from_shape_vec((h as usize, w as usize, c_type), im.raw_pixels()).unwrap();
     create_from_array(image)
