@@ -116,34 +116,26 @@ impl Program {
         self.id
     }
 
-    pub fn get_attribute_list(&self) -> Vec<GLint> {
+    pub fn attribute_names(&self) -> Vec<String> {
+        self.attribute_names.clone()
+    }
+
+    pub fn attribute_values(&self) -> Vec<GLint> {
         self.attribute_values.clone()
     }
 
-    pub fn get_attribute_location(&self, attrib_name: &str) -> GLuint {
-        for i in 0..self.attribute_names.len() {
-            if self.attribute_names[i] == attrib_name {
-                return self.attribute_values[i] as GLuint;
-            }
-        }
-        0
+    pub fn uniform_names(&self) -> Vec<String> {
+        self.uniform_names.clone()
     }
 
-    pub fn get_uniform_list(&self) -> Vec<GLint> {
+    pub fn uniform_values(&self) -> Vec<GLint> {
         self.uniform_values.clone()
     }
-  
-    pub fn get_uniform_location(&self, unif_name: &str) -> GLint { // this needs to be int but attribs need uint!!
-        for i in 0..self.uniform_names.len() {
-            if self.uniform_names[i] == unif_name {
-                return self.uniform_values[i];
-            }
-        }
-        -1
-    }
+
 
     pub fn set_used(&self) {
         unsafe {
+            //println!("-->>{:?}", self.id);
             gl::UseProgram(self.id);
         }
     }
@@ -152,7 +144,8 @@ impl Program {
 impl Drop for Program {
     fn drop(&mut self) {
         unsafe {
-            gl::DeleteProgram(self.id);
+            println!("NOT deleting program {:?}", self.id);
+            //gl::DeleteProgram(self.id); //TODO use lifetimes to do this properly!
         }
     }
 }
@@ -203,7 +196,8 @@ impl Shader {
 impl Drop for Shader {
     fn drop(&mut self) {
         unsafe {
-            gl::DeleteShader(self.id);
+            println!("NOT deleting shader {:?}", self.id);
+            //gl::DeleteShader(self.id); //TODO use lifetimes to do this properly!
         }
     }
 }

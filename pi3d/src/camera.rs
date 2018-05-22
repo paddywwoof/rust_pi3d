@@ -2,12 +2,12 @@ extern crate ndarray;
 
 use std::f32;
 use ::util::vec3;
-use ndarray as nda;
+use ndarray as nd;
 
 pub struct Camera {
-    pub eye: nda::Array1<f32>,
-    at: nda::Array1<f32>,
-    lens: nda::Array1<f32>,
+    pub eye: nd::Array1<f32>,
+    at: nd::Array1<f32>,
+    lens: nd::Array1<f32>,
     scale: f32,
     width: f32,
     height: f32,
@@ -16,19 +16,19 @@ pub struct Camera {
     rotated: bool,
     absolute: bool,
     pub mtrx_made: bool,
-    pub mtrx: nda::Array2<f32>,
-    rtn: nda::Array2<f32>,
-    r_mtrx: nda::Array2<f32>,
-    rx: nda::Array2<f32>,
-    ry: nda::Array2<f32>,
-    rz: nda::Array2<f32>,
-    t1: nda::Array2<f32>,
-    t2: nda::Array2<f32>,
+    pub mtrx: nd::Array2<f32>,
+    rtn: nd::Array1<f32>,
+    r_mtrx: nd::Array2<f32>,
+    rx: nd::Array2<f32>,
+    ry: nd::Array2<f32>,
+    rz: nd::Array2<f32>,
+    t1: nd::Array2<f32>,
+    t2: nd::Array2<f32>,
 }
 
 impl Camera {
     pub fn reset(&mut self) {
-        let view = look_at_matrix(&self.at, &self.eye, &nda::arr1(&[0.0, 1.0, 0.0]));
+        let view = look_at_matrix(&self.at, &self.eye, &nd::arr1(&[0.0, 1.0, 0.0]));
         let projection = if self.is_3d {
             projection_matrix(self.lens[0], self.lens[1], self.lens[2] / self.scale, self.lens[3])
         } else {
@@ -38,7 +38,7 @@ impl Camera {
         self.was_moved = true;
     }
 
-    pub fn set_lens(&mut self, lens: &nda::Array1<f32>) {
+    pub fn set_lens(&mut self, lens: &nd::Array1<f32>) {
         self.lens = lens.clone();
         self.reset();
     }
@@ -48,7 +48,7 @@ impl Camera {
         self.reset();
     }
 
-    pub fn set_eye_at(&mut self, eye: &nda::Array1<f32>, at: &nda::Array1<f32>) {
+    pub fn set_eye_at(&mut self, eye: &nd::Array1<f32>, at: &nd::Array1<f32>) {
         self.eye = eye.clone();
         self.at = at.clone();
         self.reset();
@@ -59,10 +59,77 @@ impl Camera {
         self.reset();
     }
 
-    pub fn position() {
+    pub fn get_direction(&mut self) -> [f32; 3] {
+        if !self.rotated {
+            self.make_r_mtrx();
+        }
+        [self.r_mtrx[[0, 2]], self.r_mtrx[[1, 2]], self.r_mtrx[[2, 2]]]
     }
 
-    pub fn rotate() {
+    fn set_rotated_flags(&mut self) {
+        self.was_moved = true;
+        self.mtrx_made = false;
+        self.rotated = false;
+    }
+    pub fn rotate_to_x(&mut self, a: f32) {
+        self.rtn[[0]] = a;
+        let c = self.rtn[[0]].cos();
+        let s = self.rtn[[0]].sin();
+        self.rx[[1, 1]] = c; self.rx[[2, 2]] = c;
+        self.rx[[1, 2]] = s; self.rx[[2, 1]] = -s;
+        self.set_rotated_flags();
+    }
+    pub fn rotate_to_y(&mut self, a: f32) {
+        self.rtn[[1]] = a;
+        let c = self.rtn[[1]].cos();
+        let s = self.rtn[[1]].sin();
+        self.ry[[0, 0]] = c; self.ry[[2, 2]] = c;
+        self.ry[[0, 2]] = -s; self.ry[[2, 0]] = s;
+        self.set_rotated_flags();
+    }
+    pub fn rotate_to_z(&mut self, a: f32) {
+        self.rtn[[2]] = a;
+        let c = self.rtn[[2]].cos();
+        let s = self.rtn[[2]].sin();
+        self.rz[[0, 0]] = c; self.rz[[1, 1]] = c;
+        self.rz[[0, 1]] = s; self.rz[[1, 0]] = -s;
+        self.set_rotated_flags();
+    }
+    pub fn rotate(&mut self, rot: &[f32; 3]) {
+        self.rotate_to_x(rot[0]);
+        self.rotate_to_y(rot[1]);
+        self.rotate_to_z(rot[2]);
+    }
+
+    fn set_moved_flags(&mut self) {
+        self.was_moved = true;
+        self.mtrx_made = false;
+    }
+    pub fn position_x(&mut self, pos: f32) {
+        self.eye[[0]] = pos;
+        self.t2[[3, 0]] = -self.eye[[0]];
+        self.set_moved_flags();
+    }
+    pub fn position_y(&mut self, pos: f32) {
+        self.eye[[1]] = pos;
+        self.t2[[3, 1]] = -self.eye[[1]];
+        self.set_moved_flags();
+    }
+    pub fn position_z(&mut self, pos: f32) {
+        self.eye[[2]] = pos;
+        self.t2[[3, 2]] = -self.eye[[2]];
+        self.set_moved_flags();
+    }
+    pub fn position(&mut self, pos: &[f32; 3]) {
+        self.eye = nd::arr1(pos);
+        self.t2.slice_mut(s![3, ..3]).assign(&(&self.eye * -1.0));
+        self.was_moved = true;
+        self.mtrx_made = false;
+    }
+    pub fn offset(&mut self, offs: &[f32; 3]) {
+        self.t1.slice_mut(s![3, ..3]).assign(&(nd::arr1(offs) * -1.0));
+        self.was_moved = true;
+        self.mtrx_made = false;
     }
 
     pub fn make_mtrx(&mut self) {
@@ -75,21 +142,21 @@ impl Camera {
 
     fn make_r_mtrx(&mut self) {
         if self.absolute {
-            self.r_mtrx = nda::Array::eye(4);
+            self.r_mtrx = nd::Array::eye(4);
         }
         self.r_mtrx = self.r_mtrx.dot(&self.ry.dot(&self.rx.dot(&self.rz)));
         self.rotated = true;
     }
 
-    pub fn get_matrix(&self) -> &nda::Array2<f32> {
+    pub fn get_matrix(&self) -> &nd::Array2<f32> {
         &self.r_mtrx
     }
 }
 
 pub fn create(display: &::display::Display) -> Camera {
-    let eye: nda::Array1<f32> = nda::arr1(&[0.0, 0.0, -0.1]);
-    let at: nda::Array1<f32> = nda::arr1(&[0.0, 0.0, 0.0]);
-    let lens: nda::Array1<f32> = nda::arr1(&[display.near, display.far, display.fov, display.width / display.height]);
+    let eye: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, -0.1]);
+    let at: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, 0.0]);
+    let lens: nd::Array1<f32> = nd::arr1(&[display.near, display.far, display.fov, display.width / display.height]);
     let mut cam = Camera {
         eye: eye,
         at: at,
@@ -102,21 +169,21 @@ pub fn create(display: &::display::Display) -> Camera {
         rotated: false,
         absolute: true,
         mtrx_made: true,
-        rtn: nda::Array::eye(4),
-        mtrx: nda::Array::eye(4),
-        r_mtrx: nda::Array::eye(4),
-        rx: nda::Array::eye(4),
-        ry: nda::Array::eye(4),
-        rz: nda::Array::eye(4),
-        t1: nda::Array::eye(4),
-        t2: nda::Array::eye(4),
+        rtn: nd::arr1(&[0.0, 0.0, 0.0]),
+        mtrx: nd::Array::eye(4),
+        r_mtrx: nd::Array::eye(4),
+        rx: nd::Array::eye(4),
+        ry: nd::Array::eye(4),
+        rz: nd::Array::eye(4),
+        t1: nd::Array::eye(4),
+        t2: nd::Array::eye(4),
     };
     cam.reset();
     cam
 }
 
-fn look_at_matrix(at: &nda::Array1<f32>, eye: &nda::Array1<f32>, up: &nda::Array1<f32>) -> nda::Array2<f32> {
-    let mut matrix: nda::Array2<f32> = nda::Array::eye(4);
+fn look_at_matrix(at: &nd::Array1<f32>, eye: &nd::Array1<f32>, up: &nd::Array1<f32>) -> nd::Array2<f32> {
+    let mut matrix: nd::Array2<f32> = nd::Array::eye(4);
     let zaxis = vec3::norm(&vec3::sub(&at, &eye));     // unit vec direction cam pointing
     let xaxis = vec3::norm(&vec3::cross(&up, &zaxis)); // local horizontal vec
     let yaxis = vec3::cross(&zaxis, &xaxis);           // local vert vec
@@ -130,8 +197,8 @@ fn look_at_matrix(at: &nda::Array1<f32>, eye: &nda::Array1<f32>, up: &nda::Array
     matrix
 }
 
-fn projection_matrix(near: f32, far: f32, fov: f32, aspect_ratio: f32) -> nda::Array2<f32> {
-    let mut matrix = nda::Array::eye(4);
+fn projection_matrix(near: f32, far: f32, fov: f32, aspect_ratio: f32) -> nd::Array2<f32> {
+    let mut matrix = nd::Array::eye(4);
     if (aspect_ratio != 0.0) && (fov != 0.0) && (near != far) {
         let size = 1.0 / (fov * 0.5).tan();
         matrix[[0, 0]] = size / aspect_ratio;
@@ -143,8 +210,8 @@ fn projection_matrix(near: f32, far: f32, fov: f32, aspect_ratio: f32) -> nda::A
     matrix
 }
 
-fn orthographic_matrix(scale: f32, width: f32, height: f32) -> nda::Array2<f32> {
-    let mut matrix = nda::Array::eye(4);
+fn orthographic_matrix(scale: f32, width: f32, height: f32) -> nd::Array2<f32> {
+    let mut matrix = nd::Array::eye(4);
     if (width != 0.0) && (height != 0.0) {
         matrix[[0, 0]] = 2.0 * scale / width;
         matrix[[1, 1]] = 2.0 * scale / height;

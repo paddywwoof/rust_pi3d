@@ -1,7 +1,7 @@
 extern crate ndarray;
 
 use std::f32::consts;
-use ndarray as nda;
+use ndarray as nd;
 
 pub fn create(path: Vec<[f32; 2]>, sides: usize, rise: f32, loops: f32) -> ::shape::Shape {
     
@@ -61,10 +61,10 @@ pub fn create(path: Vec<[f32; 2]>, sides: usize, rise: f32, loops: f32) -> ::sha
     }
     let nverts = verts.len() / 3;
     let nfaces = faces.len() / 3;
-    let new_buffer = ::buffer::create(::shader::Program::new(),
-                nda::Array::from_shape_vec((nverts, 3usize), verts).unwrap(), //TODO make functions return Result and feedback errors
-                nda::Array::from_shape_vec((nverts, 3usize), norms).unwrap(),
-                nda::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
-                nda::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), true);
+    let new_buffer = ::buffer::create(&::shader::Program::new(),
+                nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(), //TODO make functions return Result and feedback errors
+                nd::Array::from_shape_vec((nverts, 3usize), norms).unwrap(),
+                nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
+                nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), false);
     ::shape::create(vec![new_buffer])
 }

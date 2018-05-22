@@ -2,18 +2,20 @@ extern crate gl;
 extern crate ndarray;
 
 use std::f32;
-use ndarray as nda;
+use ndarray as nd;
 use gl::types::*;
 
 pub struct Shape {
-    pub unif: nda::Array2<f32>,
+    pub unif: nd::Array2<f32>,
     pub buf: Vec<::buffer::Buffer>,
-    rox: nda::Array2<f32>,
-    roy: nda::Array2<f32>,
-    roz: nda::Array2<f32>,
-    tr1: nda::Array2<f32>, //TODO offset and scale matrices
+    tr1: nd::Array2<f32>, //TODO offset and scale matrices
+    rox: nd::Array2<f32>,
+    roy: nd::Array2<f32>,
+    roz: nd::Array2<f32>,
+    scl: nd::Array2<f32>,
+    tr2: nd::Array2<f32>,
     pub m_flag: bool,
-    pub matrix: nda::Array3<f32>,
+    pub matrix: nd::Array3<f32>,
 }
 
 impl Shape {
@@ -22,10 +24,12 @@ impl Shape {
             camera.make_mtrx();
         }
         self.unif.slice_mut(s![6, ..]).assign(&camera.eye);
-        let m = &self.roy.dot(
-                    &self.rox.dot(
-                        &self.roz.dot(
-                            &self.tr1)));
+        let m = &self.tr2.dot(
+                 &self.scl.dot(
+                  &self.roy.dot(
+                   &self.rox.dot(
+                    &self.roz.dot(
+                     &self.tr1)))));
         self.matrix.slice_mut(s![0, .., ..]).assign(m);
         self.matrix.slice_mut(s![1, .., ..]).assign(&m.dot(&camera.mtrx));
         for i in 0..self.buf.len() {
@@ -35,15 +39,23 @@ impl Shape {
 
     pub fn set_shader(&mut self, shader_program: &::shader::Program) {
         for i in 0..self.buf.len() {
-            self.buf[i].set_shader(shader_program.clone());
+            self.buf[i].set_shader(&shader_program.clone());
         }
     }
     pub fn set_draw_details(&mut self, shader_program: &::shader::Program,
         textures: &Vec<GLuint>, ntiles: f32, shiny: f32, umult: f32,
         vmult:f32, bump_factor: f32) {
         for i in 0..self.buf.len() {
-            self.buf[i].set_draw_details(shader_program.clone(), textures,
+            self.buf[i].set_draw_details(&shader_program.clone(), textures,
                 ntiles, shiny, umult, vmult, bump_factor);
+        }
+    }
+    pub fn set_material(&mut self, material: &[f32]) {
+        for i in 0..self.buf.len() {
+            self.buf[i].set_material(&material);
+        }
+        if material.len() > 3 {
+            self.unif[[5, 2]] = material[3];
         }
     }
 
@@ -83,34 +95,42 @@ impl Shape {
 
     pub fn position_x(&mut self, pos: f32) {
         self.unif[[0, 0]] = pos;
-        self.tr1[[3, 0]] = self.unif[[0, 0]];
+        self.tr1[[3, 0]] = self.unif[[0, 0]] - self.unif[[3, 0]];
     }
     pub fn position_y(&mut self, pos: f32) {
         self.unif[[0, 1]] = pos;
-        self.tr1[[3, 1]] = self.unif[[0, 1]];
+        self.tr1[[3, 1]] = self.unif[[0, 1]] - self.unif[[3, 1]];
     }
     pub fn position_z(&mut self, pos: f32) {
         self.unif[[0, 2]] = pos;
-        self.tr1[[3, 2]] = self.unif[[0, 2]];
+        self.tr1[[3, 2]] = self.unif[[0, 2]] - self.unif[[3, 2]];
     }
     pub fn position(&mut self, pos: &[f32; 3]) {
         self.position_x(pos[0]);
         self.position_y(pos[1]);
         self.position_z(pos[2]);
     }
+    pub fn offset(&mut self, offs: &[f32; 3]) {
+        self.unif.slice_mut(s![3, ..]).assign(&nd::arr1(offs));
+        self.tr2.slice_mut(s![3, ..3]).assign(&nd::arr1(offs));
+    }
+    pub fn scale(&mut self, scale: &[f32; 3]) {
+        self.unif.slice_mut(s![2, ..]).assign(&nd::arr1(scale));
+        self.scl.slice_mut(s![3, ..3]).assign(&nd::arr1(scale));
+    }
 
     pub fn set_light(&mut self, num: usize, posn: &[f32],
                     rgb: &[f32], amb: &[f32], point: bool) {
         self.unif[[7, num]] = if point {1.0} else {0.0};
-        self.unif.slice_mut(s![8 + num * 2, ..]).assign(&nda::arr1(posn));
-        self.unif.slice_mut(s![9 + num * 2, ..]).assign(&nda::arr1(rgb));
-        self.unif.slice_mut(s![10 + num * 2, ..]).assign(&nda::arr1(amb));
+        self.unif.slice_mut(s![8 + num * 2, ..]).assign(&nd::arr1(posn));
+        self.unif.slice_mut(s![9 + num * 2, ..]).assign(&nd::arr1(rgb));
+        self.unif.slice_mut(s![10 + num * 2, ..]).assign(&nd::arr1(amb));
     }
 }
 
 pub fn create(buf: Vec<::buffer::Buffer>) -> Shape {
     Shape {
-        unif: nda::arr2(&[
+        unif: nd::arr2(&[
                 [0.0, 0.0, 0.0], //00 location
                 [0.0, 0.0, 0.0], //01 rotation
                 [1.0, 1.0, 1.0], //02 scale
@@ -133,12 +153,14 @@ pub fn create(buf: Vec<::buffer::Buffer>) -> Shape {
                 [0.0, 0.0, 0.0], //19 available
                 ]),//
         buf: buf,
-        rox: nda::Array::eye(4),
-        roy: nda::Array::eye(4),
-        roz: nda::Array::eye(4),
-        tr1: nda::Array::eye(4),
+        tr1: nd::Array::eye(4),
+        rox: nd::Array::eye(4),
+        roy: nd::Array::eye(4),
+        roz: nd::Array::eye(4),
+        scl: nd::Array::eye(4),
+        tr2: nd::Array::eye(4),
         m_flag: true,
-        matrix: nda::Array::zeros((3, 4, 4)),
+        matrix: nd::Array::zeros((3, 4, 4)),
     }
 }
 

@@ -3,15 +3,25 @@ extern crate ndarray;
 extern crate image;
 
 use gl::types::*;
-use ndarray as nda;
+use ndarray as nd;
 use texture::image::GenericImage; // confusing name texture
 
 pub struct Texture {
     pub id: GLuint,
-    pub image: nda::Array3<u8>,
+    pub image: nd::Array3<u8>,
 }
 
-pub fn create_from_array(image: nda::Array3<u8>) -> Texture {
+impl Drop for Texture {
+    fn drop(&mut self) {
+        println!("deleting texture {:?}", self.id);
+        unsafe {
+            gl::BindTexture(gl::TEXTURE, 0);
+            gl::DeleteTextures(1, &self.id);
+        }
+    }
+}
+
+pub fn create_from_array(image: nd::Array3<u8>) -> Texture {
     let (h, w, d) = image.dim();
     let c_type = match d {
         3 => gl::RGB,
@@ -49,17 +59,17 @@ pub fn create_from_file(disp: &::display::Display, name: &str) -> Texture {
         image::ColorType::RGBA(_u8) => 4,
         _ => 4, // TODO catch unrecognised types, need to cope with indexed
     };
-    let image = nda::Array::from_shape_vec((h as usize, w as usize, c_type), im.raw_pixels()).unwrap();
+    let image = nd::Array::from_shape_vec((h as usize, w as usize, c_type), im.raw_pixels()).unwrap();
     create_from_array(image)
 }
     
 
 pub fn create() -> Texture {
-    let mut image: nda::Array3<u8> = nda::Array::zeros((128, 128, 4));
+    let mut image: nd::Array3<u8> = nd::Array::zeros((128, 128, 4));
     image.fill(255);
-    image.slice_mut(s![..64, ..64, ..]).assign(&nda::arr1(&[255, 0, 0, 255]));
-    image.slice_mut(s![64.., ..64, ..]).assign(&nda::arr1(&[255, 255, 0, 255]));
-    image.slice_mut(s![..64, 64.., ..]).assign(&nda::arr1(&[0, 255, 0, 255]));
-    image.slice_mut(s![64.., 64.., ..]).assign(&nda::arr1(&[255, 0, 255, 255]));
+    image.slice_mut(s![..64, ..64, ..]).assign(&nd::arr1(&[255, 0, 0, 255]));
+    image.slice_mut(s![64.., ..64, ..]).assign(&nd::arr1(&[255, 255, 0, 255]));
+    image.slice_mut(s![..64, 64.., ..]).assign(&nd::arr1(&[0, 255, 0, 255]));
+    image.slice_mut(s![64.., 64.., ..]).assign(&nd::arr1(&[255, 0, 255, 255]));
     create_from_array(image)
 }
