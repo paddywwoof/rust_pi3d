@@ -57,14 +57,14 @@ impl Buffer {
         }
     }
 
-    fn get_attribute_location(&self, attrib_name: &str) -> GLuint {
+    /*fn get_attribute_location(&self, attrib_name: &str) -> GLuint {
         for i in 0..self.attribute_names.len() {
             if self.attribute_names[i] == attrib_name {
                 return self.attribute_values[i] as GLuint;
             }
         }
         0
-    }
+    }*/
 
     fn get_uniform_location(&self, unif_name: &str) -> GLint { // this needs to be int but attribs need uint!!
         for i in 0..self.uniform_names.len() {
@@ -216,7 +216,7 @@ pub fn create_empty() -> Buffer {
 }
                 
 fn calc_normals(a_b: &mut nd::Array2<f32>, e_a_b: &nd::Array2<u16>) {
-    // update array_buffer in place TODO
+    // update array_buffer in place TODO element_normals array
     let n_elements = e_a_b.shape()[0];
     for i in 0..n_elements {
         for j in 0..3 { // for each corner of element

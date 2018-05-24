@@ -16,10 +16,15 @@ pub struct Shape {
     tr2: nd::Array2<f32>,
     pub m_flag: bool,
     pub matrix: nd::Array3<f32>,
+    pub children: Vec<::shape::Shape>, //children have to be owned by parent shape to avoid nightmare lifetime controls
 }
 
 impl Shape {
-    pub fn draw(&mut self, camera: &mut ::camera::Camera) {
+    pub fn draw(&mut self, mut camera: &mut ::camera::Camera) {
+        self.draw_with_children(&mut camera, &nd::Array::eye(4));
+    }
+
+    fn draw_with_children(&mut self, mut camera: &mut ::camera::Camera, next_m: &nd::Array2<f32>) {
         if !camera.mtrx_made {
             camera.make_mtrx();
         }
@@ -29,7 +34,11 @@ impl Shape {
                   &self.roy.dot(
                    &self.rox.dot(
                     &self.roz.dot(
-                     &self.tr1)))));
+                     &self.tr1.dot(
+                      next_m))))));
+        for i in 0..self.children.len() {
+            self.children[i].draw_with_children(&mut camera, m);
+        }
         self.matrix.slice_mut(s![0, .., ..]).assign(m);
         self.matrix.slice_mut(s![1, .., ..]).assign(&m.dot(&camera.mtrx));
         for i in 0..self.buf.len() {
@@ -126,6 +135,10 @@ impl Shape {
         self.unif.slice_mut(s![9 + num * 2, ..]).assign(&nd::arr1(rgb));
         self.unif.slice_mut(s![10 + num * 2, ..]).assign(&nd::arr1(amb));
     }
+
+    pub fn add_child(&mut self, child: ::shape::Shape) {
+        self.children.push(child);
+    }
 }
 
 pub fn create(buf: Vec<::buffer::Buffer>) -> Shape {
@@ -161,6 +174,7 @@ pub fn create(buf: Vec<::buffer::Buffer>) -> Shape {
         tr2: nd::Array::eye(4),
         m_flag: true,
         matrix: nd::Array::zeros((3, 4, 4)),
+        children: vec![],
     }
 }
 

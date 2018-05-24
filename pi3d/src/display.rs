@@ -6,10 +6,10 @@ use gl::types::*;
 
 pub struct Display {
     pub res: ::util::resources::Resources,
-    sdl: sdl2::Sdl,
+    _sdl: sdl2::Sdl,
     pub window: sdl2::video::Window,
     event_pump: sdl2::EventPump,
-    gl_context: sdl2::video::GLContext,
+    _gl_context: sdl2::video::GLContext,
     pub width: f32,
     pub height: f32,
     pub near: f32,
@@ -75,6 +75,9 @@ impl Display {
             gl::ClearColor(rgba[0], rgba[1], rgba[2], rgba[3]);
         }
     }
+
+    //pub fn get_next_shape_id(&mut self) -> usize {
+    //   self.
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
 pub fn create(name: &str, w: f32, h: f32) -> Display {
@@ -111,8 +114,8 @@ pub fn create(name: &str, w: f32, h: f32) -> Display {
         res: res,
         window: window,
         event_pump: sdl.event_pump().unwrap(),
-        sdl: sdl,
-        gl_context: gl_context,
+        _sdl: sdl,
+        _gl_context: gl_context,
         width: w,
         height: h,
         near: 1.0,

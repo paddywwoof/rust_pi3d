@@ -2,12 +2,9 @@ extern crate ndarray;
 extern crate image;
 
 use ndarray as nd;
-//use texture::image::GenericImage; // confusing name texture
-
-use ::util::vec3::{rotate_vec, rotate_vec_slice};
 
 pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
-              height: f32, ix: usize, iy: usize, ntiles: f32, texmap: &str) -> ::shape::Shape {
+              height: f32, ix: usize, iy: usize, ntiles: f32, _texmap: &str) -> ::shape::Shape {
 
     let ix = if ix < 200 {ix + 1} else {200}; // one more vertex in each direction than number of divisions
     let iy = if iy < 200 {iy + 1} else {200};
@@ -15,11 +12,11 @@ pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
     //println!("f={:?}", f);
     let im = image::open(f).unwrap();
     // convert to Gray
-    let im = image::imageops::colorops::grayscale(&im);
+    let mut im = image::imageops::colorops::grayscale(&im);
     // resize
     let (w, h) = im.dimensions();
     if w != ix as u32 || h != iy as u32 {
-        let im = image::imageops::resize(&im, ix as u32, iy as u32, image::FilterType::Lanczos3);
+        im = image::imageops::resize(&im, ix as u32, iy as u32, image::FilterType::Lanczos3);
     }
     // flip top to bottom and left to right - which results in 180 degree rotation
     let im = image::imageops::rotate180(&im);
@@ -36,7 +33,6 @@ pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
     let ty = 1.0 * ntiles / iy as f32;
 
     let mut verts = Vec::<f32>::new();
-    let mut norms = Vec::<f32>::new();
     let mut faces = Vec::<u16>::new();
     let mut tex_coords = Vec::<f32>::new();
 
@@ -70,6 +66,8 @@ pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
 }
 
 pub fn calc_height(map: &::shape::Shape, px: f32, pz: f32) -> (f32, Vec<f32>) {
+    //TODO a) for regular map this doesn't need to iterate through whole thing
+    // b) Buffer.calc_normals does cross product calc already so should save result
     let px = px - map.unif[[0, 0]];
     let pz = pz - map.unif[[0, 2]];
     for f in map.buf[0].element_array_buffer.axis_iter(nd::Axis(0)) {
@@ -86,11 +84,11 @@ pub fn calc_height(map: &::shape::Shape, px: f32, pz: f32) -> (f32, Vec<f32>) {
             let v1 = nd::arr1(&[x1, map.buf[0].array_buffer[[f[[1]] as usize, 1]], z1]);
             let v2 = nd::arr1(&[x2, map.buf[0].array_buffer[[f[[2]] as usize, 1]], z2]);
             //calc normal from two edge vectors v2-v1 and v3-v1
-            let nVec = ::util::vec3::cross(&(&v1 - &v0), &(v2 - v0));
-            //equation of plane: Ax + By + Cz = kVal where A,B,C are components of normal. x,y,z for point v1 to find kVal
-            let kVal = ::util::vec3::dot(&nVec, &v1);
-            //return y val i.e. y = (kVal - Ax - Cz)/B also the normal vector seeing as this has been calculated
-            return ((kVal - nVec[[0]] * px - nVec[[2]] * pz) / nVec[[1]], nVec.to_vec());
+            let n_vec = ::util::vec3::cross(&(&v1 - &v0), &(v2 - v0));
+            //equation of plane: Ax + By + Cz = k_val where A,B,C are components of normal. x,y,z for point v1 to find k_val
+            let k_val = ::util::vec3::dot(&n_vec, &v1);
+            //return y val i.e. y = (k_val - Ax - Cz)/B also the normal vector seeing as this has been calculated
+            return ((k_val - n_vec[[0]] * px - n_vec[[2]] * pz) / n_vec[[1]], n_vec.to_vec());
         }
     }
     //TODO fn should return Option<> and need to be unwrapped rather than return something
