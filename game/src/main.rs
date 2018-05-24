@@ -6,25 +6,25 @@ fn main() {
     let mut display = pi3d::display::create("experimental window", 800.0, 600.0);
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
     let shader_program = pi3d::shader::Program::from_res(
-          &display, "uv_light").unwrap();
+          &display, "uv_bump").unwrap();
     let mut camera = pi3d::camera::create(&display);
-    let texture = pi3d::texture::create_from_file(&display, "textures/pattern.png");
+    let tex = pi3d::texture::create_from_file(&display, "textures/pattern.png");
+    let maptex = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
+    let mapnorm = pi3d::texture::create_from_file(&display, "textures/grasstile_n.jpg");
 
     let mut candlestick = pi3d::shapes::lathe::create(vec![[0.0, 2.0], [0.1, 1.8], [0.1, 1.2],
             [0.5, 1.0], [0.6, 0.6], [0.2, 0.5], [0.2, 0.2], [1.0, 0.1], [1.2, -0.3], [0.0, -2.0]],
             144, 0.0, 1.0);
-    candlestick.set_draw_details(&shader_program, &vec![texture.id, texture.id], 1.0, 0.0, 1.0, 1.0, 1.0);
-    candlestick.position(&[-2.0, 1.0, 15.0]);
+    candlestick.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id], 1.0, 0.0, 1.0, 1.0, 1.0);
+    candlestick.position(&[-2.0, 30.0, 15.0]);
     candlestick.set_material(&[1.0, 0.0, 0.0]);
 
     let mut cube = pi3d::shapes::sphere::create(1.5, 16, 32, 0.3, false);
-    cube.buf[0].set_textures(&vec![texture.id, texture.id]);
+    cube.buf[0].set_textures(&vec![tex.id, mapnorm.id]);
     cube.set_shader(&shader_program);
-    cube.position_z(8.5);
 
     let mut cube2 = pi3d::shapes::cuboid::create(3.0, 2.0, 1.0, 1.0, 1.0, 1.0);
-    cube2.set_draw_details(&shader_program, &vec![texture.id, texture.id], 2.0, 1.0, 2.0, 3.0, 1.0);
-    cube2.position_z(9.6);
+    cube2.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id], 2.0, 1.0, 2.0, 3.0, 1.0);
 
     cube2.set_light(0, &[1.5, 1.5, 4.0], &[10.0, 10.0, 10.0], &[0.05, 0.1, 0.05], true);
 
@@ -38,29 +38,27 @@ fn main() {
     junk.buf[1].set_material(&[1.0, 1.0, 0.0, 1.0]);
 
     //junk.set_draw_details(&shader_program, &vec![texture.id, texture.id], 2.0, 1.0, 2.0, 3.0, 1.0);
-    junk.position_z(7.5);
+    junk.position(&[5.0, 30.0, 7.5]);
 
     let mut map = pi3d::shapes::elevation_map::create(&display, "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 32, 32, 1.0, "nothing");
-    map.set_draw_details(&shader_program, &vec![texture.id, texture.id], 1.0, 0.0, 1.0, 1.0, 1.0);
-    map.position_y(-55.0);
+    map.set_draw_details(&shader_program, &vec![maptex.id, mapnorm.id], 128.0, 1.0, 1.0, 1.0, 2.0);
 
     let mut t: f32 = 0.0;
     let mut x: f32 = 0.0;
     let mut y: f32 = 0.0;
     let mut z: f32 = -0.1;
-    let mut ds:f32;
+    let mut ds:f32 = 0.01;
     let mut rot: f32 = 0.0;
     let mut tilt: f32 = 0.0;
     while display.loop_running() {
         t += 0.02;
-        ds = 0.0;
         cube.rotate_inc_y(0.01);
         cube.rotate_inc_z(0.031);
-        cube.position(&[t * 0.087 % 2.2 - 1.1, t * 0.12 % 1.98 - 0.9, 2.5]);
+        cube.position(&[t * 0.087 % 2.2 - 1.1, t * 0.12 % 1.98 + 30.0, 2.5]);
 
         cube2.rotate_inc_z(0.009);
         cube2.position_x((t + 0.7) * 0.047 % 3.2 - 1.01);
-        cube2.position_y(t * 0.092 % 1.48 - 0.8);
+        cube2.position_y(t * 0.092 % 1.48 + 35.0);
 
         candlestick.rotate_inc_x(0.05);
 
@@ -83,17 +81,17 @@ fn main() {
         if display.keys_pressed.contains(&Keycode::L) {candlestick.buf[0].set_line_width(5.0, true, false);}
         if display.keys_pressed.contains(&Keycode::F) {candlestick.buf[0].set_line_width(0.0, true, false);}
         if display.keys_pressed.contains(&Keycode::P) {candlestick.buf[0].set_point_size(30.0);}
-        if display.keys_pressed.contains(&Keycode::W) {ds = 0.1}
-        if display.keys_pressed.contains(&Keycode::S) {ds = -0.1;}
+        if display.keys_pressed.contains(&Keycode::W) {ds = 0.25}
+        if display.keys_pressed.contains(&Keycode::S) {ds = -0.25;}
         let cd = camera.get_direction();
         x += cd[0] * ds; y += cd[1] * ds; z += cd[2] * ds;
         camera.reset();
         camera.rotate(&[tilt, rot, 0.0]);
-        camera.position(&[x, y, z]);
-        if t % 1.0 < 0.01 {
-            let (newy, mapnorm) = pi3d::shapes::elevation_map::calc_height(&map, x, z);
-            y = newy - 50.0;
-            println!("{:?}", (newy, mapnorm));
+        if ds != 0.0 {
+            let (newy, _mapnorm) = pi3d::shapes::elevation_map::calc_height(&map, x, z);
+            y = newy + 5.0;
+            camera.position(&[x, y, z]);
         }
+        ds = 0.0;
     }
 }
