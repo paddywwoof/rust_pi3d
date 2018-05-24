@@ -129,7 +129,7 @@ impl Buffer {
 
 impl Drop for Buffer {
     fn drop(&mut self) {
-        println!("deleting array_buffer {:?} and element_array_buffer {:?}", self.arr_b, self.ear_b);
+        //println!("deleting array_buffer {:?} and element_array_buffer {:?}", self.arr_b, self.ear_b);
         unsafe {
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
@@ -174,8 +174,8 @@ pub fn create(shader_program: &::shader::Program, verts: nd::Array2<f32>,
         gl::GenBuffers(1, &mut arr_b);
         gl::BindBuffer(gl::ARRAY_BUFFER, arr_b);
         gl::BufferData(
-          gl::ARRAY_BUFFER, ((array_buffer.len() + 1) * std::mem::size_of::<f32>()) as GLsizeiptr,
-          //TODO why does it need this extra float 'padding' on the end of the size?
+          gl::ARRAY_BUFFER, (array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
+          //TODO why does the last value (tex_coord) get set to 0.0?
           array_buffer.as_ptr() as *const GLvoid, gl::DYNAMIC_DRAW);
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
 

@@ -6,6 +6,7 @@ use ndarray as nd;
 
 pub struct Camera {
     pub eye: nd::Array1<f32>,
+    reset_eye: nd::Array1<f32>,
     at: nd::Array1<f32>,
     lens: nd::Array1<f32>,
     scale: f32,
@@ -28,7 +29,7 @@ pub struct Camera {
 
 impl Camera {
     pub fn reset(&mut self) {
-        let view = look_at_matrix(&self.at, &self.eye, &nd::arr1(&[0.0, 1.0, 0.0]));
+        let view = look_at_matrix(&self.at, &self.reset_eye, &nd::arr1(&[0.0, 1.0, 0.0]));
         let projection = if self.is_3d {
             projection_matrix(self.lens[0], self.lens[1], self.lens[2] / self.scale, self.lens[3])
         } else {
@@ -155,10 +156,12 @@ impl Camera {
 
 pub fn create(display: &::display::Display) -> Camera {
     let eye: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, -0.1]);
+    let reset_eye = eye.clone();
     let at: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, 0.0]);
     let lens: nd::Array1<f32> = nd::arr1(&[display.near, display.far, display.fov, display.width / display.height]);
     let mut cam = Camera {
         eye: eye,
+        reset_eye: reset_eye,
         at: at,
         lens: lens,
         scale: 1.0,

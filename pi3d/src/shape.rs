@@ -136,7 +136,7 @@ pub fn create(buf: Vec<::buffer::Buffer>) -> Shape {
                 [1.0, 1.0, 1.0], //02 scale
                 [0.0, 0.0, 0.0], //03 offset
                 [0.4, 0.4, 0.6], //04 fog shade
-                [10.0, 0.6, 1.0], //05 fog dist, fog alpha, shape alpha
+                [200.0, 0.6, 1.0], //05 fog dist, fog alpha, shape alpha
                 [0.0, 0.0, -0.1], //06 camera position (eye location) TODO pick up from camera default
                 [0.0, 0.0, 0.0], //07 point light flags: light0, light1, unused
                 [10.0, -10.0, -5.0], //08 light0 position or direction vector

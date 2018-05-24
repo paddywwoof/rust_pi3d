@@ -40,11 +40,15 @@ fn main() {
     //junk.set_draw_details(&shader_program, &vec![texture.id, texture.id], 2.0, 1.0, 2.0, 3.0, 1.0);
     junk.position_z(7.5);
 
+    let mut map = pi3d::shapes::elevation_map::create(&display, "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 32, 32, 1.0, "nothing");
+    map.set_draw_details(&shader_program, &vec![texture.id, texture.id], 1.0, 0.0, 1.0, 1.0, 1.0);
+    map.position_y(-55.0);
+
     let mut t: f32 = 0.0;
     let mut x: f32 = 0.0;
     let mut y: f32 = 0.0;
     let mut z: f32 = -0.1;
-    let mut ds:f32 = 0.0;
+    let mut ds:f32;
     let mut rot: f32 = 0.0;
     let mut tilt: f32 = 0.0;
     while display.loop_running() {
@@ -66,14 +70,15 @@ fn main() {
         cube2.draw(&mut camera);
         candlestick.draw(&mut camera);
         junk.draw(&mut camera);
+        map.draw(&mut camera);
 
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.keys_down.contains(&Keycode::A) {cube2.offset(&[t % 3.0, 0.0, 0.0]);}
         if display.mouse_moved {
             //cube2.rotate_to_x(display.mouse_y as f32 * 0.01);
             //cube2.rotate_to_y(display.mouse_x as f32 * 0.01);
-            tilt = display.mouse_y as f32 * 0.01;
-            rot = display.mouse_x as f32 * 0.01;
+            tilt = (display.mouse_y as f32 - 300.0) * 0.01;
+            rot = (display.mouse_x as f32 - 400.0) * 0.01;
         }
         if display.keys_pressed.contains(&Keycode::L) {candlestick.buf[0].set_line_width(5.0, true, false);}
         if display.keys_pressed.contains(&Keycode::F) {candlestick.buf[0].set_line_width(0.0, true, false);}
@@ -85,5 +90,10 @@ fn main() {
         camera.reset();
         camera.rotate(&[tilt, rot, 0.0]);
         camera.position(&[x, y, z]);
+        if t % 1.0 < 0.01 {
+            let (newy, mapnorm) = pi3d::shapes::elevation_map::calc_height(&map, x, z);
+            y = newy - 50.0;
+            println!("{:?}", (newy, mapnorm));
+        }
     }
 }

@@ -1,6 +1,7 @@
 #[macro_use(s)]
 extern crate ndarray;
 extern crate gl;
+extern crate image;
 
 pub mod buffer;
 pub mod camera;
