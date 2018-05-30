@@ -6,16 +6,17 @@ fn main() {
     let mut display = pi3d::display::create("experimental window", 800.0, 600.0);
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
     let shader_program = pi3d::shader::Program::from_res(
-          &display, "uv_bump").unwrap();
+          &display, "uv_reflect").unwrap();
     let mut camera = pi3d::camera::create(&display);
     let tex = pi3d::texture::create_from_file(&display, "textures/pattern.png");
     let maptex = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
     let mapnorm = pi3d::texture::create_from_file(&display, "textures/grasstile_n.jpg");
+    let stars = pi3d::texture::create_from_file(&display, "textures/stars.jpg");
 
     let mut candlestick = pi3d::shapes::lathe::create(vec![[0.0, 2.0], [0.1, 1.8], [0.1, 1.2],
             [0.5, 1.0], [0.6, 0.6], [0.2, 0.5], [0.2, 0.2], [1.0, 0.1], [1.2, -0.3], [0.0, -2.0]],
             144, 0.0, 1.0);
-    candlestick.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id], 1.0, 0.0, 1.0, 1.0, 1.0);
+    candlestick.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id, stars.id], 1.0, 0.1, 1.0, 1.0, 1.0);
     candlestick.position(&[-2.0, 30.0, 15.0]);
     candlestick.set_material(&[1.0, 0.0, 0.0]);
 
@@ -24,7 +25,7 @@ fn main() {
     sphere.set_shader(&shader_program);
 
     let mut cube2 = pi3d::shapes::cuboid::create(3.0, 2.0, 1.0, 1.0, 1.0, 1.0);
-    cube2.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id], 2.0, 1.0, 2.0, 3.0, 1.0);
+    cube2.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id, stars.id], 2.0, 0.1, 2.0, 3.0, 1.0);
     cube2.set_light(0, &[1.5, 1.5, 4.0], &[10.0, 10.0, 10.0], &[0.05, 0.1, 0.05], true);
     cube2.add_child(sphere);
 
@@ -36,10 +37,23 @@ fn main() {
      vec![&[1.0, 1.0, 1.0], &[0.5, 2.0, 2.0], &[2.2, 2.2, 2.2]],
      vec![0, 0, 1]);
     junk.buf[1].set_material(&[1.0, 1.0, 0.0, 1.0]);
-    junk.position(&[5.0, 30.0, 7.5]);
+    junk.position(&[1.0, 30.0, 7.5]);
 
     let mut map = pi3d::shapes::elevation_map::create(&display, "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 64, 64, 1.0, "nothing");
-    map.set_draw_details(&shader_program, &vec![maptex.id, mapnorm.id], 128.0, 1.0, 1.0, 1.0, 2.0);
+    map.set_draw_details(&shader_program, &vec![maptex.id, mapnorm.id, stars.id], 128.0, 0.0, 1.0, 1.0, 2.0);
+
+    let (mut iss, _texlist) = pi3d::shapes::model_obj::create(&display, "models/iss.obj");
+    //iss.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id], 5.0, 1.0, 1.0, 1.0, 2.0);
+    iss.set_shader(&shader_program);
+    for i in 0..iss.buf.len() {
+        iss.buf[i].textures.push(mapnorm.id);
+        iss.buf[i].textures.push(stars.id);
+        iss.buf[i].unib[[0, 0]] = 8.0;
+        iss.buf[i].unib[[0, 1]] = 0.1;
+        iss.buf[i].unib[[3, 2]] = 0.2;
+    }
+    iss.position(&[20.0, 50.0, 10.0]);
+    iss.scale(&[40.0, 40.0, 40.0]);
 
     let mut t: f32 = 0.0;
     let mut x: f32 = 0.0;
@@ -62,11 +76,15 @@ fn main() {
         candlestick.rotate_inc_x(0.05);
 
         junk.rotate_inc_y(0.1);
+
+        iss.rotate_inc_y(0.01);
+        iss.rotate_inc_x(0.007);
         
         cube2.draw(&mut camera);
         candlestick.draw(&mut camera);
         junk.draw(&mut camera);
         map.draw(&mut camera);
+        iss.draw(&mut camera);
 
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.keys_down.contains(&Keycode::A) {cube2.offset(&[t % 3.0, 0.0, 0.0]);}

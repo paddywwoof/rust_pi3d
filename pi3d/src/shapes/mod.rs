@@ -4,4 +4,5 @@ pub mod cuboid;
 pub mod elevation_map;
 pub mod lathe;
 pub mod merge_shape;
+pub mod model_obj;
 pub mod sphere;

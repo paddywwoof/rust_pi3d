@@ -125,7 +125,9 @@ impl Shape {
     }
     pub fn scale(&mut self, scale: &[f32; 3]) {
         self.unif.slice_mut(s![2, ..]).assign(&nd::arr1(scale));
-        self.scl.slice_mut(s![3, ..3]).assign(&nd::arr1(scale));
+        self.scl[[0, 0]] = scale[0];
+        self.scl[[1, 1]] = scale[1];
+        self.scl[[2, 2]] = scale[2];
     }
 
     pub fn set_light(&mut self, num: usize, posn: &[f32],
