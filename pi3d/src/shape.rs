@@ -52,10 +52,10 @@ impl Shape {
         }
     }
     pub fn set_draw_details(&mut self, shader_program: &::shader::Program,
-        textures: &Vec<GLuint>, ntiles: f32, shiny: f32, umult: f32,
+        tex_ids: &Vec<GLuint>, ntiles: f32, shiny: f32, umult: f32,
         vmult:f32, bump_factor: f32) {
         for i in 0..self.buf.len() {
-            self.buf[i].set_draw_details(&shader_program.clone(), textures,
+            self.buf[i].set_draw_details(&shader_program.clone(), tex_ids,
                 ntiles, shiny, umult, vmult, bump_factor);
         }
     }
@@ -65,6 +65,24 @@ impl Shape {
         }
         if material.len() > 3 {
             self.unif[[5, 2]] = material[3];
+        }
+    }
+    pub fn set_normal_shine(&mut self, tex_ids: &Vec<GLuint>, ntiles: f32,
+        shiny: f32, umult: f32, vmult:f32, bump_factor: f32, is_uv: bool) {
+        for i in 0..self.buf.len() {
+            let first_tex = if is_uv {1} else {0}; // uv has diffuse texture first mat doesn't
+            for j in 0..tex_ids.len() {
+                if self.buf[i].textures.len() > (j + first_tex) {
+                    self.buf[i].textures[j + first_tex] = tex_ids[j];
+                } else {
+                    self.buf[i].textures.push(tex_ids[j]);
+                }
+            }
+            self.buf[i].unib[[0, 0]] = ntiles;
+            self.buf[i].unib[[0, 1]] = shiny;
+            self.buf[i].unib[[3, 0]] = umult;
+            self.buf[i].unib[[3, 1]] = vmult;
+            self.buf[i].unib[[3, 2]] = bump_factor;
         }
     }
 
@@ -138,6 +156,12 @@ impl Shape {
         self.unif.slice_mut(s![10 + num * 2, ..]).assign(&nd::arr1(amb));
     }
 
+    pub fn set_fog(&mut self, shade: &[f32; 3], dist: f32, alpha: f32) {
+        self.unif.slice_mut(s![4, ..]).assign(&nd::arr1(shade));
+        self.unif[[5, 0]] = dist;
+        self.unif[[5, 1]] = alpha;
+    }
+
     pub fn add_child(&mut self, child: ::shape::Shape) {
         self.children.push(child);
     }
@@ -151,7 +175,7 @@ pub fn create(buf: Vec<::buffer::Buffer>) -> Shape {
                 [1.0, 1.0, 1.0], //02 scale
                 [0.0, 0.0, 0.0], //03 offset
                 [0.4, 0.4, 0.6], //04 fog shade
-                [200.0, 0.6, 1.0], //05 fog dist, fog alpha, shape alpha
+                [500.0, 0.6, 1.0], //05 fog dist, fog alpha, shape alpha
                 [0.0, 0.0, -0.1], //06 camera position (eye location) TODO pick up from camera default
                 [0.0, 0.0, 0.0], //07 point light flags: light0, light1, unused
                 [10.0, -10.0, -5.0], //08 light0 position or direction vector

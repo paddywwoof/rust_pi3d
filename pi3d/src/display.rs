@@ -6,7 +6,7 @@ use gl::types::*;
 
 pub struct Display {
     pub res: ::util::resources::Resources,
-    _sdl: sdl2::Sdl,
+    sdl: sdl2::Sdl,
     pub window: sdl2::video::Window,
     event_pump: sdl2::EventPump,
     _gl_context: sdl2::video::GLContext,
@@ -20,6 +20,7 @@ pub struct Display {
     pub mouse_moved: bool,
     pub mouse_x: i32,
     pub mouse_y: i32,
+    mouse_relative: bool,
 }
 
 impl Display {
@@ -35,6 +36,8 @@ impl Display {
                 sdl2::event::Event::Quit {..} => {return false;},
                 sdl2::event::Event::KeyDown {keycode, ..} => {
                     let key = keycode.unwrap();
+                    // hard code ESC so that window doesn't get stuck with no cursor
+                    if self.mouse_relative && key == sdl2::keyboard::Keycode::Escape {return false;}
                     if !self.keys_pressed.contains(&key) {
                         self.keys_pressed.push(key);
                     }
@@ -46,10 +49,15 @@ impl Display {
                     let key = keycode.unwrap();
                     self.keys_down.retain(|&x| x != key);
                 }
-                sdl2::event::Event::MouseMotion {x, y, ..} => {
+                sdl2::event::Event::MouseMotion {x, y, xrel, yrel, ..} => {
                     self.mouse_moved = true;
-                    self.mouse_x = x;
-                    self.mouse_y = y;
+                    if self.mouse_relative {
+                        self.mouse_x += xrel;
+                        self.mouse_y += yrel;
+                    } else {
+                        self.mouse_x = x;
+                        self.mouse_y = y;
+                    }
                 }
                 //sdl2::event::Event::MouseButtonDown {} => {
                 //}
@@ -64,7 +72,7 @@ impl Display {
                         }
                     }
                 }
-                _ => {}, // TODO mouse buttons, relative motion and SDL_GetGlobalMouseState?
+                _ => {}, // TODO mouse buttons
             }
         }
         true
@@ -76,8 +84,9 @@ impl Display {
         }
     }
 
-    //pub fn get_next_shape_id(&mut self) -> usize {
-    //   self.
+    pub fn set_mouse_relative(&mut self, mode: bool) {
+        self.sdl.mouse().set_relative_mouse_mode(mode);
+    }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
 pub fn create(name: &str, w: f32, h: f32) -> Display {
@@ -114,7 +123,7 @@ pub fn create(name: &str, w: f32, h: f32) -> Display {
         res: res,
         window: window,
         event_pump: sdl.event_pump().unwrap(),
-        _sdl: sdl,
+        sdl: sdl,
         _gl_context: gl_context,
         width: w,
         height: h,
@@ -126,5 +135,6 @@ pub fn create(name: &str, w: f32, h: f32) -> Display {
         mouse_moved: false,
         mouse_x: 0,
         mouse_y: 0,
+        mouse_relative: true,
     }
 }

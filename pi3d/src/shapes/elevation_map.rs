@@ -3,11 +3,25 @@ extern crate image;
 
 use ndarray as nd;
 
+/// generate an elevation map Shape
+///
+/// * `disp` reference to the display object which has file path functionality
+/// * `mapfile` relative path to image file representing heights
+/// * `width` edge to edge in x direction
+/// * `depth` in z direction
+/// * `height` in y direction scaled by pixel values 0 to 255
+/// * `ix` number of polygons in x direction 
+/// * `iz` polygons in z direction
+/// * `ntiles` uv repeats for texture mapping
+/// * `_texmap` TODO used for allocating multiple textures to the map
+/// NB for no image scaling the mapfile should be one more pixel than ix and iz
+/// i.e. 33x33 image for 32x32 squares in grid
+///
 pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
-              height: f32, ix: usize, iy: usize, ntiles: f32, _texmap: &str) -> ::shape::Shape {
+              height: f32, ix: usize, iz: usize, ntiles: f32, _texmap: &str) -> ::shape::Shape {
 
     let ix = if ix < 200 {ix + 1} else {200}; // one more vertex in each direction than number of divisions
-    let iy = if iy < 200 {iy + 1} else {200};
+    let iz = if iz < 200 {iz + 1} else {200};
     let f = disp.res.resource_name_to_path(mapfile);
     //println!("f={:?}", f);
     let im = image::open(f).unwrap();
@@ -15,41 +29,41 @@ pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
     let mut im = image::imageops::colorops::grayscale(&im);
     // resize
     let (w, h) = im.dimensions();
-    if w != ix as u32 || h != iy as u32 {
-        im = image::imageops::resize(&im, ix as u32, iy as u32, image::FilterType::Lanczos3);
+    if w != ix as u32 || h != iz as u32 {
+        im = image::imageops::resize(&im, ix as u32, iz as u32, image::FilterType::Lanczos3);
     }
     // flip top to bottom and left to right - which results in 180 degree rotation
     let im = image::imageops::rotate180(&im);
-    let pixels = nd::Array::from_shape_vec((iy, ix, 1), im.into_raw()).unwrap();
+    let pixels = nd::Array::from_shape_vec((iz, ix, 1), im.into_raw()).unwrap();
 
     //TODO texmap used for mapping other info into uv coords (integer part)
 
     let wh = width * 0.5;
     let hh = depth * 0.5;
     let ws = width / (ix as f32 - 1.0);
-    let hs = depth / (iy as f32 - 1.0);
+    let hs = depth / (iz as f32 - 1.0);
     let ht = height / 255.0;
     let tx = 1.0 * ntiles / ix as f32;
-    let ty = 1.0 * ntiles / iy as f32;
+    let tz = 1.0 * ntiles / iz as f32;
 
     let mut verts = Vec::<f32>::new();
     let mut faces = Vec::<u16>::new();
     let mut tex_coords = Vec::<f32>::new();
 
-    for y in 0..iy {
+    for z in 0..iz {
         for x in 0..ix {
-            //println!("y,x {:?},{:?}", y, x);
+            //println!("z,x {:?},{:?}", z, x);
             verts.extend_from_slice(&[-wh + x as f32 * ws,
-                                       pixels[[y, x, 0]] as f32 * ht, 
-                                      -hh + y as f32 * hs]);
-            tex_coords.extend_from_slice(&[(ix - x) as f32 * tx, (iy - y) as f32 * ty]);
+                                       pixels[[z, x, 0]] as f32 * ht, 
+                                      -hh + z as f32 * hs]);
+            tex_coords.extend_from_slice(&[(ix - x) as f32 * tx, (iz - z) as f32 * tz]);
         }
     }
 
     //create one long triangle_strip by alternating X directions
-    for y in 0..(iy - 1) {
+    for z in 0..(iz - 1) {
         for x in 0..(ix - 1) {
-            let i = (y * ix) + x;
+            let i = (z * ix) + x;
             faces.extend_from_slice(&[i as u16, (i + ix) as u16, (i + ix + 1) as u16]);
             faces.extend_from_slice(&[(i + ix + 1) as u16, (i + 1) as u16, i as u16]);
         }
@@ -62,15 +76,35 @@ pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
                 nd::Array2::<f32>::zeros((0, 3)),
                 nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
                 nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), true);
-    ::shape::create(vec![new_buffer])
+    let mut new_shape = ::shape::create(vec![new_buffer]);
+    new_shape.unif[[18, 0]] = ix as f32 - 1.0; // hold these for calc_height
+    new_shape.unif[[18, 1]] = iz as f32 - 1.0; // NB potential conflict with
+    new_shape.unif[[19, 0]] = width; // special shaders that use the spare
+    new_shape.unif[[19, 1]] = depth; // uniform variables
+    new_shape
 }
 
+/// find the value of the y component of the location on the triangle
+/// where the x, z location lies within the elevation_map
+///
+/// * `map` the Shape object representing the elevation map
+/// * `px` x location in world space
+/// * `pz` z location
+///
+/// returns a tuple of the (height, normal vector at that point) this can
+/// be used for resistance to movement, bouncing etc.
+///
 pub fn calc_height(map: &::shape::Shape, px: f32, pz: f32) -> (f32, Vec<f32>) {
-    //TODO a) for regular map this doesn't need to iterate through whole thing
+    //TODO a) the skip method will only work for regular maps
     // b) Buffer.calc_normals does cross product calc already so should save result
+    // in Buffer on creation
     let px = px - map.unif[[0, 0]];
     let pz = pz - map.unif[[0, 2]];
-    for f in map.buf[0].element_array_buffer.axis_iter(nd::Axis(0)) {
+    let (ix, iz) = (map.unif[[18,0]], map.unif[[18, 1]]);
+    let (width, depth) = (map.unif[[19,0]], map.unif[[19, 1]]);
+    let skip_n = (((pz + depth * 0.5) * iz / depth).floor() * ix * 2.0
+                  + ((px + width * 0.5) * ix / width).floor() * 2.0) as usize;
+    for f in map.buf[0].element_array_buffer.axis_iter(nd::Axis(0)).skip(skip_n) {
         let x0 = map.buf[0].array_buffer[[f[[0]] as usize, 0]];
         let z0 = map.buf[0].array_buffer[[f[[0]] as usize, 2]];
         let x1 = map.buf[0].array_buffer[[f[[1]] as usize, 0]];

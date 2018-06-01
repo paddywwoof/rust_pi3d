@@ -43,8 +43,6 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
     as part of a Shape. Arguments:
     */
     let mut bufs: Vec<::buffer::Buffer> = vec![];
-    let mut v_group = HashMap::<usize, usize>::new(); // links material id to buffer index
-
     let mut vertices: Vec<f32> = vec![];
     let mut normals: Vec<f32> = vec![];
     let mut uvs: Vec<f32> = vec![];

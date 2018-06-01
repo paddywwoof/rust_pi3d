@@ -3,10 +3,13 @@ extern crate sdl2;
 use sdl2::keyboard::Keycode;
 
 fn main() {
-    let mut display = pi3d::display::create("experimental window", 800.0, 600.0);
+    let mut display = pi3d::display::create("experimental window", 1200.0, 960.0);
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
+    display.set_mouse_relative(true);
     let shader_program = pi3d::shader::Program::from_res(
           &display, "uv_reflect").unwrap();
+    let flatsh = pi3d::shader::Program::from_res(
+          &display, "uv_flat").unwrap();
     let mut camera = pi3d::camera::create(&display);
     let tex = pi3d::texture::create_from_file(&display, "textures/pattern.png");
     let maptex = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
@@ -43,17 +46,18 @@ fn main() {
     map.set_draw_details(&shader_program, &vec![maptex.id, mapnorm.id, stars.id], 128.0, 0.0, 1.0, 1.0, 2.0);
 
     let (mut iss, _texlist) = pi3d::shapes::model_obj::create(&display, "models/iss.obj");
-    //iss.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id], 5.0, 1.0, 1.0, 1.0, 2.0);
     iss.set_shader(&shader_program);
-    for i in 0..iss.buf.len() {
-        iss.buf[i].textures.push(mapnorm.id);
-        iss.buf[i].textures.push(stars.id);
-        iss.buf[i].unib[[0, 0]] = 8.0;
-        iss.buf[i].unib[[0, 1]] = 0.1;
-        iss.buf[i].unib[[3, 2]] = 0.2;
-    }
+    iss.set_normal_shine(&vec![mapnorm.id, stars.id], 16.0, 0.1, 1.0, 1.0, 0.1, true);
     iss.position(&[20.0, 50.0, 10.0]);
     iss.scale(&[40.0, 40.0, 40.0]);
+
+    let mut clust = pi3d::shapes::merge_shape::create();
+    pi3d::shapes::merge_shape::cluster(&mut clust, &cube2, &map, -20.0, -100.0,
+            200.0, 150.0, 0.5, 2.5, 200);
+
+    let (mut ecube, _tex_list) = pi3d::shapes::environment_cube::create(&display, 500.0,
+                "ecubes/miramar_256", "png");
+    ecube.set_shader(&flatsh);
 
     let mut t: f32 = 0.0;
     let mut x: f32 = 0.0;
@@ -79,12 +83,14 @@ fn main() {
 
         iss.rotate_inc_y(0.01);
         iss.rotate_inc_x(0.007);
-        
+
+        ecube.draw(&mut camera);
         cube2.draw(&mut camera);
         candlestick.draw(&mut camera);
         junk.draw(&mut camera);
         map.draw(&mut camera);
         iss.draw(&mut camera);
+        clust.draw(&mut camera);
 
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.keys_down.contains(&Keycode::A) {cube2.offset(&[t % 3.0, 0.0, 0.0]);}
@@ -95,7 +101,7 @@ fn main() {
         if display.keys_pressed.contains(&Keycode::L) {candlestick.buf[0].set_line_width(2.0, true, false);}
         if display.keys_pressed.contains(&Keycode::F) {candlestick.buf[0].set_line_width(0.0, true, false);}
         if display.keys_pressed.contains(&Keycode::P) {candlestick.buf[0].set_point_size(30.0);}
-        if display.keys_pressed.contains(&Keycode::W) {ds = 0.25}
+        if display.keys_pressed.contains(&Keycode::W) {ds = 1.25}
         if display.keys_pressed.contains(&Keycode::S) {ds = -0.25;}
         let cd = camera.get_direction();
         x += cd[0] * ds; y += cd[1] * ds; z += cd[2] * ds;

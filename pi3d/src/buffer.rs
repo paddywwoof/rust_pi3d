@@ -57,15 +57,6 @@ impl Buffer {
         }
     }
 
-    /*fn get_attribute_location(&self, attrib_name: &str) -> GLuint {
-        for i in 0..self.attribute_names.len() {
-            if self.attribute_names[i] == attrib_name {
-                return self.attribute_values[i] as GLuint;
-            }
-        }
-        0
-    }*/
-
     fn get_uniform_location(&self, unif_name: &str) -> GLint { // this needs to be int but attribs need uint!!
         for i in 0..self.uniform_names.len() {
             if self.uniform_names[i] == unif_name {
@@ -76,7 +67,6 @@ impl Buffer {
     }
 
     pub fn set_shader(&mut self, shader_program: &::shader::Program) {
-        //self.shader_program = shader_program;
         self.shader_id = shader_program.id();
         self.attribute_names = shader_program.attribute_names();
         self.attribute_values = shader_program.attribute_values();
@@ -89,8 +79,6 @@ impl Buffer {
     }
 
     pub fn set_material(&mut self, material: &[f32]) {
-        //self.unib.slice_mut(s![1, 0..3]).assign(&nd::arr1(&material[0..3]));
-        //or
         for i in 0..3 {self.unib[[1, i]] = material[i];}
     }
 

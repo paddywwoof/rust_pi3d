@@ -67,7 +67,7 @@ pub fn create_from_array(image: nd::Array3<u8>) -> Texture {
 }
 
 pub fn create_from_file(disp: &::display::Display, name: &str) -> Texture {
-    let mut im = image::open(disp.res.resource_name_to_path(name)).unwrap();
+    let im = image::open(disp.res.resource_name_to_path(name)).unwrap();
     let (w, h) = im.dimensions();
     let c_type: usize = match im.color() {
         image::ColorType::Gray(_u8) => 1,
@@ -76,6 +76,6 @@ pub fn create_from_file(disp: &::display::Display, name: &str) -> Texture {
         image::ColorType::RGBA(_u8) => 4,
         _ => 4, // TODO catch unrecognised types, need to cope with indexed
     };
-    let mut image = nd::Array::from_shape_vec((h as usize, w as usize, c_type), im.raw_pixels()).unwrap();
+    let image = nd::Array::from_shape_vec((h as usize, w as usize, c_type), im.raw_pixels()).unwrap();
     create_from_array(image)
 }
