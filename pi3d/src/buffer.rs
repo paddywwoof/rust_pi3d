@@ -175,7 +175,7 @@ pub fn create(shader_program: &::shader::Program, verts: nd::Array2<f32>,
     }
 
     Buffer {
-        unib: nd::arr2(&[[0.0, 0.0, 0.0],  //00 ntile, shiny, blend
+        unib: nd::arr2(&[[0.0, 0.0, 0.6],  //00 ntile, shiny, blend
                          [0.5, 0.5, 0.5],  //01 material RGB
                          [1.0, 1.0, 0.0],  //02 umult, vmult, point_size
                          [0.0, 0.0, 1.0]]),//03 u_off, v_off, line_width/bump
