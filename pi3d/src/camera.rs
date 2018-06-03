@@ -60,6 +60,10 @@ impl Camera {
         self.reset();
     }
 
+    pub fn set_absolute(&mut self, absolute: bool) {
+        self.absolute = absolute;
+    }
+
     pub fn get_direction(&mut self) -> [f32; 3] {
         if !self.rotated {
             self.make_r_mtrx();

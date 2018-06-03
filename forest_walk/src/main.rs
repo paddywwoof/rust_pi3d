@@ -1,6 +1,7 @@
 extern crate pi3d;
 extern crate sdl2;
 use sdl2::keyboard::Keycode;
+use std::time::Instant;
 
 fn main() {
     // setup display
@@ -15,6 +16,7 @@ fn main() {
 
     // camera
     let mut camera = pi3d::camera::create(&display);
+    camera.set_absolute(false);
 
     // textures
     let tree2img = pi3d::texture::create_from_file(&display, "textures/tree2.png");
@@ -72,7 +74,7 @@ fn main() {
 
     let mut mytrees3 = pi3d::shapes::merge_shape::create();
     pi3d::shapes::merge_shape::cluster(&mut mytrees3, &treemodel2, &mymap, 0.0, 0.0,
-            300.0, 300.0, 2.0, 4.0, 20);
+            300.0, 300.0, 6.0, 10.0, 20);
     mytrees3.set_draw_details(&flatsh, &vec![hb2img.id], 0.0, 0.0, 1.0, 1.0, 1.0);
     mytrees3.set_fog(&t_fog_shade, t_fog_dist, t_fog_alpha);
 
@@ -94,7 +96,12 @@ fn main() {
     let mut ds:f32 = 0.0;
     let mut rot: f32 = 0.0;
     let mut tilt: f32 = 0.0;
+    let mut frames: f32 = 0.0;
+    let start = Instant::now();
+    let mut mouse_x: f32 = 0.0;
+    let mut mouse_y: f32 = 0.0;
     while display.loop_running() {
+        frames += 1.0;
         monument.draw(&mut camera);
         mymap.draw(&mut camera);
         if x.abs() > 300.0 {
@@ -118,8 +125,13 @@ fn main() {
         
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.mouse_moved {
-            tilt = (display.mouse_y as f32 - 300.0) * -0.01;
-            rot = (display.mouse_x as f32 - 400.0) * -0.01;
+            tilt = (mouse_y - display.mouse_y as f32) * 0.002;
+            rot = (mouse_x - display.mouse_x as f32) * 0.002;
+            mouse_x = display.mouse_x as f32;
+            mouse_y = display.mouse_y as f32;
+        } else {
+            tilt = 0.0;
+            rot = 0.0;
         }
         if display.keys_pressed.contains(&Keycode::W) {df = 1.25}
         if display.keys_pressed.contains(&Keycode::S) {df = -0.25;}
@@ -141,4 +153,5 @@ fn main() {
         x = (mapsize + (x + halfsize) % mapsize) % mapsize - halfsize; // wrap location to stay on map -500 to +500
         z = (mapsize + (z + halfsize) % mapsize) % mapsize - halfsize; // bonkers not to use python style modulo
     }
+    println!("{:?} FPS", frames / start.elapsed().as_secs() as f32);
 }

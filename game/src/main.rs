@@ -1,6 +1,7 @@
 extern crate pi3d;
 extern crate sdl2;
 use sdl2::keyboard::Keycode;
+use std::time;
 
 fn main() {
     let mut display = pi3d::display::create("experimental window", 1200.0, 960.0);
@@ -66,7 +67,10 @@ fn main() {
     let mut ds:f32 = 0.01;
     let mut rot: f32 = 0.0;
     let mut tilt: f32 = 0.0;
+    let mut frames: f32 = 0.0;
+    let start = time::Instant::now();
     while display.loop_running() {
+        frames += 1.0;
         t += 0.02;
 
         cube2.children[0].rotate_inc_y(0.01);
@@ -114,4 +118,5 @@ fn main() {
         }
         ds = 0.0;
     }
+    println!("{:?} FPS", frames / start.elapsed().as_secs() as f32);
 }
