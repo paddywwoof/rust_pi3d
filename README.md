@@ -1,38 +1,35 @@
 # rust_pi3d
 translation of pi3d from python to rust
 
-My obective is to break the different parts of the tutorial from
+Following parts of the tutorial:
 http://nercury.github.io/rust/opengl/tutorial/2018/02/08/opengl-in-rust-from-scratch-01-window.html
-into a module called pi3d so I can do something like::
+I have started the process of making a rust version of the python pi3d
+module.
 
-    extern crate pi3d;
+As at commit 908064 most of the functionality is in place to get demos such
+as ForestWalk working.
 
-    fn main {
-        let mut display = pi3d::display::create("experimental window");
-        let shader_program = pi3d::shader::Program::from_res(
-              &display, "shaders/triangle").unwrap();
-        let mut cube = pi3d::shape::cuboid(0.2, 0.7, 0.4);
-        cube.set_shader(&shader_program);
-        cube.position_z(0.5);
+TODO::
 
-        let mut cube2 = pi3d::shape::cuboid(0.8, 0.6, 0.5);
-        cube2.set_shader(&shader_program);
-        cube2.position_z(0.6);
+    installation, requirements and compile instructions on here!
 
-        let mut t: f32 = 0.0;
+    Fonts and lettering.
 
-        while display.loop_running() {
-            t += 0.02;
-            cube.rotate_inc_x(0.01);
-            cube.rotate_inc_y(0.0173);
-            cube.rotate_inc_z(0.031);
-            cube.position_x(t * 0.087 % 2.2 - 1.1);
-            cube.position_y(t * 0.12 % 1.98 - 0.9);
+    error and failure handling. Many functions need to return a Result<..>
+    wrapper around whatever they are supposed to do.
 
-            cube.draw();
-        }
-    }
+    Texture blender option (lower alpha to drop pixel)
 
-As at commit dc84106 this is now working but it needs a fair bit of additional
-functionality putting in. Specifically the camera, texture and light components
-are empty!
+    Find out why last value of array_buffer is always set to zero (i.e.
+    why a sacrificial extra one needs to be added)
+
+    Mouse buttons
+
+    Offscreen textures, screen capture and post processing
+
+    Lifetimes and controlled deletion of Shaders and Programs.
+
+    More elaborate Camera functions.
+
+    Other Texture types i.e. different internal storage modes supported
+    by OpenGL

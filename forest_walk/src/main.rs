@@ -37,6 +37,7 @@ fn main() {
 
     // elevation map
     let mapsize = 1000.0;
+    let halfsize = mapsize * 0.5;
     let mountimg1 = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
     let mut mymap = pi3d::shapes::elevation_map::create(&display, "textures/mountainsHgt.png",
                                 mapsize, mapsize, 60.0, 32, 32, 1.0, "nothing");
@@ -104,11 +105,11 @@ fn main() {
         frames += 1.0;
         monument.draw(&mut camera);
         mymap.draw(&mut camera);
-        if x.abs() > 300.0 {
+        if x.abs() > 300.0 { // draw tiled maps
             mymap.position(&[mapsize * x.signum(), 0.0, 0.0]);
             mymap.draw(&mut camera);
         }
-        if z.abs() > 300.9 {
+        if z.abs() > 300.0 {
             mymap.position(&[ 0.0, 0.0, mapsize * z.signum()]);
             mymap.draw(&mut camera);
             if x.abs() > 300.0 {
@@ -149,9 +150,12 @@ fn main() {
         df = 0.0;
         ds = 0.0;
         
-        let halfsize = mapsize / 2.0;
-        x = (mapsize + (x + halfsize) % mapsize) % mapsize - halfsize; // wrap location to stay on map -500 to +500
-        z = (mapsize + (z + halfsize) % mapsize) % mapsize - halfsize; // bonkers not to use python style modulo
+        if x.abs() >= halfsize { //TODO what causes momentary limbo crossing border?
+            x -= x.signum() * mapsize;
+        }
+        if z.abs() >= halfsize {
+            z -= z.signum() * mapsize;
+        }
     }
     println!("{:?} FPS", frames / start.elapsed().as_secs() as f32);
 }
