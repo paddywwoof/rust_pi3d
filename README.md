@@ -46,28 +46,28 @@ but I've not tried that. (Let me know if you do and what the problems are).
 
 TODO::
 
-    ~~installation, requirements and compile instructions on here!~~
+~~installation, requirements and compile instructions on here!~~
 
-    build script to copy support files (images, models, fonts etc) to target
-    directory
+build script to copy support files (images, models, fonts etc) to target
+directory
 
-    ~~Fonts and lettering.~~
+~~Fonts and lettering.~~
 
-    error and failure handling. Many functions need to return a Result<..>
-    wrapper around whatever they are supposed to do.
+error and failure handling. Many functions need to return a Result<..>
+wrapper around whatever they are supposed to do.
 
-    ~~Texture blender option (lower alpha to drop pixel)~~
+~~Texture blender option (lower alpha to drop pixel)~~
 
-    Find out why last value of array_buffer is always set to zero (i.e.
-    why a sacrificial extra one needs to be added)
+Find out why last value of array_buffer is always set to zero (i.e.
+why a sacrificial extra one needs to be added)
 
-    Mouse buttons
+Mouse buttons
 
-    Offscreen textures, screen capture and post processing
+Offscreen textures, screen capture and post processing
 
-    Lifetimes and controlled deletion of Shaders and Programs.
+Lifetimes and controlled deletion of Shaders and Programs.
 
-    More elaborate Camera functions.
+More elaborate Camera functions.
 
-    Other Texture types i.e. different internal storage modes supported
-    by OpenGL
+Other Texture types i.e. different internal storage modes supported
+by OpenGL
