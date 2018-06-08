@@ -6,19 +6,57 @@ http://nercury.github.io/rust/opengl/tutorial/2018/02/08/opengl-in-rust-from-scr
 I have started the process of making a rust version of the python pi3d
 module.
 
-As at commit 908064 most of the functionality is in place to get demos such
+As at commit 12c692f most of the functionality is in place to get demos such
 as ForestWalk working.
+
+*Installation*
+
+For this to work you need to install rust. Basically follow the instructions
+here https://www.rust-lang.org/en-US/install.html It seems to be reasonably
+fool proof though I've not tried it on Windows yet.
+
+You also need to have SDL2 running. On linux it's pretty easy using
+
+```sh
+patrick@thiscomputer:~/rust/rust_pi3d$ sudo apt-get install libsdl2-dev
+```
+
+See the tutorial link at the top or the rust sdl2 crate site for what to
+do for windows.
+
+Then in the terminal navigate to wherever you cloned or extracted this
+repo and build the executables using cargo, and run them like this:
+
+```sh
+patrick@thiscomputer:~/rust/rust_pi3d$ cargo build --release
+patrick@thiscomputer:~/rust/rust_pi3d$ target/release/game
+patrick@thiscomputer:~/rust/rust_pi3d$ target/release/forest_walk
+```
+
+Building for release will take longer and exclude debugging symbols etc but
+run faster (obviously) and will be much smaller. If you want to build for
+debug (probably sensible) exclude the `--release`. However if you do this
+the required support files in `target/release/textures`, `models`, `ecubes`
+and `fonts` will have to be copied into the `target/debug/` directory.
+
+On the Raspberry Pi the OpenGL used by default SDL2 won't work unless you use
+raspi-config and switch the graphics driver to the new experimental one.
+It should be possible to compile SDL2 to use the built in Broadcom drivers
+but I've not tried that. (Let me know if you do and what the problems are).
 
 TODO::
 
-    installation, requirements and compile instructions on here!
+    ~~installation, requirements and compile instructions on here!~~
 
-    Fonts and lettering.
+    build script to copy support files (images, models, fonts etc) to target
+    directory
+
+    ~~Fonts and lettering.~~
 
     error and failure handling. Many functions need to return a Result<..>
     wrapper around whatever they are supposed to do.
 
-    Texture blender option (lower alpha to drop pixel)
+    ~~Texture blender option (lower alpha to drop pixel)~~
 
     Find out why last value of array_buffer is always set to zero (i.e.
     why a sacrificial extra one needs to be added)
