@@ -62,7 +62,6 @@ pub fn create(disp: &::display::Display, size: f32, stem: &str, suffix: &str)
     for i in 0..bufs.len() {
         //let path_str = path_buf.to_str().unwrap();
         let fname = format!("{}_{}.{}", &stem, &parts[i], &suffix);
-        println!("{}", &fname);
         tex_list.push(::texture::create_from_file(disp,
                         &fname));
         bufs[i].set_textures(&vec![tex_list[i].id]);

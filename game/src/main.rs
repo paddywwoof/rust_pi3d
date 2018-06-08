@@ -4,7 +4,7 @@ use sdl2::keyboard::Keycode;
 use std::time;
 
 fn main() {
-    let mut display = pi3d::display::create("experimental window", 1200.0, 960.0);
+    let mut display = pi3d::display::create("experimental window", 960.0, 960.0);
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
     display.set_mouse_relative(true);
     let shader_program = pi3d::shader::Program::from_res(
@@ -12,11 +12,21 @@ fn main() {
     let flatsh = pi3d::shader::Program::from_res(
           &display, "uv_flat").unwrap();
     let mut camera = pi3d::camera::create(&display);
+
     let tex = pi3d::texture::create_from_file(&display, "textures/pattern.png");
     let maptex = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
     let mapnorm = pi3d::texture::create_from_file(&display, "textures/grasstile_n.jpg");
     let stars = pi3d::texture::create_from_file(&display, "textures/stars.jpg");
-
+    let myfont = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "", 48.0);
+    let mut mystring = pi3d::shapes::string::create(&myfont, "\"The quick brown
+fox `jumps`
+over the !azy
+dog\"", 0.0);
+    mystring.set_shader(&flatsh);
+    mystring.position_z(2.0);
+    let mut camera2d = pi3d::camera::create(&display);
+    camera2d.set_3d(false);
+    
     let mut candlestick = pi3d::shapes::lathe::create(vec![[0.0, 2.0], [0.1, 1.8], [0.1, 1.2],
             [0.5, 1.0], [0.6, 0.6], [0.2, 0.5], [0.2, 0.2], [1.0, 0.1], [1.2, -0.3], [0.0, -2.0]],
             144, 0.0, 1.0);
@@ -95,6 +105,7 @@ fn main() {
         map.draw(&mut camera);
         iss.draw(&mut camera);
         clust.draw(&mut camera);
+        mystring.draw(&mut camera2d);
 
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.keys_down.contains(&Keycode::A) {cube2.offset(&[t % 3.0, 0.0, 0.0]);}

@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "pi3d",
+    "game",
+    "forest_walk",
+]

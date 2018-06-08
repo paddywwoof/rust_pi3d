@@ -2,6 +2,8 @@
 extern crate ndarray;
 extern crate gl;
 extern crate image;
+extern crate rusttype;
+
 
 pub mod buffer;
 pub mod camera;

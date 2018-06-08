@@ -162,6 +162,12 @@ impl Shape {
         self.unif[[5, 1]] = alpha;
     }
 
+    pub fn set_blend(&mut self, blend: bool) {
+        for i in 0..self.buf.len() {
+            self.buf[i].set_blend(blend);
+        }
+    }
+
     pub fn add_child(&mut self, child: ::shape::Shape) {
         self.children.push(child);
     }

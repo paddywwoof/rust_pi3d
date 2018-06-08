@@ -49,9 +49,8 @@ impl Buffer {
                 gl::Uniform1i(self.get_uniform_location(&format!("tex{}\0", i)),
                     i as GLint);
             }
-
-            // finally draw it TODO gl::TRANGLES should be variable lines or points
-            gl::DrawElements(self.draw_method, self.element_array_buffer.len() as GLsizei, gl::UNSIGNED_SHORT, 0 as *const GLvoid);
+            gl::DrawElements(self.draw_method, self.element_array_buffer.len() as GLsizei,
+                                gl::UNSIGNED_SHORT, 0 as *const GLvoid);
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
         }
@@ -113,6 +112,45 @@ impl Buffer {
                                 } else {gl::LINES}
                             } else {gl::TRIANGLES};
     }
+
+    pub fn set_blend(&mut self, blend: bool) { // logically Buffer holds blend status not Texture
+        self.unib[[0, 2]] = if blend {0.05} else {0.6};
+    }
+
+    /// select buffers
+    ///
+    fn select(&mut self) {
+        unsafe {
+            gl::BindBuffer(gl::ARRAY_BUFFER, self.arr_b);
+            gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, self.ear_b);
+        }
+    }
+
+    /// load opengl buffers
+    ///
+    pub fn load_opengl(&mut self) {
+        unsafe {
+        gl::BufferData(
+          gl::ARRAY_BUFFER, (self.array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
+          //TODO why does the last value (tex_coord) get set to 0.0?
+          self.array_buffer.as_ptr() as *const GLvoid, gl::DYNAMIC_DRAW);
+        gl::BufferData(
+          gl::ELEMENT_ARRAY_BUFFER, (self.element_array_buffer.len() * std::mem::size_of::<u16>()) as GLsizeiptr,
+          self.element_array_buffer.as_ptr() as *const GLvoid, gl::STATIC_DRAW);
+        }
+    }
+
+    /// update array_buffer in place
+    ///
+    pub fn re_init(&mut self) {
+        //self.load_opengl() # has to be called prior to _select
+        self.select();
+        unsafe {
+            gl::BufferSubData(gl::ARRAY_BUFFER, 0 as GLintptr,
+                      (self.array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
+                      self.array_buffer.as_ptr() as *const GLvoid);
+        }
+    }
 }
 
 impl Drop for Buffer {
@@ -160,21 +198,10 @@ pub fn create(shader_program: &::shader::Program, verts: nd::Array2<f32>,
     let mut ear_b: GLuint = 0;
     unsafe {
         gl::GenBuffers(1, &mut arr_b);
-        gl::BindBuffer(gl::ARRAY_BUFFER, arr_b);
-        gl::BufferData(
-          gl::ARRAY_BUFFER, (array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
-          //TODO why does the last value (tex_coord) get set to 0.0?
-          array_buffer.as_ptr() as *const GLvoid, gl::DYNAMIC_DRAW);
-        gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-
         gl::GenBuffers(1, &mut ear_b);
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ear_b);
-        gl::BufferData(
-          gl::ELEMENT_ARRAY_BUFFER, (element_array_buffer.len() * std::mem::size_of::<u16>()) as GLsizeiptr,
-          element_array_buffer.as_ptr() as *const GLvoid, gl::STATIC_DRAW);
     }
 
-    Buffer {
+    let mut buf = Buffer {
         unib: nd::arr2(&[[0.0, 0.0, 0.6],  //00 ntile, shiny, blend
                          [0.5, 0.5, 0.5],  //01 material RGB
                          [1.0, 1.0, 0.0],  //02 umult, vmult, point_size
@@ -192,11 +219,14 @@ pub fn create(shader_program: &::shader::Program, verts: nd::Array2<f32>,
         stride: stride,
         textures: vec![],
         draw_method: gl::TRIANGLES,
-    }
+    };
+    buf.select();
+    buf.load_opengl();
+    buf
 }
 
 pub fn create_empty() -> Buffer {
-    create(&::shader::Program::new(), //TODO put this in own fn
+    create(&::shader::Program::new(),
                     nd::Array2::<f32>::zeros((0, 3)),
                     nd::Array2::<f32>::zeros((0, 3)),
                     nd::Array2::<f32>::zeros((0, 2)),

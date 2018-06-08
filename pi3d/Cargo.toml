@@ -4,8 +4,9 @@ version = "0.1.0"
 authors = ["paddywwof <patrick@eldwick.org.uk>"]
 
 [dependencies]
-sdl2 = "0.31.0"
-gl = "0.10.0"
+sdl2 = "0.31"
+gl = "0.10"
 ndarray = "0.11"
-image = "0.19.0"
-rand = "0.5"
+image = "0.19"
+rand = "0.4.2"
+rusttype = "0.6"

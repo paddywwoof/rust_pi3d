@@ -8,3 +8,4 @@ pub mod merge_shape;
 pub mod model_obj;
 pub mod plane;
 pub mod sphere;
+pub mod string;

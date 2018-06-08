@@ -44,7 +44,7 @@ impl Texture {
 
 impl Drop for Texture {
     fn drop(&mut self) {
-        println!("deleting texture {:?}", self.id);
+        print!("-tex{:?} ", self.id);
         unsafe {
             gl::BindTexture(gl::TEXTURE, 0);
             gl::DeleteTextures(1, &self.id);
