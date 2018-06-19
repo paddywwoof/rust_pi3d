@@ -84,7 +84,8 @@ void main(void) {
 }",
 
 
-            "//mat_flat.fs
+"#version 120
+            //mat_flat.fs
 #include std_head_fs.inc
 
 void main(void) {
@@ -96,7 +97,8 @@ void main(void) {
 ",
 
 
-            "//mat_flat.vs
+"#version 120
+            //mat_flat.vs
 #include std_head_vs.inc
 
 void main(void) {
@@ -143,7 +145,8 @@ void main(void) {
 }",
 
 
-            "//mat_pointsprite.fs
+"#version 120
+            //mat_pointsprite.fs
 uniform vec3 unib[4];
 //uniform float hardness => unib[0][0]
 //uniform float discard => unib[0][2]
@@ -159,7 +162,8 @@ void main(void) {
 ",
 
 
-            "//mat_pointsprite.vs
+"#version 120
+            //mat_pointsprite.vs
 attribute vec3 vertex;
 attribute vec3 normal;
 attribute vec2 texcoord;
@@ -174,7 +178,7 @@ varying vec4 colour;
 
 void main(void) {
   gl_Position = modelviewmatrix[1] * vec4(vertex,1.0);
-  gl_PointSize = unib[2][2] * fract(vertex[2]);
+  gl_PointSize = unib[2][2];// * fract(vertex[2]);
   colour = vec4(normal[0], normal[1], normal[2], texcoord[0]);
 }
 ",
@@ -528,7 +532,8 @@ void main(void) {
 ",
 
 
-            "//uv_pointsprite.fs
+"#version 120
+            ////uv_pointsprite.fs
 uniform sampler2D tex0;
 uniform vec3 unib[4];
 
@@ -553,7 +558,8 @@ void main(void) {
 }",
 
 
-            "//uv_pointsprite.vs
+"#version 120
+            //uv_pointsprite.vs
 attribute vec3 vertex;
 attribute vec3 normal;
 attribute vec2 texcoord;

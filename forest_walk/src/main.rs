@@ -95,8 +95,8 @@ fn main() {
     let mut z: f32 = -0.1;
     let mut df:f32 = 0.01;
     let mut ds:f32 = 0.0;
-    let mut rot: f32 = 0.0;
-    let mut tilt: f32 = 0.0;
+    let mut rot: f32;
+    let mut tilt: f32;
     let mut frames: f32 = 0.0;
     let start = Instant::now();
     let mut mouse_x: f32 = 0.0;

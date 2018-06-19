@@ -1,5 +1,6 @@
 extern crate pi3d;
 extern crate sdl2;
+extern crate rand;
 use sdl2::keyboard::Keycode;
 use std::time;
 
@@ -97,6 +98,11 @@ dog\"", 0.0);
 
         iss.rotate_inc_y(0.01);
         iss.rotate_inc_x(0.007);
+
+        for i in 0..clust.buf[0].array_buffer.shape()[0] {
+            clust.buf[0].array_buffer[[i, 1]] *= 0.9995 + 0.001 * rand::random::<f32>();
+        }
+        clust.buf[0].re_init();
 
         ecube.draw(&mut camera);
         cube2.draw(&mut camera);

@@ -13,14 +13,15 @@ pub struct GlyphTable {
     pub h: f32,
     pub uv: [[f32; 2]; 4],
     pub verts: [[f32; 3]; 4],
-    x: f32, //
-    y: f32,
+    pub x: f32, //
+    pub y: f32,
 }
 
 pub struct TextureFont {
     pub tex: ::texture::Texture,
     pub glyph_table: HashMap<char, GlyphTable>,
     pub height: f32,
+    pub size: f32,
 }
 
 pub fn create(disp: &::display::Display, file_name: &str, glyphs: &str,
@@ -95,9 +96,10 @@ pub fn create(disp: &::display::Display, file_name: &str, glyphs: &str,
     }
     let tex = ::texture::create_from_array(image);
     TextureFont {
-        tex: tex,
-        glyph_table: glyph_table,
+        tex,
+        glyph_table,
         height: v_step,
+        size,
     }
 }
 
