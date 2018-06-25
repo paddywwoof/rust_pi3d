@@ -2,26 +2,29 @@ extern crate pi3d;
 extern crate sdl2;
 extern crate rand;
 use sdl2::keyboard::Keycode;
-use std::time;
+
+const W:f32 = 960.0;
+const H:f32 = 960.0;
 
 fn main() {
-    let mut display = pi3d::display::create("experimental window", 960.0, 960.0);
+    let mut display = pi3d::display::create("experimental window", W, H);
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
     display.set_mouse_relative(true);
-    let shader_program = pi3d::shader::Program::from_res(
-          &display, "uv_reflect").unwrap();
-    let flatsh = pi3d::shader::Program::from_res(
-          &display, "uv_flat").unwrap();
+    let shader_program = pi3d::shader::Program::from_res(&display, "uv_reflect").unwrap();
+    let flatsh = pi3d::shader::Program::from_res(&display, "uv_flat").unwrap();
+    let textsh = pi3d::shader::Program::from_res(&display, "uv_pointsprite").unwrap();
     let mut camera = pi3d::camera::create(&display);
+    let mut camera2d = pi3d::camera::create(&display);
+    camera2d.set_3d(false);
 
     let tex = pi3d::texture::create_from_file(&display, "textures/pattern.png");
     let maptex = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
     let mapnorm = pi3d::texture::create_from_file(&display, "textures/grasstile_n.jpg");
     let stars = pi3d::texture::create_from_file(&display, "textures/stars.jpg");
-    let myfont = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "", 48.0);
-    let mut mystring = pi3d::shapes::string::create(&myfont, "\"The quick brown
+    let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "ęĻ", 64.0);
+    let mut mystring = pi3d::shapes::string::create(&font, "\"The quick brown
 fox `jumps`
-over the !azy
+over thę Ļazy
 dog\"", 0.0);
     mystring.set_shader(&flatsh);
     mystring.position_z(2.0);
@@ -71,6 +74,11 @@ dog\"", 0.0);
                 "ecubes/miramar_256", "png");
     ecube.set_shader(&flatsh);
 
+    // fps counter
+    let mut fps_text = pi3d::shapes::point_text::create(&font, 20, 24.0);
+    fps_text.set_shader(&textsh);
+    let fps_blk = fps_text.add_text_block(&font, &[-W * 0.5 + 20.0, -H * 0.5 + 20.0, 0.1], 19, "00.0 FPS");
+
     let mut t: f32 = 0.0;
     let mut x: f32 = 0.0;
     let mut y: f32 = 0.0;
@@ -78,10 +86,8 @@ dog\"", 0.0);
     let mut ds:f32 = 0.01;
     let mut rot: f32 = 0.0;
     let mut tilt: f32 = 0.0;
-    let mut frames: f32 = 0.0;
-    let start = time::Instant::now();
+
     while display.loop_running() {
-        frames += 1.0;
         t += 0.02;
 
         cube2.children[0].rotate_inc_y(0.01);
@@ -112,6 +118,8 @@ dog\"", 0.0);
         iss.draw(&mut camera);
         clust.draw(&mut camera);
         mystring.draw(&mut camera2d);
+        fps_text.set_text(&font, fps_blk, &format!("{:5.1} FPS", display.fps));
+        fps_text.draw(&mut camera2d);
 
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.keys_down.contains(&Keycode::A) {cube2.offset(&[t % 3.0, 0.0, 0.0]);}
@@ -135,5 +143,4 @@ dog\"", 0.0);
         }
         ds = 0.0;
     }
-    println!("{:?} FPS", frames / start.elapsed().as_secs() as f32);
 }

@@ -1,11 +1,13 @@
 extern crate pi3d;
 extern crate sdl2;
 use sdl2::keyboard::Keycode;
-use std::time::Instant;
+
+const W:f32 = 800.0;
+const H:f32 = 600.0;
 
 fn main() {
     // setup display
-    let mut display = pi3d::display::create("experimental window", 800.0, 600.0);
+    let mut display = pi3d::display::create("experimental window", W, H);
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
     display.set_mouse_relative(true);
 
@@ -13,10 +15,13 @@ fn main() {
     let shader = pi3d::shader::Program::from_res(&display, "uv_bump").unwrap();
     let shinesh = pi3d::shader::Program::from_res(&display, "uv_reflect").unwrap();
     let flatsh = pi3d::shader::Program::from_res(&display, "uv_flat").unwrap();
+    let textsh = pi3d::shader::Program::from_res(&display, "uv_pointsprite").unwrap();
 
-    // camera
+    // cameras
     let mut camera = pi3d::camera::create(&display);
     camera.set_absolute(false);
+    let mut camera2d = pi3d::camera::create(&display);
+    camera2d.set_3d(false);
 
     // textures
     let tree2img = pi3d::texture::create_from_file(&display, "textures/tree2.png");
@@ -87,8 +92,13 @@ fn main() {
     let (ht, _norm) = pi3d::shapes::elevation_map::calc_height(&mymap, 100.0, 245.0);
     monument.position(&[100.0, ht + 1.0, 245.0]);
     monument.scale(&[20.0, 20.0, 20.0]);
-    monument.rotate_to_y(1.1); 
+    monument.rotate_to_y(1.1);
 
+    // fps counter
+    let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "", 64.0);
+    let mut fps_text = pi3d::shapes::point_text::create(&font, 20, 24.0);
+    fps_text.set_shader(&textsh);
+    let fps_blk = fps_text.add_text_block(&font, &[-W * 0.5 + 20.0, -H * 0.5 + 20.0, 0.1], 19, "00.0 FPS");
 
     let mut x: f32 = 0.0;
     let mut y: f32 = 0.0;
@@ -97,12 +107,9 @@ fn main() {
     let mut ds:f32 = 0.0;
     let mut rot: f32;
     let mut tilt: f32;
-    let mut frames: f32 = 0.0;
-    let start = Instant::now();
     let mut mouse_x: f32 = 0.0;
     let mut mouse_y: f32 = 0.0;
     while display.loop_running() {
-        frames += 1.0;
         monument.draw(&mut camera);
         mymap.draw(&mut camera);
         if x.abs() > 300.0 { // draw tiled maps
@@ -123,6 +130,8 @@ fn main() {
         mytrees1.draw(&mut camera);
         mytrees2.draw(&mut camera);
         mytrees3.draw(&mut camera);
+        fps_text.set_text(&font, fps_blk, &format!("{:5.1} FPS", display.fps));
+        fps_text.draw(&mut camera2d);
         
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.mouse_moved {
@@ -157,5 +166,5 @@ fn main() {
             z -= z.signum() * mapsize;
         }
     }
-    println!("{:?} FPS", frames / start.elapsed().as_secs() as f32);
+    println!("{:?} FPS", display.fps);
 }

@@ -12,7 +12,6 @@ pub struct TextBlock {
     rgba: [f32; 4],
     justification: f32,
     start: usize,
-    changed: bool,
 }
 
 pub struct PointText {
@@ -50,7 +49,6 @@ impl PointText {
             rgba: [0.999; 4],
             justification: 0.0,
             start,
-            changed: false,
         };
         self.blocks.push(new_block);
         let block_id = self.blocks.len() - 1;

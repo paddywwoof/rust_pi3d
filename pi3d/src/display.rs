@@ -3,6 +3,9 @@ extern crate gl;
 
 use std;
 use gl::types::*;
+use std::time::Instant;
+
+const FRAMES: u32 = 50;
 
 pub struct Display {
     pub res: ::util::resources::Resources,
@@ -21,10 +24,21 @@ pub struct Display {
     pub mouse_x: i32,
     pub mouse_y: i32,
     mouse_relative: bool,
+    start: Instant,
+    frame_count: u32,
+    pub fps: f32,
 }
 
 impl Display {
     pub fn loop_running(&mut self) -> bool {
+        self.frame_count += 1;
+        if self.frame_count >= FRAMES {
+            let del = self.start.elapsed();
+            self.fps = self.frame_count as f32 /
+                (del.as_secs() as f32 + del.subsec_nanos()  as f32 * 1e-9);
+            self.start = Instant::now();
+            self.frame_count = 0;
+        }
         self.window.gl_swap_window();
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
@@ -89,7 +103,7 @@ impl Display {
     }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
-pub fn create(name: &str, w: f32, h: f32) -> Display {
+pub fn create(name: &str, width: f32, height: f32) -> Display {
     let res = ::util::resources::from_exe_path().unwrap();
     let sdl = sdl2::init().unwrap();
     let video_subsystem = sdl.video().unwrap();
@@ -97,13 +111,13 @@ pub fn create(name: &str, w: f32, h: f32) -> Display {
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(2, 1);
     let window = video_subsystem
-        .window(name, w as u32, h as u32)
+        .window(name, width as u32, height as u32)
         .opengl().resizable()
         .build().unwrap();
-    let gl_context = window.gl_create_context().unwrap();
+    let _gl_context = window.gl_create_context().unwrap();
     let _gl = gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
     unsafe {
-        gl::Viewport(0, 0, w as GLsizei, h as GLsizei);
+        gl::Viewport(0, 0, width as GLsizei, height as GLsizei);
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
         gl::DepthRangef(0.0, 1.0);
         gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
@@ -120,13 +134,13 @@ pub fn create(name: &str, w: f32, h: f32) -> Display {
     }
 
     Display {
-        res: res,
-        window: window,
+        res,
+        window,
         event_pump: sdl.event_pump().unwrap(),
-        sdl: sdl,
-        _gl_context: gl_context,
-        width: w,
-        height: h,
+        sdl,
+        _gl_context,
+        width,
+        height,
         near: 1.0,
         far: 1000.0,
         fov: 45.0,
@@ -136,5 +150,8 @@ pub fn create(name: &str, w: f32, h: f32) -> Display {
         mouse_x: 0,
         mouse_y: 0,
         mouse_relative: true,
+        start: Instant::now(),
+        frame_count: 0,
+        fps: 0.0,
     }
 }
