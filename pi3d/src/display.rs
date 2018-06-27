@@ -26,7 +26,7 @@ pub struct Display {
     mouse_relative: bool,
     start: Instant,
     frame_count: u32,
-    pub fps: f32,
+    fps: f32,
 }
 
 impl Display {
@@ -100,6 +100,10 @@ impl Display {
 
     pub fn set_mouse_relative(&mut self, mode: bool) {
         self.sdl.mouse().set_relative_mouse_mode(mode);
+    }
+
+    pub fn fps(&mut self) -> f32 {
+        self.fps
     }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 

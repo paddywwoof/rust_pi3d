@@ -130,7 +130,7 @@ fn main() {
         mytrees1.draw(&mut camera);
         mytrees2.draw(&mut camera);
         mytrees3.draw(&mut camera);
-        fps_text.set_text(&font, fps_blk, &format!("{:5.1} FPS", display.fps));
+        fps_text.set_text(&font, fps_blk, &format!("{:5.1} FPS", display.fps()));
         fps_text.draw(&mut camera2d);
         
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
@@ -166,5 +166,4 @@ fn main() {
             z -= z.signum() * mapsize;
         }
     }
-    println!("{:?} FPS", display.fps);
 }

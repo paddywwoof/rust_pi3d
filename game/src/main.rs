@@ -118,7 +118,7 @@ dog\"", 0.0);
         iss.draw(&mut camera);
         clust.draw(&mut camera);
         mystring.draw(&mut camera2d);
-        fps_text.set_text(&font, fps_blk, &format!("{:5.1} FPS", display.fps));
+        fps_text.set_text(&font, fps_blk, &format!("{:5.1} FPS", display.fps()));
         fps_text.draw(&mut camera2d);
 
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
