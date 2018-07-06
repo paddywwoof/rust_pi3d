@@ -178,11 +178,11 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
             }
         }
         // finally add a sacrificial line TODO, this could be done in buffer
-        for vi in 0..3 {
+        for _vi in 0..3 {
             m_vertices.push(0.0);
             m_normals.push(0.0);
         }
-        for vi in 0..2 {
+        for _vi in 0..2 {
             m_tex_coords.push(0.0);
         }
 
