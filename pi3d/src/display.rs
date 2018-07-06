@@ -32,13 +32,13 @@ pub struct Display {
 
 impl Display {
     pub fn loop_running(&mut self) -> bool {
-        let mut del = self.start.elapsed().subsec_nanos();
+        let mut del = self.start.elapsed().subsec_micros();
         if del < self.target_frame_tm {
-            let delay = Duration::from_nanos((self.target_frame_tm - del) as u64);
+            let delay = Duration::from_micros((self.target_frame_tm - del) as u64);
             sleep(delay);
             del = self.target_frame_tm;
         }
-        self.fps = self.fps * 0.99 + 1e7 / del as f32; // bit of smoothing
+        self.fps = self.fps * 0.99 + 1e4 / del as f32; // bit of smoothing 1e6 * 0.01
         self.start = Instant::now();
         self.window.gl_swap_window();
         unsafe {
@@ -104,8 +104,8 @@ impl Display {
     }
 
     pub fn set_target_fps(&mut self, target_fps: f32) {
-        self.target_frame_tm = if target_fps > 1.0 {1000000000 / target_fps as u32
-                                            } else {99999999};
+        self.target_frame_tm = if target_fps > 1.0 {1000000 / target_fps as u32
+                                            } else {999999};
     }
 
     pub fn fps(&mut self) -> f32 {
@@ -164,6 +164,6 @@ pub fn create(name: &str, width: f32, height: f32) -> Display {
         mouse_relative: true,
         start: Instant::now(),
         fps: 0.0,
-        target_frame_tm: 20000000, //ns -> 50fps default target
+        target_frame_tm: 20000, //micro_s -> 50fps default target
     }
 }
