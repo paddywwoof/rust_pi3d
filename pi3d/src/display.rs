@@ -3,9 +3,10 @@ extern crate gl;
 
 use std;
 use gl::types::*;
-use std::time::Instant;
+use std::time::{Instant, Duration};
+use std::thread::sleep;
 
-const FRAMES: u32 = 50;
+const GL_POINT_SPRITE: GLenum = 0x8861; // needed for NVIDIA driver
 
 pub struct Display {
     pub res: ::util::resources::Resources,
@@ -25,20 +26,20 @@ pub struct Display {
     pub mouse_y: i32,
     mouse_relative: bool,
     start: Instant,
-    frame_count: u32,
     fps: f32,
+    target_frame_tm: u32,
 }
 
 impl Display {
     pub fn loop_running(&mut self) -> bool {
-        self.frame_count += 1;
-        if self.frame_count >= FRAMES {
-            let del = self.start.elapsed();
-            self.fps = self.frame_count as f32 /
-                (del.as_secs() as f32 + del.subsec_nanos()  as f32 * 1e-9);
-            self.start = Instant::now();
-            self.frame_count = 0;
+        let mut del = self.start.elapsed().subsec_nanos();
+        if del < self.target_frame_tm {
+            let delay = Duration::from_nanos((self.target_frame_tm - del) as u64);
+            sleep(delay);
+            del = self.target_frame_tm;
         }
+        self.fps = self.fps * 0.99 + 1e7 / del as f32; // bit of smoothing
+        self.start = Instant::now();
         self.window.gl_swap_window();
         unsafe {
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
@@ -102,6 +103,11 @@ impl Display {
         self.sdl.mouse().set_relative_mouse_mode(mode);
     }
 
+    pub fn set_target_fps(&mut self, target_fps: f32) {
+        self.target_frame_tm = if target_fps > 1.0 {1000000000 / target_fps as u32
+                                            } else {99999999};
+    }
+
     pub fn fps(&mut self) -> f32 {
         self.fps
     }
@@ -128,6 +134,8 @@ pub fn create(name: &str, width: f32, height: f32) -> Display {
         gl::Enable(gl::CULL_FACE);
         gl::Enable(gl::DEPTH_TEST);
         gl::Enable(gl::VERTEX_PROGRAM_POINT_SIZE);
+        gl::Enable(gl::PROGRAM_POINT_SIZE);
+        gl::Enable(GL_POINT_SPRITE);
         gl::DepthFunc(gl::LESS);
         gl::DepthMask(1);
         gl::CullFace(gl::FRONT);
@@ -155,7 +163,7 @@ pub fn create(name: &str, width: f32, height: f32) -> Display {
         mouse_y: 0,
         mouse_relative: true,
         start: Instant::now(),
-        frame_count: 0,
         fps: 0.0,
+        target_frame_tm: 20000000, //ns -> 50fps default target
     }
 }

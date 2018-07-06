@@ -105,18 +105,18 @@ pub fn calc_height(map: &::shape::Shape, px: f32, pz: f32) -> (f32, Vec<f32>) {
     let skip_n = (((pz + depth * 0.5) * iz / depth).floor() * ix * 2.0
                   + ((px + width * 0.5) * ix / width).floor() * 2.0) as usize;
     for f in map.buf[0].element_array_buffer.axis_iter(nd::Axis(0)).skip(skip_n) {
-        let x0 = map.buf[0].array_buffer[[f[[0]] as usize, 0]];
-        let z0 = map.buf[0].array_buffer[[f[[0]] as usize, 2]];
-        let x1 = map.buf[0].array_buffer[[f[[1]] as usize, 0]];
-        let z1 = map.buf[0].array_buffer[[f[[1]] as usize, 2]];
-        let x2 = map.buf[0].array_buffer[[f[[2]] as usize, 0]];
-        let z2 = map.buf[0].array_buffer[[f[[2]] as usize, 2]];
-        if ((z1 - z0) * (px - x0) + (-x1 + x0) * (pz - z0) >= 0.0) &&
-           ((z2 - z1) * (px - x1) + (-x2 + x1) * (pz - z1) >= 0.0) &&
-           ((z0 - z2) * (px - x2) + (-x0 + x2) * (pz - z2) >= 0.0) {
-            let v0 = nd::arr1(&[x0, map.buf[0].array_buffer[[f[[0]] as usize, 1]], z0]);
-            let v1 = nd::arr1(&[x1, map.buf[0].array_buffer[[f[[1]] as usize, 1]], z1]);
-            let v2 = nd::arr1(&[x2, map.buf[0].array_buffer[[f[[2]] as usize, 1]], z2]);
+        let mut v: Vec<Vec<f32>> = vec![vec![0.0; 3]; 3];
+        for i in 0..3 { // the three vertices of this element
+            for j in 0..3 { // the x, y, z components of each vertex
+                v[i][j] = map.buf[0].array_buffer[[f[[i]] as usize, j]];
+            }
+        }
+        if ((v[1][2] - v[0][2]) * (px - v[0][0]) + (-v[1][0] + v[0][0]) * (pz - v[0][2]) >= 0.0) &&
+           ((v[2][2] - v[1][2]) * (px - v[1][0]) + (-v[2][0] + v[1][0]) * (pz - v[1][2]) >= 0.0) &&
+           ((v[0][2] - v[2][2]) * (px - v[2][0]) + (-v[0][0] + v[2][0]) * (pz - v[2][2]) >= 0.0) {
+            let v0 = nd::arr1(&v[0]);
+            let v1 = nd::arr1(&v[1]);
+            let v2 = nd::arr1(&v[2]);
             //calc normal from two edge vectors v2-v1 and v3-v1
             let n_vec = ::util::vec3::cross(&(&v1 - &v0), &(v2 - v0));
             //equation of plane: Ax + By + Cz = k_val where A,B,C are components of normal. x,y,z for point v1 to find k_val

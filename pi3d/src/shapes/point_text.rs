@@ -25,14 +25,14 @@ impl PointText {
     //pub fn add_text_block(&mut self,
     pub fn add_text_block(&mut self, font: &::util::font::TextureFont,
                         position: &[f32; 3], capacity: usize, text: &str) -> usize {
-        if text.chars().count() >= capacity {
+        if text.chars().count() > capacity {
             panic!("text won't fit into capacity for this TextBlock");
         }
         let start = match self.blocks.last() {
             Some(blk) => blk.start + blk.capacity,
             _ => 0, // it must have been an empty Vec
         };
-        if (start + capacity) >= self.max_chars {
+        if (start + capacity) > self.max_chars {
             panic!("TextBlock is going to overflow PointText");
         }
         let new_block = TextBlock {

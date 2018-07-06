@@ -10,7 +10,7 @@ use std::{collections::HashMap,
           fs::File};
 
 const POP_N: usize = 800;
-const N_CITIES: usize = 80; // with cities from file this need to be mutated, i.e. use cities.len()
+const N_CITIES: usize = 200; // with cities from file this need to be mutated, i.e. use cities.len()
 const W: f32 = 800.0;
 const H: f32 = 800.0;
 
@@ -29,7 +29,7 @@ fn main() {
   let mut rng: ThreadRng = rand::thread_rng(); // one instance of random number gen passed as argument to methods
   //parsing text from file
   let mut cities: Vec<Point> = vec![];
-  match File::open("cities80.txt") {
+  match File::open("cities200.txt") {
     Ok(mut f) => {
           let mut buffer = String::new();
           match f.read_to_string(&mut buffer) {
@@ -49,8 +49,8 @@ fn main() {
     Err(e) => {
       println!("{:?} - generate some random cities", e);
       for _i in 0..N_CITIES {
-        cities.push(Point::new(rng.gen_range(-0.5 * W, 0.5 * W),
-                               rng.gen_range(-0.5 * H, 0.5 * H)));
+        cities.push(Point::new(rng.gen_range(-0.49 * W, 0.49 * W),
+                               rng.gen_range(-0.49 * H, 0.49 * H)));
       }
       for c in cities.iter() {println!("Point::new({:.1}, {:.1}),", c.x, c.y);}
     }
@@ -75,7 +75,7 @@ fn main() {
   points.buf[0].unib[[0, 0]] = 1.0;
 
   let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "", 64.0);
-  let mut labels = pi3d::shapes::point_text::create(&font, 400, 24.0);
+  let mut labels = pi3d::shapes::point_text::create(&font, 600, 24.0);
   labels.set_shader(&textsh);
   for i in 0..N_CITIES {
     let blk = labels.add_text_block(&font, &[cities[i].x - 5.0, cities[i].y + 5.0, 0.0], 3, &format!("{}", i));

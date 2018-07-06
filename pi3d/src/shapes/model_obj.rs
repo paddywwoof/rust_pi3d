@@ -177,6 +177,14 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
                 m_faces.push((i_start + t) as u16);
             }
         }
+        // finally add a sacrificial line TODO, this could be done in buffer
+        for vi in 0..3 {
+            m_vertices.push(0.0);
+            m_normals.push(0.0);
+        }
+        for vi in 0..2 {
+            m_tex_coords.push(0.0);
+        }
 
         let calc_normals = if m_normals.len() == m_vertices.len() {
                 false} else {true
