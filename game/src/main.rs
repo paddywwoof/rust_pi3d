@@ -4,12 +4,12 @@ extern crate rand;
 use sdl2::keyboard::Keycode;
 
 const W:f32 = 960.0;
-const H:f32 = 960.0;
+const H:f32 = 720.0;
 
 fn main() {
-    let mut display = pi3d::display::create("experimental window", W, H);
+    let mut display = pi3d::display::create("experimental widispndow", W, H);
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
-    display.set_mouse_relative(true);
+    //display.set_mouse_relative(true);
     let shader_program = pi3d::shader::Program::from_res(&display, "uv_reflect").unwrap();
     let flatsh = pi3d::shader::Program::from_res(&display, "uv_flat").unwrap();
     let textsh = pi3d::shader::Program::from_res(&display, "uv_pointsprite").unwrap();
@@ -142,5 +142,11 @@ dog\"", 0.0);
             camera.position(&[x, y, z]);
         }
         ds = 0.0;
+        if display.was_resized() {
+            camera.set_lens_from_display(&display);
+            camera2d.set_lens_from_display(&display);
+            fps_text.set_position(&font, fps_blk,
+                     &[-display.width * 0.5 + 20.0, -display.height * 0.5 + 20.0, 0.1]);
+        }
     }
 }

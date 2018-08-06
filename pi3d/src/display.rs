@@ -28,17 +28,18 @@ pub struct Display {
     start: Instant,
     fps: f32,
     target_frame_tm: u32,
+    resized: bool,
 }
 
 impl Display {
     pub fn loop_running(&mut self) -> bool {
-        let mut del = self.start.elapsed().subsec_millis();
+        let mut del = self.start.elapsed().subsec_nanos();
         if del < self.target_frame_tm {
-            let delay = Duration::from_millis((self.target_frame_tm - del) as u64);
+            let delay = Duration::new(0, (self.target_frame_tm - del) as u32);
             sleep(delay);
             del = self.target_frame_tm;
         }
-        self.fps = self.fps * 0.99 + 10.0 / del as f32; // bit of smoothing 1000 * 0.01
+        self.fps = self.fps * 0.99 + 1e7 / del as f32; // bit of smoothing 1e9 * 0.01
         self.start = Instant::now();
         self.window.gl_swap_window();
         unsafe {
@@ -51,7 +52,7 @@ impl Display {
                 sdl2::event::Event::Quit {..} => {return false;},
                 sdl2::event::Event::KeyDown {keycode, ..} => {
                     let key = keycode.unwrap();
-                    // hard code ESC so that window doesn't get stuck with no cursor
+                    // ESC is hard coded so that window doesn't get stuck with no cursor
                     if self.mouse_relative && key == sdl2::keyboard::Keycode::Escape {return false;}
                     if !self.keys_pressed.contains(&key) {
                         self.keys_pressed.push(key);
@@ -74,7 +75,7 @@ impl Display {
                         self.mouse_y = y;
                     }
                 }
-                //sdl2::event::Event::MouseButtonDown {} => {
+                //sdl2::event::Event::MouseButtonDown {} => { //TODO
                 //}
                 sdl2::event::Event::Window {..} => {
                     let (w, h) = self.window.drawable_size();
@@ -83,11 +84,16 @@ impl Display {
                         self.height = h as f32;
                         unsafe {
                             gl::Viewport(0, 0, w as GLsizei, h as GLsizei);
-                            // TODO change camera lens settings somehow.
+                            /* to change camera lens settings you need to check Display::was_resized()
+                            in the main loop and if true call:
+                            Camera.set_lens_from_display(display: &::display::Display)
+                            if 2d camera also used it also needs to be set. 
+                            */
                         }
+                        self.resized = true;
                     }
                 }
-                _ => {}, // TODO mouse buttons
+                _ => {},
             }
         }
         true
@@ -105,13 +111,19 @@ impl Display {
 
     pub fn set_target_fps(&mut self, target_fps: f32) {
         self.target_frame_tm = if target_fps < 1.0 {
-            999 // min speed 999 ms per frame
-         } else if target_fps < 1000.0 {1000 / target_fps as u32
-         } else { 1 }; // max speed 1ms per frame
+            99999999 // min speed 999 ms per frame
+         } else if target_fps < 1e9 {1000000000 / target_fps as u32
+         } else { 1 }; // max speed 1ns per frame
     }
 
     pub fn fps(&mut self) -> f32 {
         self.fps
+    }
+
+    pub fn was_resized(&mut self) -> bool {
+        let previous_value = self.resized;
+        self.resized = false;
+        previous_value
     }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
@@ -122,6 +134,7 @@ pub fn create(name: &str, width: f32, height: f32) -> Display {
     let gl_attr = video_subsystem.gl_attr();
     gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
     gl_attr.set_context_version(2, 1);
+    gl_attr.set_double_buffer(true);
     let window = video_subsystem
         .window(name, width as u32, height as u32)
         .opengl().resizable()
@@ -166,6 +179,7 @@ pub fn create(name: &str, width: f32, height: f32) -> Display {
         mouse_relative: true,
         start: Instant::now(),
         fps: 0.0,
-        target_frame_tm: 20, //ms -> 50fps default target
+        target_frame_tm: 20000000, //ms -> 50fps default target
+        resized: false,
     }
 }

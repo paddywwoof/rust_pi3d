@@ -141,40 +141,51 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
 
     // create the buffers, one for each material g
     for (m, face) in faces.iter() { // m is material, face is Vec of Face structs
-        //numv[*m] -= 1; //TODO should never go negative. Check?
-        //numi[*m] -= 1;
-
         let mut m_vertices: Vec<f32> = vec![]; //TODO better to go into ndarray at this stage?
         let mut m_normals: Vec<f32> = vec![];
         let mut m_tex_coords: Vec<f32> = vec![];
         let mut m_faces: Vec<u16> = vec![];
 
         let mut i: usize = 0; //# vertex counter in this material
-        //LOGGER.info("len uv=", len(vertices))
+        // vert_map checks for reuse of vertex/uv/normal in
+        let mut vert_map: HashMap<(i32, i32, i32), usize> = HashMap::new();
+
         for f in face.iter() {
             let i_start = i;
             let length = f.vertex.len();
             let length_n = f.normal.len();
+            let length_uv = f.uv.len();
+            let mut vert_vec: Vec<usize> = vec![]; // will hold index to m_vertices
 
             for v in 0..length {
-                for vi in 0..3 {
-                    m_vertices.push(vertices[(f.vertex[v] as usize - 1) * 3 + vi]);
-                    if length_n == length { //#only use normals if there is one for each vertex
-                        m_normals.push(normals[(f.normal[v] as usize - 1) * 3 + vi]);
+                //vert_tuple (v,n,u) with -1 if n or u missing check in vert_map and
+                //only add here if doesn't already exist
+                let vert_tuple = (f.vertex[v],
+                        if length_n == length {f.normal[v]} else {-1},
+                        if length_uv > 0 {f.uv[v]} else {-1});
+                if vert_map.contains_key(&vert_tuple) {
+                    vert_vec.push(*vert_map.get(&vert_tuple).unwrap());
+                } else {
+                    for vi in 0..3 { // xyz components
+                        m_vertices.push(vertices[(f.vertex[v] as usize - 1) * 3 + vi]);
+                        if length_n == length { //#only use normals if there is one for each vertex
+                            m_normals.push(normals[(f.normal[v] as usize - 1) * 3 + vi]);
+                        }
                     }
-                }
-                if f.uv.len() > 0  { //&& uvs[f.uv[v] - 1].len() == 2) {
-                    for vi in 0..2 {
-                        m_tex_coords.push(uvs[(f.uv[v] as usize - 1) * 2 + vi]);
+                    if length_uv > 0  { //&& uvs[f.uv[v] - 1].len() == 2) {
+                        for vi in 0..2 {
+                            m_tex_coords.push(uvs[(f.uv[v] as usize - 1) * 2 + vi]);
+                        }
                     }
+                    vert_map.insert(vert_tuple, i);
+                    vert_vec.push(i);
+                    i += 1;
                 }
-                i += 1;
             }
-            let n = i - i_start - 1;
-            for t in 1..n {
-                m_faces.push(i_start as u16);
-                m_faces.push((i_start + t + 1) as u16);
-                m_faces.push((i_start + t) as u16);
+            for t in 0..(vert_vec.len() - 2) {
+                m_faces.push(vert_vec[t] as u16);
+                m_faces.push(vert_vec[t + 2] as u16);
+                m_faces.push(vert_vec[t + 1] as u16);
             }
         }
         // finally add a sacrificial line TODO, this could be done in buffer

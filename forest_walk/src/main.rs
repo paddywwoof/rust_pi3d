@@ -3,7 +3,7 @@ extern crate sdl2;
 use sdl2::keyboard::Keycode;
 
 const W:f32 = 800.0;
-const H:f32 = 600.0;
+const H:f32 = 480.0;
 
 fn main() {
     // setup display

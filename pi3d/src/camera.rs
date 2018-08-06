@@ -44,6 +44,13 @@ impl Camera {
         self.reset();
     }
 
+    pub fn set_lens_from_display(&mut self, display: &::display::Display) {
+        self.lens = nd::arr1(&[display.near, display.far, display.fov, display.width / display.height]);
+        self.width = display.width;
+        self.height = display.height;
+        self.reset();
+    }
+
     pub fn set_3d(&mut self, is_3d: bool) {
         self.is_3d = is_3d;
         self.reset();
@@ -162,12 +169,12 @@ pub fn create(display: &::display::Display) -> Camera {
     let eye: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, -0.1]);
     let reset_eye = eye.clone();
     let at: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, 0.0]);
-    let lens: nd::Array1<f32> = nd::arr1(&[display.near, display.far, display.fov, display.width / display.height]);
+    let lens: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, 0.0, 0.0]);
     let mut cam = Camera {
-        eye: eye,
-        reset_eye: reset_eye,
-        at: at,
-        lens: lens,
+        eye,
+        reset_eye,
+        at,
+        lens,
         scale: 1.0,
         width: display.width,
         height: display.height,
@@ -185,7 +192,7 @@ pub fn create(display: &::display::Display) -> Camera {
         t1: nd::Array::eye(4),
         t2: nd::Array::eye(4),
     };
-    cam.reset();
+    cam.set_lens_from_display(display);
     cam
 }
 
