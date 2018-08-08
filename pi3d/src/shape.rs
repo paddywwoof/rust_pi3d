@@ -85,6 +85,11 @@ impl Shape {
             self.buf[i].unib[[3, 2]] = bump_factor;
         }
     }
+    pub fn set_specular(&mut self, specular: &[f32]) {
+        for i in 0..self.buf.len() {
+            self.buf[i].set_specular(&specular);
+        }
+    }
 
     pub fn rotate_inc_x(&mut self, da: f32) {
         let a = self.unif[[1, 0]] + da;

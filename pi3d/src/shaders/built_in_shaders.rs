@@ -59,7 +59,7 @@ void main(void) {
   vec3 bump = normalize(texture2D(tex0, bumpcoordout).rgb * 2.0 - 1.0);
 #include std_bump.inc
 
-  gl_FragColor =  (1.0 - ffact) * texc + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor =  mix(texc, vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }",
 
@@ -91,7 +91,7 @@ void main(void) {
 void main(void) {
 #include std_main_mat.inc
   //if (distance(gl_PointCoord, vec2(0.5)) > 0.5) discard; //circular points
-  gl_FragColor = (1.0 - ffact) * texc + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor = mix(texc, vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }
 ",
@@ -121,7 +121,7 @@ void main(void) {
 #include std_main_mat.inc
 #include std_light.inc
 
-  gl_FragColor =  (1.0 - ffact) * texc + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor =  mix(texc, vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }",
 
@@ -147,7 +147,7 @@ void main(void) {
 
 "#version 120
             //mat_pointsprite.fs
-uniform vec3 unib[4];
+uniform vec3 unib[5];
 //uniform float hardness => unib[0][0]
 //uniform float discard => unib[0][2]
 
@@ -169,7 +169,7 @@ attribute vec3 normal;
 attribute vec2 texcoord;
 
 uniform mat4 modelviewmatrix[2]; // [0] model movement in real coords, [1] in camera coords
-uniform vec3 unib[4];
+uniform vec3 unib[5];
 //uniform vec2 umult, vmult => unib[2]
 //uniform vec2 u_off, v_off => unib[3]
 uniform vec3 unif[20];
@@ -199,9 +199,10 @@ void main(void) {
 #include std_bump.inc
 #include std_shine.inc
   shinec = texture2D(tex1, shinecoord); // ------ get the reflection for this pixel
+  shinec += vec4(max(pow(dot(refl, -inray), 4.0), 0.0) * unib[4], 1.0); // Phong specular
   float shinefact = clamp(unib[0][1]*length(shinec)/length(texc), 0.0, unib[0][1]);// ------ reduce the reflection where the ground texture is lighter than it
 
-  gl_FragColor = (1.0 - ffact) * ((1.0 - shinefact) * texc + shinefact * shinec) + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor = mix(mix(texc, shinec, shinefact), vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }",
 
@@ -261,7 +262,7 @@ void main(void) {
 uniform sampler2D tex0;
 uniform sampler2D tex1;
 uniform sampler2D tex2;
-uniform vec3 unib[4];
+uniform vec3 unib[5];
 // see docstring Buffer
 uniform vec3 unif[20];
 // see docstring Shape
@@ -278,7 +279,7 @@ attribute vec3 normal;
 attribute vec2 texcoord;
 
 uniform mat4 modelviewmatrix[3]; // [0] model movement in real coords, [1] in camera coords, [2] camera at light
-uniform vec3 unib[4];
+uniform vec3 unib[5];
 //uniform float ntiles => unib[0][0]
 //uniform vec2 umult, vmult => unib[2]
 //uniform vec2 u_off, v_off => unib[3]
@@ -378,7 +379,7 @@ void main(void) {
   vec3 bump = normalize(texture2D(tex1, bumpcoordout).rgb * 2.0 - 1.0);
 #include std_bump.inc
 
-  gl_FragColor =  (1.0 - ffact) * texc + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor =  mix(texc, vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }",
 
@@ -435,7 +436,7 @@ void main(void) {
                   clamp((texFactor - 1.0), 0.0, 1.0)).rgb * 2.0 - 1.0);
 #include std_bump.inc
 
-  gl_FragColor =  (1.0 - ffact) * texc + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor =  mix(texc, vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }",
 
@@ -472,7 +473,7 @@ varying vec2 texcoordout;
 
 void main(void) {
 #include std_main_uv.inc
-  gl_FragColor = (1.0 - ffact) * texc + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor = mix(texc, vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }",
 
@@ -503,7 +504,7 @@ void main(void) {
 #include std_main_uv.inc
 #include std_light.inc
 
-  gl_FragColor =  (1.0 - ffact) * texc + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor =  mix(texc, vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }
 ",
@@ -535,7 +536,7 @@ void main(void) {
 "#version 120
             ////uv_pointsprite.fs
 uniform sampler2D tex0;
-uniform vec3 unib[4];
+uniform vec3 unib[5];
 
 varying float dist;
 varying mat2 rotn;
@@ -565,7 +566,7 @@ attribute vec3 normal;
 attribute vec2 texcoord;
 
 uniform mat4 modelviewmatrix[2]; // [0] model movement in real coords, [1] in camera coords
-uniform vec3 unib[4];
+uniform vec3 unib[5];
 //uniform float ntiles => unib[0][0]
 //uniform vec2 umult, vmult => unib[2]
 //uniform vec2 u_off, v_off => unib[3]
@@ -605,9 +606,10 @@ void main(void) {
 #include std_bump.inc
 #include std_shine.inc
   shinec = texture2D(tex2, shinecoord); // ------ get the reflection for this pixel
+  shinec += vec4(max(pow(dot(refl, -inray), 4.0), 0.0) * unib[4], 1.0); // Phong specular
   float shinefact = clamp(unib[0][1]*length(shinec)/length(texc), 0.0, unib[0][1]);// ------ reduce the reflection where the ground texture is lighter than it
 
-  gl_FragColor = (1.0 - ffact) * ((1.0 - shinefact) * texc + shinefact * shinec) + ffact * vec4(unif[4], unif[5][1]); // ------ combine using factors
+  gl_FragColor = mix(mix(texc, shinec, shinefact), vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
   gl_FragColor.a *= unif[5][2];
 }",
 

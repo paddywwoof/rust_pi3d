@@ -151,7 +151,6 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
         let mut vert_map: HashMap<(i32, i32, i32), usize> = HashMap::new();
 
         for f in face.iter() {
-            let i_start = i;
             let length = f.vertex.len();
             let length_n = f.normal.len();
             let length_uv = f.uv.len();
@@ -159,13 +158,13 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
 
             for v in 0..length {
                 //vert_tuple (v,n,u) with -1 if n or u missing check in vert_map and
-                //only add here if doesn't already exist
                 let vert_tuple = (f.vertex[v],
                         if length_n == length {f.normal[v]} else {-1},
                         if length_uv > 0 {f.uv[v]} else {-1});
                 if vert_map.contains_key(&vert_tuple) {
                     vert_vec.push(*vert_map.get(&vert_tuple).unwrap());
                 } else {
+                    //only add here if doesn't already exist
                     for vi in 0..3 { // xyz components
                         m_vertices.push(vertices[(f.vertex[v] as usize - 1) * 3 + vi]);
                         if length_n == length { //#only use normals if there is one for each vertex
@@ -183,7 +182,7 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
                 }
             }
             for t in 0..(vert_vec.len() - 2) {
-                m_faces.push(vert_vec[t] as u16);
+                m_faces.push(vert_vec[0] as u16);
                 m_faces.push(vert_vec[t + 2] as u16);
                 m_faces.push(vert_vec[t + 1] as u16);
             }

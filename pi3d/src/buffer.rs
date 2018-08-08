@@ -41,7 +41,7 @@ impl Buffer {
             gl::Uniform3fv(self.get_uniform_location("unif\0"),
                 20 as GLsizei, shape.unif.as_ptr() as *const GLfloat);
             gl::Uniform3fv(self.get_uniform_location("unib\0"),
-                4 as GLsizei, self.unib.as_ptr() as *const GLfloat);
+                5 as GLsizei, self.unib.as_ptr() as *const GLfloat);
             for (i, tex) in self.textures.iter().enumerate() {
                 gl::ActiveTexture(gl::TEXTURE0 + i as u32);
                 //assert texture.tex(), 'There was an empty texture in your Buffer.'
@@ -96,6 +96,10 @@ impl Buffer {
         self.unib[[3, 0]] = umult;
         self.unib[[3, 1]] = vmult;
         self.unib[[3, 2]] = bump_factor;
+    }
+
+    pub fn set_specular(&mut self, specular: &[f32]) {
+        for i in 0..3 {self.unib[[4, i]] = specular[i];}
     }
 
     pub fn set_point_size(&mut self, point_size: f32) {
@@ -205,7 +209,8 @@ pub fn create(shader_program: &::shader::Program, verts: nd::Array2<f32>,
         unib: nd::arr2(&[[0.0, 0.0, 0.6],  //00 ntile, shiny, blend
                          [0.5, 0.5, 0.5],  //01 material RGB
                          [1.0, 1.0, 0.0],  //02 umult, vmult, point_size
-                         [0.0, 0.0, 1.0]]),//03 u_off, v_off, line_width/bump
+                         [0.0, 0.0, 1.0],  //03 u_off, v_off, line_width/bump
+                         [0.5, 0.5, 0.5]]),//04 specular rgb values
         array_buffer: array_buffer,
         element_array_buffer: element_array_buffer,
         arr_b: arr_b,
