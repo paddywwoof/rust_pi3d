@@ -3,6 +3,9 @@ extern crate image;
 
 use ndarray as nd;
 
+// create a new struct definition 
+make_shape!(ElevationMap, ix:f32=0.0, iz:f32=0.0, width:f32=200.0, depth:f32=200.0);
+
 /// generate an elevation map Shape
 ///
 /// * `disp` reference to the display object which has file path functionality
@@ -16,9 +19,10 @@ use ndarray as nd;
 /// * `_texmap` TODO used for allocating multiple textures to the map
 /// NB for no image scaling the mapfile should be one more pixel than ix and iz
 /// i.e. 33x33 image for 32x32 squares in grid
-///
-pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
-              height: f32, ix: usize, iz: usize, ntiles: f32, _texmap: &str) -> ::shape::Shape {
+/// 
+/// TODO put this as class method (i.e. ::new())
+pub fn new_map(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
+              height: f32, ix: usize, iz: usize, ntiles: f32, _texmap: &str) -> ElevationMap {
 
     let ix = if ix < 200 {ix + 1} else {200}; // one more vertex in each direction than number of divisions
     let iz = if iz < 200 {iz + 1} else {200};
@@ -76,11 +80,11 @@ pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
                 nd::Array2::<f32>::zeros((0, 3)),
                 nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
                 nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), true);
-    let mut new_shape = ::shape::create(vec![new_buffer]);
-    new_shape.unif[[18, 0]] = ix as f32 - 1.0; // hold these for calc_height
-    new_shape.unif[[18, 1]] = iz as f32 - 1.0; // NB potential conflict with
-    new_shape.unif[[19, 0]] = width; // special shaders that use the spare
-    new_shape.unif[[19, 1]] = depth; // uniform variables
+    let mut new_shape = ::shapes::elevation_map::create(vec![new_buffer]);
+    new_shape.ix = ix as f32 - 1.0; // hold these for calc_height in additional attributes
+    new_shape.iz = iz as f32 - 1.0;
+    new_shape.width = width;
+    new_shape.depth = depth;
     new_shape
 }
 
@@ -93,17 +97,16 @@ pub fn create(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
 ///
 /// returns a tuple of the (height, normal vector at that point) this can
 /// be used for resistance to movement, bouncing etc.
-///
-pub fn calc_height(map: &::shape::Shape, px: f32, pz: f32) -> (f32, Vec<f32>) {
+/// 
+/// TODO put this as a class method
+pub fn calc_height(map: &ElevationMap, px: f32, pz: f32) -> (f32, Vec<f32>) {
     //TODO a) the skip method will only work for regular maps
     // b) Buffer.calc_normals does cross product calc already so should save result
     // in Buffer on creation
     let px = px - map.unif[[0, 0]];
     let pz = pz - map.unif[[0, 2]];
-    let (ix, iz) = (map.unif[[18,0]], map.unif[[18, 1]]);
-    let (width, depth) = (map.unif[[19,0]], map.unif[[19, 1]]);
-    let skip_n = (((pz + depth * 0.5) * iz / depth).floor() * ix * 2.0
-                  + ((px + width * 0.5) * ix / width).floor() * 2.0) as usize;
+    let skip_n = (((pz + map.depth * 0.5) * map.iz / map.depth).floor() * map.ix * 2.0
+                  + ((px + map.width * 0.5) * map.ix / map.width).floor() * 2.0) as usize;
     for f in map.buf[0].element_array_buffer.axis_iter(nd::Axis(0)).skip(skip_n) {
         let mut v: Vec<Vec<f32>> = vec![vec![0.0; 3]; 3];
         for i in 0..3 { // the three vertices of this element

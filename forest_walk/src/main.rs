@@ -7,7 +7,7 @@ const H:f32 = 480.0;
 
 fn main() {
     // setup display
-    let mut display = pi3d::display::create("experimental window", W, H);
+    let mut display = pi3d::display::create("experimental window", W, H).unwrap();
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
     display.set_mouse_relative(true);
 
@@ -44,7 +44,7 @@ fn main() {
     let mapsize = 1000.0;
     let halfsize = mapsize * 0.5;
     let mountimg1 = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
-    let mut mymap = pi3d::shapes::elevation_map::create(&display, "textures/mountainsHgt.png",
+    let mut mymap = pi3d::shapes::elevation_map::new_map(&display, "textures/mountainsHgt.png",
                                 mapsize, mapsize, 60.0, 32, 32, 1.0, "nothing");
     mymap.set_draw_details(&shader, &vec![mountimg1.id, bumpimg.id, reflimg.id], 128.0, 0.0, 1.0, 1.0, 2.0);
     mymap.set_fog(&fog_shade, fog_dist, fog_alpha);

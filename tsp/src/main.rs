@@ -15,7 +15,7 @@ const W: f32 = 800.0;
 const H: f32 = 800.0;
 
 fn main() {
-  let mut display = pi3d::display::create("TSP window", W, H);
+  let mut display = pi3d::display::create("TSP window", W, H).unwrap();
   display.set_background(&[0.2, 0.2, 0.6, 1.0]);
   let flatsh = pi3d::shader::Program::from_res(
         &display, "mat_flat").unwrap();

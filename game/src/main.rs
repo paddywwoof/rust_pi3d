@@ -7,7 +7,7 @@ const W:f32 = 960.0;
 const H:f32 = 720.0;
 
 fn main() {
-    let mut display = pi3d::display::create("experimental widispndow", W, H);
+    let mut display = pi3d::display::create("experimental widispndow", W, H).unwrap();
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
     //display.set_mouse_relative(true);
     let shader_program = pi3d::shader::Program::from_res(&display, "uv_reflect").unwrap();
@@ -57,7 +57,7 @@ dog\"", 0.0);
     junk.buf[1].set_material(&[1.0, 1.0, 0.0, 1.0]);
     junk.position(&[1.0, 30.0, 7.5]);
 
-    let mut map = pi3d::shapes::elevation_map::create(&display, "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 64, 64, 1.0, "nothing");
+    let mut map = pi3d::shapes::elevation_map::new_map(&display, "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 64, 64, 1.0, "nothing");
     map.set_draw_details(&shader_program, &vec![maptex.id, mapnorm.id, stars.id], 128.0, 0.0, 1.0, 1.0, 2.0);
 
     let (mut iss, _texlist) = pi3d::shapes::model_obj::create(&display, "models/iss.obj");

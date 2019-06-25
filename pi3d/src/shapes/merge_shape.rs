@@ -126,7 +126,7 @@ pub fn add_shapes(merge_to: &mut ::shape::Shape, new_shapes: Vec<&::shape::Shape
 /// * `count` number of duplicates to make
 ///
 pub fn cluster(merge_to: &mut ::shape::Shape, new_shape: &::shape::Shape,
-                map: &::shape::Shape, xpos: f32, zpos: f32, w: f32, d: f32,
+                map: &::shapes::elevation_map::ElevationMap, xpos: f32, zpos: f32, w: f32, d: f32,
                 minscl: f32, maxscl: f32, count: usize) {
     let mut bufs = Vec::<&::buffer::Buffer>::new();
     let mut new_loc = Vec::<[f32; 3]>::new();

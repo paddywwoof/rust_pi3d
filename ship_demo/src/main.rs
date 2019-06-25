@@ -7,7 +7,7 @@ const W:f32 = 960.0;
 const H:f32 = 960.0;
 
 fn main() {
-    let mut display = pi3d::display::create("experimental window", W, H);
+    let mut display = pi3d::display::create("experimental window", W, H).unwrap();
     display.set_background(&[0.1, 0.1, 0.2, 1.0]);
     display.set_mouse_relative(true);
     display.set_target_fps(1000.0);

@@ -9,6 +9,7 @@ pub mod buffer;
 pub mod camera;
 pub mod display;
 pub mod shader;
+#[macro_use]
 pub mod shape;
 pub mod texture;
 

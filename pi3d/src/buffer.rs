@@ -23,7 +23,7 @@ pub struct Buffer {
 }
 
 impl Buffer {
-    pub fn draw(&self, matrix: &nd::Array3<f32>, shape: &::shape::Shape) {
+    pub fn draw(&self, matrix: &nd::Array3<f32>, unif: &nd::Array2<f32>) {
         //TODO check if no shader has been set and create default, also default light
         unsafe {
             gl::UseProgram(self.shader_id);
@@ -39,7 +39,7 @@ impl Buffer {
             gl::UniformMatrix4fv(self.get_uniform_location("modelviewmatrix\0"),
                 3 as GLsizei, 0 as GLboolean, matrix.as_ptr() as *const GLfloat);
             gl::Uniform3fv(self.get_uniform_location("unif\0"),
-                20 as GLsizei, shape.unif.as_ptr() as *const GLfloat);
+                20 as GLsizei, unif.as_ptr() as *const GLfloat);
             gl::Uniform3fv(self.get_uniform_location("unib\0"),
                 5 as GLsizei, self.unib.as_ptr() as *const GLfloat);
             for (i, tex) in self.textures.iter().enumerate() {

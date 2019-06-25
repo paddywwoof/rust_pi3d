@@ -8,6 +8,11 @@ use std::thread::sleep;
 
 const GL_POINT_SPRITE: GLenum = 0x8861; // needed for NVIDIA driver
 
+#[derive(Debug)]
+pub enum Error {
+    WindowBuildError {name: String},
+}
+
 pub struct Display {
     pub res: ::util::resources::Resources,
     sdl: sdl2::Sdl,
@@ -127,7 +132,7 @@ impl Display {
     }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
-pub fn create(name: &str, width: f32, height: f32) -> Display {
+pub fn create(name: &str, width: f32, height: f32) -> Result<Display, Error> {
     let res = ::util::resources::from_exe_path().unwrap();
     let sdl = sdl2::init().unwrap();
     let video_subsystem = sdl.video().unwrap();
@@ -160,7 +165,7 @@ pub fn create(name: &str, width: f32, height: f32) -> Display {
         gl::ColorMask(1, 1, 1, 0);
     }
 
-    Display {
+    Ok(Display {
         res,
         window,
         event_pump: sdl.event_pump().unwrap(),
@@ -181,5 +186,5 @@ pub fn create(name: &str, width: f32, height: f32) -> Display {
         fps: 0.0,
         target_frame_tm: 20000000, //ms -> 50fps default target
         resized: false,
-    }
+    })
 }
