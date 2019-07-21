@@ -149,6 +149,8 @@ pub fn create(name: &str, width: f32, height: f32) -> Result<Display, Error> {
     unsafe {
         gl::Viewport(0, 0, width as GLsizei, height as GLsizei);
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
+        gl::CullFace(gl::BACK);
+        gl::FrontFace(gl::CW);
         gl::DepthRangef(0.0, 1.0);
         gl::BindFramebuffer(gl::FRAMEBUFFER, 0);
         gl::Enable(gl::CULL_FACE);
@@ -158,7 +160,6 @@ pub fn create(name: &str, width: f32, height: f32) -> Result<Display, Error> {
         gl::Enable(GL_POINT_SPRITE);
         gl::DepthFunc(gl::LESS);
         gl::DepthMask(1);
-        gl::CullFace(gl::FRONT);
         gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA, 
                                                 1, gl::ONE_MINUS_SRC_ALPHA);
         gl::Enable(gl::BLEND);
