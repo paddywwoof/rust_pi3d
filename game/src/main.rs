@@ -129,7 +129,7 @@ dog\"", 0.0);
         }
         if display.keys_pressed.contains(&Keycode::L) {candlestick.buf[0].set_line_width(2.0, true, false);}
         if display.keys_pressed.contains(&Keycode::F) {candlestick.buf[0].set_line_width(0.0, true, false);}
-        if display.keys_pressed.contains(&Keycode::P) {candlestick.buf[0].set_point_size(30.0);}
+        if display.keys_pressed.contains(&Keycode::P) {candlestick.buf[0].set_point_size(3.0);}
         if display.keys_pressed.contains(&Keycode::W) {ds = 1.25}
         if display.keys_pressed.contains(&Keycode::S) {ds = -0.25;}
         let cd = camera.get_direction();
