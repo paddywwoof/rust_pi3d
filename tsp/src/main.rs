@@ -10,13 +10,14 @@ use std::{collections::HashMap,
           fs::File};
 
 const POP_N: usize = 800;
-const N_CITIES: usize = 200; // with cities from file this need to be mutated, i.e. use cities.len()
+const N_CITIES: usize = 42; // with cities from file this need to be mutated, i.e. use cities.len()
 const W: f32 = 800.0;
 const H: f32 = 800.0;
 
 fn main() {
-  let mut display = pi3d::display::create("TSP window", W, H).unwrap();
-  display.set_background(&[0.2, 0.2, 0.6, 1.0]);
+  let mut display = pi3d::display::create("TSP window", W, H, "GL", 2, 1).unwrap();
+          display.set_background(&[0.2, 0.2, 0.6, 1.0]);
+          display.set_target_fps(1000.0);
   let flatsh = pi3d::shader::Program::from_res(
         &display, "mat_flat").unwrap();
   let pointsh = pi3d::shader::Program::from_res(
@@ -24,12 +25,12 @@ fn main() {
   let textsh = pi3d::shader::Program::from_res(
         &display, "uv_pointsprite").unwrap();
   let mut camera = pi3d::camera::create(&display);
-  camera.set_3d(false);
+          camera.set_3d(false);
 
   let mut rng: ThreadRng = rand::thread_rng(); // one instance of random number gen passed as argument to methods
   //parsing text from file
   let mut cities: Vec<Point> = vec![];
-  match File::open("cities200.txt") {
+  match File::open("cities42.txt") {
     Ok(mut f) => {
           let mut buffer = String::new();
           match f.read_to_string(&mut buffer) {
@@ -49,8 +50,8 @@ fn main() {
     Err(e) => {
       println!("{:?} - generate some random cities", e);
       for _i in 0..N_CITIES {
-        cities.push(Point::new(rng.gen_range(-0.49 * W, 0.49 * W),
-                               rng.gen_range(-0.49 * H, 0.49 * H)));
+        cities.push(Point::new(rng.gen_range(-0.45 * W, 0.45 * W),
+                               rng.gen_range(-0.45 * H, 0.45 * H)));
       }
       for c in cities.iter() {println!("Point::new({:.1}, {:.1}),", c.x, c.y);}
     }
@@ -64,19 +65,19 @@ fn main() {
   }
 
   let mut route = pi3d::shapes::lines::create(&start_verts, 4.0, true);
-  route.set_shader(&flatsh);
-  route.set_material(&[0.5, 0.1, 0.4]);
+          route.set_shader(&flatsh);
+          route.set_material(&[0.5, 0.1, 0.4]);
 
   let mut points = pi3d::shapes::points::create(&start_verts, 30.0);
-  points.set_shader(&pointsh);
-  points.buf[0].array_buffer.slice_mut(s![.., 2..7])
-                        .assign(&nd::arr1(&[1.99, 1.0, 0.5, 0.0, 1.0]));
-  points.buf[0].re_init();
-  points.buf[0].unib[[0, 0]] = 1.0;
+          points.set_shader(&pointsh);
+          points.buf[0].array_buffer.slice_mut(s![.., 2..7])
+                                .assign(&nd::arr1(&[1.99, 1.0, 0.5, 0.0, 1.0]));
+          points.buf[0].re_init();
+          points.buf[0].unib[[0, 0]] = 1.0;
 
   let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "", 64.0);
   let mut labels = pi3d::shapes::point_text::create(&font, 600, 24.0);
-  labels.set_shader(&textsh);
+          labels.set_shader(&textsh);
   for i in 0..N_CITIES {
     let blk = labels.add_text_block(&font, &[cities[i].x - 5.0, cities[i].y + 5.0, 0.0], 3, &format!("{}", i));
     labels.set_size(&font, blk, 0.6);
@@ -84,7 +85,7 @@ fn main() {
   }
 
   let mut score = pi3d::shapes::point_text::create(&font, 16, 48.0);
-  score.set_shader(&textsh);
+          score.set_shader(&textsh);
   let score_blk = score.add_text_block(&font, &[-W * 0.5 + 10.0, H * 0.5 - 50.0, 0.0], 15, "----------");
 
   let mut population: Vec<Organism> = vec![];

@@ -132,14 +132,18 @@ impl Display {
     }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
-pub fn create(name: &str, width: f32, height: f32) -> Result<Display, Error> {
-    let res = ::util::resources::from_exe_path().unwrap();
+pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, minor: u8
+              ) -> Result<Display, Error> {
+    let mut res = ::util::resources::from_exe_path().unwrap();
+            res.set_gl_id(profile, major, minor);
     let sdl = sdl2::init().unwrap();
     let video_subsystem = sdl.video().unwrap();
     let gl_attr = video_subsystem.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-    gl_attr.set_context_version(2, 1);
-    gl_attr.set_double_buffer(true);
+        gl_attr.set_context_profile(match profile {
+          "GLES" => sdl2::video::GLProfile::GLES,
+          _      => sdl2::video::GLProfile::Core});
+        gl_attr.set_context_version(major, minor);
+        gl_attr.set_double_buffer(true);
     let window = video_subsystem
         .window(name, width as u32, height as u32)
         .opengl().resizable()

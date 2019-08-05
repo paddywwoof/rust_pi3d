@@ -7,9 +7,10 @@ const H:f32 = 480.0;
 
 fn main() {
     // setup display
-    let mut display = pi3d::display::create("experimental window", W, H).unwrap();
-    display.set_background(&[0.1, 0.1, 0.2, 1.0]);
-    display.set_mouse_relative(true);
+    let mut display = pi3d::display::create("experimental window", W, H, "GL", 2, 1).unwrap();
+            display.set_background(&[0.1, 0.1, 0.2, 1.0]);
+            display.set_mouse_relative(true);
+            display.set_target_fps(1000.0);
 
     // shaders
     let shader = pi3d::shader::Program::from_res(&display, "uv_bump").unwrap();
@@ -19,9 +20,9 @@ fn main() {
 
     // cameras
     let mut camera = pi3d::camera::create(&display);
-    camera.set_absolute(false);
+            camera.set_absolute(false);
     let mut camera2d = pi3d::camera::create(&display);
-    camera2d.set_3d(false);
+            camera2d.set_3d(false);
 
     // textures
     let tree2img = pi3d::texture::create_from_file(&display, "textures/tree2.png");
@@ -38,7 +39,7 @@ fn main() {
     // environment cube
     let (mut ecube, _tex_list) = pi3d::shapes::environment_cube::create(&display, 900.0,
                 "ecubes/sbox", "jpg");
-    ecube.set_shader(&flatsh);
+             ecube.set_shader(&flatsh);
 
     // elevation map
     let mapsize = 1000.0;
@@ -46,8 +47,8 @@ fn main() {
     let mountimg1 = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
     let mut mymap = pi3d::shapes::elevation_map::new_map(&display, "textures/mountainsHgt.png",
                                 mapsize, mapsize, 60.0, 32, 32, 1.0, "nothing");
-    mymap.set_draw_details(&shader, &vec![mountimg1.id, bumpimg.id, reflimg.id], 128.0, 0.0, 1.0, 1.0, 2.0);
-    mymap.set_fog(&fog_shade, fog_dist, fog_alpha);
+            mymap.set_draw_details(&shader, &vec![mountimg1.id, bumpimg.id, reflimg.id], 128.0, 0.0, 1.0, 1.0, 2.0);
+            mymap.set_fog(&fog_shade, fog_dist, fog_alpha);
 
     // create trees v.1 2 planes, v.2 3 planes
     let treeplane = pi3d::shapes::plane::create(4.0, 5.0);
@@ -85,20 +86,20 @@ fn main() {
     mytrees3.set_fog(&t_fog_shade, t_fog_dist, t_fog_alpha);
 
     // create and position monument
-    let (mut monument, _tex_list) = pi3d::shapes::model_obj::create(&display, "models/pi3d.obj");
-    monument.set_shader(&shinesh);
-    monument.set_normal_shine(&vec![bumpimg.id, reflimg.id], 16.0, 0.4, 1.0, 1.0, 0.05, true);
-    monument.set_fog(&fog_shade, fog_dist, fog_alpha);
-    monument.set_specular(&[0.8, 0.8, 2.0]);
     let (ht, _norm) = pi3d::shapes::elevation_map::calc_height(&mymap, 100.0, 245.0);
-    monument.position(&[100.0, ht + 1.0, 245.0]);
-    monument.scale(&[20.0, 20.0, 20.0]);
-    monument.rotate_to_y(1.1);
+    let (mut monument, _tex_list) = pi3d::shapes::model_obj::create(&display, "models/pi3d.obj");
+             monument.set_shader(&shinesh);
+             monument.set_normal_shine(&vec![bumpimg.id, reflimg.id], 16.0, 0.4, 1.0, 1.0, 0.05, true);
+             monument.set_fog(&fog_shade, fog_dist, fog_alpha);
+             monument.set_specular(&[0.8, 0.8, 2.0]);
+             monument.position(&[100.0, ht + 1.0, 245.0]);
+             monument.scale(&[20.0, 20.0, 20.0]);
+             monument.rotate_to_y(1.1);
 
     // fps counter
     let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "", 64.0);
     let mut fps_text = pi3d::shapes::point_text::create(&font, 20, 24.0);
-    fps_text.set_shader(&textsh);
+            fps_text.set_shader(&textsh);
     let fps_blk = fps_text.add_text_block(&font, &[-W * 0.5 + 20.0, -H * 0.5 + 20.0, 0.1], 19, "00.0 FPS");
 
     let mut x: f32 = 0.0;

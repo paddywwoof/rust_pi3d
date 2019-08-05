@@ -24,6 +24,7 @@ impl From<io::Error> for Error {
 
 pub struct Resources {
     root_path: PathBuf,
+    gl_id: String,
 }
 
 impl Resources {
@@ -42,6 +43,10 @@ impl Resources {
         }
         path
     }
+
+    pub fn set_gl_id(&mut self, version: &str, major: u8, minor: u8) {
+      self.gl_id = format!("{}{}{}", version, major, minor);
+    } 
 
     fn load_includes(&self, resource_name: &str, mut listing: &mut Vec<String>, depth: u32) -> Result<(), Error> {
         if depth > 16 {return Err(Error::RecursionDepth);}
@@ -63,6 +68,10 @@ impl Resources {
             match s.find("#include") { 
                 Some(ix) => {
                     let (_, new_key) = s.split_at(ix + 9);
+                    let new_key = match new_key {
+                      "version" | "precision" => format!("{}{}", new_key, self.gl_id),
+                      _ => new_key.to_string(),
+                    };
                     self.load_includes(&new_key, &mut listing, depth + 1)?;
                 },
                 None => {
@@ -79,7 +88,10 @@ pub fn from_exe_path() -> Result<Resources, Error> {
     //! that's running
     let exe_file_name = ::std::env::current_exe().map_err(|_| Error::FailedToGetExePath)?;
     let exe_path = exe_file_name.parent().ok_or(Error::FailedToGetExePath)?;
-    Ok(Resources { root_path: exe_path.into() })
+    Ok(Resources {
+      root_path: exe_path.into(),
+      gl_id: "GL21".to_string(),
+    })
 }
 
 

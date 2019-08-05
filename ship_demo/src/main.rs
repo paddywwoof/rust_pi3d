@@ -7,22 +7,22 @@ const W:f32 = 960.0;
 const H:f32 = 960.0;
 
 fn main() {
-    let mut display = pi3d::display::create("experimental window", W, H).unwrap();
-    display.set_background(&[0.1, 0.1, 0.2, 1.0]);
-    display.set_mouse_relative(true);
-    display.set_target_fps(1000.0);
+    let mut display = pi3d::display::create("experimental window", W, H, "GL", 2, 1).unwrap();
+            display.set_background(&[0.1, 0.1, 0.2, 1.0]);
+            display.set_mouse_relative(true);
+            display.set_target_fps(1000.0);
     let flatsh = pi3d::shader::Program::from_res(&display, "uv_flat").unwrap();
     let textsh = pi3d::shader::Program::from_res(&display, "uv_pointsprite").unwrap();
     let mut camera = pi3d::camera::create(&display);
     let mut camera2d = pi3d::camera::create(&display);
-    camera2d.set_3d(false);
+            camera2d.set_3d(false);
 
     let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "ęĻ", 64.0);
 
     let (mut cargo_hold, _texlist) = pi3d::shapes::model_obj::create(&display, "models/CargoHoldBaked2.obj");
-    cargo_hold.set_shader(&flatsh);
-    cargo_hold.set_material(&[0.4, 0.4, 0.4]);
-    cargo_hold.set_fog(&[0.3, 0.3, 0.3], 200.2, 1.0);
+             cargo_hold.set_shader(&flatsh);
+             cargo_hold.set_material(&[0.4, 0.4, 0.4]);
+             cargo_hold.set_fog(&[0.3, 0.3, 0.3], 200.2, 1.0);
     let mut radar_num: usize = 0;
     for k in 0..cargo_hold.buf.len() {
         if cargo_hold.buf[k].array_buffer[[0, 0]] == 97.226921 {
@@ -33,11 +33,11 @@ fn main() {
 
     let (mut ecube, _tex_list) = pi3d::shapes::environment_cube::create(&display, 500.0,
                 "models/maps/sbox_512", "png");
-    ecube.set_shader(&flatsh);
+             ecube.set_shader(&flatsh);
 
     // fps counter
     let mut fps_text = pi3d::shapes::point_text::create(&font, 20, 24.0);
-    fps_text.set_shader(&textsh);
+            fps_text.set_shader(&textsh);
     let fps_blk = fps_text.add_text_block(&font, &[-W * 0.5 + 20.0, -H * 0.5 + 20.0, 0.1], 19, "00.0 FPS");
 
     let mut n: usize = 0;

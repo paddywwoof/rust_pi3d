@@ -1,4 +1,4 @@
-pub const NAMES: [&str; 47] = ["clashtest.fs",
+pub const NAMES: [&str; 51] = ["clashtest.fs",
             "clashtest.vs",
             "conway.fs",
             "conway.vs",
@@ -44,9 +44,13 @@ pub const NAMES: [&str; 47] = ["clashtest.fs",
             "uv_reflect.fs",
             "uv_reflect.vs",
             "uv_toon.fs",
-            "uv_toon.vs"];
+            "uv_toon.vs",
+            "precisionGL21",
+            "versionGL21",
+            "precisionGLES20",
+            "versionGLES20"];
 
-pub const CODES: [&str; 47] = ["", "", "", "", "", "",
+pub const CODES: [&str; 51] = ["", "", "", "", "", "",
             "//mat_bump.fs
 #include std_head_fs.inc
 
@@ -84,8 +88,7 @@ void main(void) {
 }",
 
 
-"#version 120
-            //mat_flat.fs
+"            //mat_flat.fs
 #include std_head_fs.inc
 
 void main(void) {
@@ -97,8 +100,7 @@ void main(void) {
 ",
 
 
-"#version 120
-            //mat_flat.vs
+"            //mat_flat.vs
 #include std_head_vs.inc
 
 void main(void) {
@@ -145,8 +147,9 @@ void main(void) {
 }",
 
 
-"#version 120
-            //mat_pointsprite.fs
+"            //mat_pointsprite.fs
+#include version
+#include precision
 uniform vec3 unib[5];
 //uniform float hardness => unib[0][0]
 //uniform float discard => unib[0][2]
@@ -162,8 +165,9 @@ void main(void) {
 ",
 
 
-"#version 120
-            //mat_pointsprite.vs
+"            //mat_pointsprite.vs
+#include version
+#include precision
 attribute vec3 vertex;
 attribute vec3 normal;
 attribute vec2 texcoord;
@@ -258,6 +262,8 @@ void main(void) {
   
             "//std_head_fs.inc
 // ----- boiler-plate code for fragment shader variable definition
+#include version
+#include precision
 
 uniform sampler2D tex0;
 uniform sampler2D tex1;
@@ -273,6 +279,8 @@ varying float fog_start;",
 
             "//std_head_vs.inc
 // ----- boiler-plate code for vertex shader variable definition
+#include version
+#include precision
 
 attribute vec3 vertex;
 attribute vec3 normal;
@@ -533,8 +541,9 @@ void main(void) {
 ",
 
 
-"#version 120
-            ////uv_pointsprite.fs
+"            ////uv_pointsprite.fs
+#include version
+#include precision
 uniform sampler2D tex0;
 uniform vec3 unib[5];
 
@@ -559,8 +568,9 @@ void main(void) {
 }",
 
 
-"#version 120
-            //uv_pointsprite.vs
+"            //uv_pointsprite.vs
+#include version
+#include precision
 attribute vec3 vertex;
 attribute vec3 normal;
 attribute vec2 texcoord;
@@ -639,4 +649,8 @@ void main(void) {
   //gl_PointSize = unib[2][2] / dist; // NB this line stops the shader working on windows platforms!
 }
 ",
-            "", ""];
+            "", "",
+"precision mediump float;",
+"#version 120",
+"precision mediump float;",
+"#version 100"];
