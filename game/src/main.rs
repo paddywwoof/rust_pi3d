@@ -29,8 +29,8 @@ over thę Ļazy
 dog\"", 0.0);
             mystring.set_shader(&flatsh);
             mystring.position_z(2.0);
-    let mut camera2d = pi3d::camera::create(&display);
-            camera2d.set_3d(false);
+    //let mut camera2d = pi3d::camera::create(&display);
+    //        camera2d.set_3d(false);
     
     let mut candlestick = pi3d::shapes::lathe::create(vec![[0.0, 2.0], [0.1, 1.8], [0.1, 1.2],
             [0.5, 1.0], [0.6, 0.6], [0.2, 0.5], [0.2, 0.2], [1.0, 0.1], [1.2, -0.3], [0.0, -2.0]],
@@ -125,8 +125,8 @@ dog\"", 0.0);
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.keys_down.contains(&Keycode::A) {cube2.offset(&[t % 3.0, 0.0, 0.0]);}
         if display.mouse_moved {
-            tilt = (display.mouse_y as f32 - 300.0) * 0.01;
-            rot = (display.mouse_x as f32 - 400.0) * 0.01;
+            tilt = (display.mouse_y as f32 - 300.0) * -0.004;
+            rot = (display.mouse_x as f32 - 400.0) * -0.004;
         }
         if display.keys_pressed.contains(&Keycode::L) {candlestick.buf[0].set_line_width(2.0, true, false);}
         if display.keys_pressed.contains(&Keycode::F) {candlestick.buf[0].set_line_width(0.0, true, false);}

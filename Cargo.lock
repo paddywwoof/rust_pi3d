@@ -92,6 +92,16 @@ version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "farris"
+version = "0.1.0"
+dependencies = [
+ "gl 0.10.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "ndarray 0.11.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pi3d 0.1.0",
+ "sdl2 0.31.0 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
 name = "forest_walk"
 version = "0.1.0"
 dependencies = [

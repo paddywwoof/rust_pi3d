@@ -1,0 +1,10 @@
+[package]
+name = "farris"
+version = "0.1.0"
+authors = ["paddywwof <patrick@eldwick.org.uk>"]
+
+[dependencies]
+sdl2 = "0.31"
+gl = "0.10"
+ndarray = "0.11"
+pi3d = {path = "../pi3d"}

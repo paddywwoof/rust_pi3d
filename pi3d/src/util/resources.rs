@@ -14,6 +14,7 @@ pub enum Error {
     FailedToGetExePath,
     MissingResource,
     RecursionDepth,
+    WindowBuildError {name: String},
 }
 
 impl From<io::Error> for Error {

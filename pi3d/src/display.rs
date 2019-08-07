@@ -5,13 +5,10 @@ use std;
 use gl::types::*;
 use std::time::{Instant, Duration};
 use std::thread::sleep;
+use std::error::Error;
 
 const GL_POINT_SPRITE: GLenum = 0x8861; // needed for NVIDIA driver
 
-#[derive(Debug)]
-pub enum Error {
-    WindowBuildError {name: String},
-}
 
 pub struct Display {
     pub res: ::util::resources::Resources,
@@ -133,11 +130,11 @@ impl Display {
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
 pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, minor: u8
-              ) -> Result<Display, Error> {
+              ) -> Result<Display, Box<Error>> {
     let mut res = ::util::resources::from_exe_path().unwrap();
             res.set_gl_id(profile, major, minor);
-    let sdl = sdl2::init().unwrap();
-    let video_subsystem = sdl.video().unwrap();
+    let sdl = sdl2::init()?;//.unwrap();
+    let video_subsystem = sdl.video()?;//.unwrap();
     let gl_attr = video_subsystem.gl_attr();
         gl_attr.set_context_profile(match profile {
           "GLES" => sdl2::video::GLProfile::GLES,
@@ -147,8 +144,8 @@ pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, min
     let window = video_subsystem
         .window(name, width as u32, height as u32)
         .opengl().resizable()
-        .build().unwrap();
-    let _gl_context = window.gl_create_context().unwrap();
+        .build()?;//.unwrap();
+    let _gl_context = window.gl_create_context()?;//.unwrap();
     let _gl = gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
     unsafe {
         gl::Viewport(0, 0, width as GLsizei, height as GLsizei);
@@ -173,7 +170,7 @@ pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, min
     Ok(Display {
         res,
         window,
-        event_pump: sdl.event_pump().unwrap(),
+        event_pump: sdl.event_pump()?,//.unwrap(),
         sdl,
         _gl_context,
         width,

@@ -5,4 +5,5 @@ members = [
     "forest_walk",
     "tsp",
     "ship_demo",
+    "farris",
 ]

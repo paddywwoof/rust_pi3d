@@ -14,7 +14,7 @@ fn main() {
 
     // shaders
     let shader = pi3d::shader::Program::from_res(&display, "uv_bump").unwrap();
-    let shinesh = pi3d::shader::Program::from_res(&display, "uv_reflect").unwrap();
+    let shinesh = pi3d::shader::Program::from_res(&display, "mat_reflect").unwrap();
     let flatsh = pi3d::shader::Program::from_res(&display, "uv_flat").unwrap();
     let textsh = pi3d::shader::Program::from_res(&display, "uv_pointsprite").unwrap();
 
@@ -89,7 +89,7 @@ fn main() {
     let (ht, _norm) = pi3d::shapes::elevation_map::calc_height(&mymap, 100.0, 245.0);
     let (mut monument, _tex_list) = pi3d::shapes::model_obj::create(&display, "models/pi3d.obj");
              monument.set_shader(&shinesh);
-             monument.set_normal_shine(&vec![bumpimg.id, reflimg.id], 16.0, 0.4, 1.0, 1.0, 0.05, true);
+             monument.set_normal_shine(&vec![bumpimg.id, reflimg.id], 16.0, 0.05, 1.0, 1.0, 0.05, true);
              monument.set_fog(&fog_shade, fog_dist, fog_alpha);
              monument.set_specular(&[0.8, 0.8, 2.0]);
              monument.position(&[100.0, ht + 1.0, 245.0]);

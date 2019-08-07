@@ -252,9 +252,16 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
     let mut model = ::shape::create(bufs);
     for i in 0..model.buf.len() {
         // buf number -> material name -> image file -> Texture struct
-        model.buf[i].set_textures(&vec![tex_list[&map_diffuse[&materials[i]]].id]);
-        // buf number  -> material name -> RGB array
-        model.buf[i].set_material(&color_diffuse[&materials[i]]);
+        if i < materials.len() {
+            let mat_key = &materials[i];
+            if map_diffuse.contains_key(mat_key) && tex_list.contains_key(&map_diffuse[mat_key]) {
+                model.buf[i].set_textures(&vec![tex_list[&map_diffuse[mat_key]].id]);
+            }
+            // buf number  -> material name -> RGB array
+            if color_diffuse.contains_key(mat_key) {
+                model.buf[i].set_material(&color_diffuse[mat_key]);
+            }
+        }
     }
     (model, tex_list)
 }
