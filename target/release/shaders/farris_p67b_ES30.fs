@@ -1,14 +1,15 @@
-#include version
-#include precision
+#version 300 es
+precision mediump float;
 
-varying vec2 texcoordout;
+in vec2 texcoordout;
 
 uniform sampler2D tex0;
 uniform vec3 unif[20];
 
+out vec4 fragColor;
+
 float TWO_PI = radians(360.0);
 float INV_RT3 = inversesqrt(3.0);
-
 
 vec2 eul(float angle) {
   return vec2(cos(angle), sin(angle));
@@ -48,7 +49,6 @@ void main(void) {
   float c_angl = mix_f * unif[16][1];
   mat2 rotn = mat2(cos(c_angl), sin(c_angl),
                   -sin(c_angl), cos(c_angl)); 
-  gl_FragColor = texture2D(tex0, rotn * (uv_coord - vec2(0.5)) + vec2(0.5));
-
+  fragColor = texture(tex0, rotn * (uv_coord - vec2(0.5)) + vec2(0.5));
 }
 

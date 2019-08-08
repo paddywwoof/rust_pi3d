@@ -167,10 +167,8 @@ impl Shader {
             })
             .map(|&(_, kind)| kind)
             .ok_or_else(|| Error::CanNotDetermineShaderTypeForResource { name: name.into() })?;
-
         let source = res.load_cstring(name)
             .map_err(|e| Error::ResourceLoad { name: name.into(), inner: e })?;
-
         Shader::from_source(&source, shader_kind)
             .map_err(|message| Error::CompileError { name: name.into(), message })
     }

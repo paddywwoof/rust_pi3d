@@ -27,6 +27,8 @@ fn main() {
     // shaders
     let shader = pi3d::shader::Program::from_res(&display, "shaders/farris_p67b").unwrap();
     let textsh = pi3d::shader::Program::from_res(&display, "uv_pointsprite").unwrap();
+    //let shader = pi3d::shader::Program::from_res(&display, "shaders/farris_p67b_ES30").unwrap();
+    //let textsh = pi3d::shader::Program::from_res(&display, "shaders/uv_pointsprite_ES30").unwrap();
 
     // cameras
     let mut camera = pi3d::camera::create(&display);
@@ -34,7 +36,7 @@ fn main() {
             camera2d.set_3d(false);
 
     // textures
-    let tex = pi3d::texture::create_from_file(&display, "textures/poppy1.jpg");
+    let tex = pi3d::texture::create_from_file(&display, "models/pi3d.jpg");
 
     // cube
     let mut cube = pi3d::shapes::cuboid::create(10.0, 10.0, 10.0, 1.0, 1.0, 1.0);

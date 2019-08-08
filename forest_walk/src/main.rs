@@ -89,7 +89,7 @@ fn main() {
     let (ht, _norm) = pi3d::shapes::elevation_map::calc_height(&mymap, 100.0, 245.0);
     let (mut monument, _tex_list) = pi3d::shapes::model_obj::create(&display, "models/pi3d.obj");
              monument.set_shader(&shinesh);
-             monument.set_normal_shine(&vec![bumpimg.id, reflimg.id], 16.0, 0.05, 1.0, 1.0, 0.05, true);
+             monument.set_normal_shine(&vec![bumpimg.id, reflimg.id], 16.0, 0.02, 1.0, 1.0, 0.02, false);
              monument.set_fog(&fog_shade, fog_dist, fog_alpha);
              monument.set_specular(&[0.8, 0.8, 2.0]);
              monument.position(&[100.0, ht + 1.0, 245.0]);

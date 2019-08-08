@@ -250,6 +250,9 @@ void main(void) {
   float bfact = unib[3][2] * (1.0 - smoothstep(100.0, 600.0, dist)); // ------ attenuate smoothly between 100 and 600 units
   float intensity = clamp(dot(lightVector, normalize(vec3(0.0, 0.0, 1.0) + bump * bfact)) * lightFactor, 0.0, 1.0); // ------ adjustment of colour according to combined normal
   texc.rgb = (texc.rgb * unif[9]) * intensity + (texc.rgb * unif[10]); // ------ directional lightcol * intensity + ambient lightcol",
+
+
+
             "//std_fog_start.inc
 //NB previousl (in std_head_vs.inc) define fog_start and unif[20]
   fog_start = fract(unif[5][0]);
@@ -646,11 +649,11 @@ void main(void) {
   texcoordout = texcoord * unib[2].xy + unib[3].xy;
 
   gl_Position = modelviewmatrix[1] * vec4(vertex,1.0);
-  //gl_PointSize = unib[2][2] / dist; // NB this line stops the shader working on windows platforms!
+  gl_PointSize = unib[2][2] / dist; // NB this line stops the shader working on windows platforms!
 }
 ",
             "", "",
-"precision mediump float;",
+"//precision mediump float;",
 "#version 120",
 "precision mediump float;",
 "#version 100"];
