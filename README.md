@@ -1,7 +1,7 @@
 # rust_pi3d
 translation of pi3d from python to rust
 
-<img src="rust_pi3d.png", style="float:left; width:50%" />
+<img src="rust_pi3d.png" align="left" width="50%" />
 
 Following parts of the tutorial:
 http://nercury.github.io/rust/opengl/tutorial/2018/02/08/opengl-in-rust-from-scratch-01-window.html
