@@ -1,3 +1,4 @@
+#version 120
 precision mediump float;
 
 uniform sampler2D tex0;
@@ -14,6 +15,8 @@ varying vec3 normout;
 varying vec2 texcoordout;
 varying vec3 lightVector;
 varying float lightFactor;
+
+//fragcolor
 
 void main(void) {
   vec4 texc = texture2D(tex0, texcoordout); // ------ material or basic colour from texture

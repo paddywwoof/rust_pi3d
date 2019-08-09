@@ -1,5 +1,5 @@
-#include version
-#include precision
+#version 120
+precision mediump float;
 
 attribute vec3 vertex;
 attribute vec2 texcoord;

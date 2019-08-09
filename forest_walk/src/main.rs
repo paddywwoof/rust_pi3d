@@ -7,7 +7,7 @@ const H:f32 = 480.0;
 
 fn main() {
     // setup display
-    let mut display = pi3d::display::create("experimental window", W, H, "GL", 2, 1).unwrap();
+    let mut display = pi3d::display::create("experimental window", W, H, "GLES", 3, 0).unwrap();
             display.set_background(&[0.1, 0.1, 0.2, 1.0]);
             display.set_mouse_relative(true);
             display.set_target_fps(1000.0);
@@ -87,7 +87,7 @@ fn main() {
 
     // create and position monument
     let (ht, _norm) = pi3d::shapes::elevation_map::calc_height(&mymap, 100.0, 245.0);
-    let (mut monument, _tex_list) = pi3d::shapes::model_obj::create(&display, "models/pi3d.obj");
+    let (mut monument, _tex_list) = pi3d::shapes::model_obj::create(&display, "models/rust_pi3d.obj");
              monument.set_shader(&shinesh);
              monument.set_normal_shine(&vec![bumpimg.id, reflimg.id], 16.0, 0.02, 1.0, 1.0, 0.02, false);
              monument.set_fog(&fog_shade, fog_dist, fog_alpha);

@@ -25,15 +25,16 @@ impl From<io::Error> for Error {
 
 pub struct Resources {
     root_path: PathBuf,
-    gl_id: String,
+    pub gl_id: String,
 }
 
 impl Resources {
-    pub fn load_cstring(&self, resource_name: &str) -> Result<ffi::CString, Error> {
+    pub fn load_string(&self, resource_name: &str) -> Result<String, Error> {
         let mut listing = Vec::<String>::new();
         self.load_includes(&resource_name, &mut listing, 0)?;
-        let buffer: Vec<u8> = listing.join("\n").as_bytes().to_vec();
-        ffi::CString::new(buffer).map_err(|_e| Error::FileContainsNil)
+        Ok(listing.join("\n"))
+        //let buffer: Vec<u8> = listing.join("\n").as_bytes().to_vec();
+        //ffi::CString::new(buffer).map_err(|_e| Error::FileContainsNil)
     }
 
     pub fn resource_name_to_path(&self, location: &str) -> PathBuf {
@@ -69,10 +70,6 @@ impl Resources {
             match s.find("#include") { 
                 Some(ix) => {
                     let (_, new_key) = s.split_at(ix + 9);
-                    let new_key = match new_key {
-                      "version" | "precision" => format!("{}{}", new_key, self.gl_id),
-                      _ => new_key.to_string(),
-                    };
                     self.load_includes(&new_key, &mut listing, depth + 1)?;
                 },
                 None => {

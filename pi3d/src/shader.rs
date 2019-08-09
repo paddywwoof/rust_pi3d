@@ -167,9 +167,28 @@ impl Shader {
             })
             .map(|&(_, kind)| kind)
             .ok_or_else(|| Error::CanNotDetermineShaderTypeForResource { name: name.into() })?;
-        let source = res.load_cstring(name)
+        let mut source = res.load_string(name)
             .map_err(|e| Error::ResourceLoad { name: name.into(), inner: e })?;
-        Shader::from_source(&source, shader_kind)
+        if res.gl_id == "GLES20" {
+            source = source.replace("version 120", "version 100")
+                           .replace("//precision", "precision");
+        }
+        if res.gl_id == "GLES30" {
+            source = source.replace("version 120", "version 300 es")
+                           .replace("//precision", "precision")
+                           .replace("attribute", "in")
+                           .replace("Texture2D", "Texture")
+                           .replace("//fragcolor", "out vec4 fragColor;")
+                           .replace("gl_fragColor", "fragColor");
+            if shader_kind == gl::VERTEX_SHADER {
+                source = source.replace("varying", "out");
+            }
+            else {
+                source = source.replace("varying", "in");
+            }
+        } // the default settings are for GL21
+        let c_source = CString::new(source).unwrap();
+        Shader::from_source(&c_source, shader_kind)
             .map_err(|message| Error::CompileError { name: name.into(), message })
     }
 

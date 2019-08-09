@@ -1,4 +1,4 @@
-pub const NAMES: [&str; 51] = ["clashtest.fs",
+pub const NAMES: [&str; 47] = ["clashtest.fs",
             "clashtest.vs",
             "conway.fs",
             "conway.vs",
@@ -44,19 +44,17 @@ pub const NAMES: [&str; 51] = ["clashtest.fs",
             "uv_reflect.fs",
             "uv_reflect.vs",
             "uv_toon.fs",
-            "uv_toon.vs",
-            "precisionGL21",
-            "versionGL21",
-            "precisionGLES20",
-            "versionGLES20"];
+            "uv_toon.vs"];
 
-pub const CODES: [&str; 51] = ["", "", "", "", "", "",
+pub const CODES: [&str; 47] = ["", "", "", "", "", "",
             "//mat_bump.fs
 #include std_head_fs.inc
 
 varying vec2 bumpcoordout;
 varying vec3 lightVector;
 varying float lightFactor;
+
+//fragcolor
 
 void main(void) {
 #include std_main_mat.inc
@@ -91,6 +89,8 @@ void main(void) {
 "            //mat_flat.fs
 #include std_head_fs.inc
 
+//fragcolor
+
 void main(void) {
 #include std_main_mat.inc
   //if (distance(gl_PointCoord, vec2(0.5)) > 0.5) discard; //circular points
@@ -118,6 +118,8 @@ void main(void) {
 
 varying vec3 lightVector;
 varying float lightFactor;
+
+//fragcolor
 
 void main(void) {
 #include std_main_mat.inc
@@ -148,13 +150,15 @@ void main(void) {
 
 
 "            //mat_pointsprite.fs
-#include version
-#include precision
+#version 120
+precision mediump float;
 uniform vec3 unib[5];
 //uniform float hardness => unib[0][0]
 //uniform float discard => unib[0][2]
 
 varying vec4 colour;
+
+//fragcolor
 
 void main(void) {
   float alpha = 2.0 * unib[0][0] * (0.5 - length(gl_PointCoord - vec2(0.5)));
@@ -166,8 +170,8 @@ void main(void) {
 
 
 "            //mat_pointsprite.vs
-#include version
-#include precision
+#version 120
+precision mediump float;
 attribute vec3 vertex;
 attribute vec3 normal;
 attribute vec2 texcoord;
@@ -196,6 +200,8 @@ varying vec3 inray;
 varying vec3 normout;
 varying vec3 lightVector;
 varying float lightFactor;
+
+//fragcolor
 
 void main(void) {
 #include std_main_mat.inc
@@ -265,8 +271,8 @@ void main(void) {
   
             "//std_head_fs.inc
 // ----- boiler-plate code for fragment shader variable definition
-#include version
-#include precision
+#version 120
+precision mediump float;
 
 uniform sampler2D tex0;
 uniform sampler2D tex1;
@@ -282,8 +288,8 @@ varying float fog_start;",
 
             "//std_head_vs.inc
 // ----- boiler-plate code for vertex shader variable definition
-#include version
-#include precision
+#version 120
+precision mediump float;
 
 attribute vec3 vertex;
 attribute vec3 normal;
@@ -385,6 +391,8 @@ varying vec2 bumpcoordout;
 varying vec3 lightVector;
 varying float lightFactor;
 
+//fragcolor
+
 void main(void) {
 #include std_main_uv.inc
   vec3 bump = normalize(texture2D(tex1, bumpcoordout).rgb * 2.0 - 1.0);
@@ -434,6 +442,8 @@ varying vec3 lightVector;
 varying float lightFactor;
 varying float texFactor;
 
+//fragcolor
+
 void main(void) {
   vec4 texc = mix(
                   mix(texture2D(tex0, texcoordout), texture2D(tex2, texcoordout), clamp(texFactor, 0.0, 1.0)),
@@ -482,6 +492,8 @@ void main(void) {
 
 varying vec2 texcoordout;
 
+//fragcolor
+
 void main(void) {
 #include std_main_uv.inc
   gl_FragColor = mix(texc, vec4(unif[4], unif[5][1]), ffact); // ------ combine using factors
@@ -510,6 +522,8 @@ varying vec3 normout;
 varying vec2 texcoordout;
 varying vec3 lightVector;
 varying float lightFactor;
+
+//fragcolor
 
 void main(void) {
 #include std_main_uv.inc
@@ -545,8 +559,8 @@ void main(void) {
 
 
 "            ////uv_pointsprite.fs
-#include version
-#include precision
+#version 120
+precision mediump float;
 uniform sampler2D tex0;
 uniform vec3 unib[5];
 
@@ -556,6 +570,8 @@ varying vec2 corner;
 varying float subsize;
 varying float alpha;
 varying vec4 colour;
+
+//fragcolor
 
 const vec2 p_centre = vec2(0.5);
 const vec2 limit = vec2(0.6);
@@ -572,8 +588,8 @@ void main(void) {
 
 
 "            //uv_pointsprite.vs
-#include version
-#include precision
+#version 120
+precision mediump float;
 attribute vec3 vertex;
 attribute vec3 normal;
 attribute vec2 texcoord;
@@ -612,6 +628,8 @@ varying vec3 inray;
 varying vec3 normout;
 varying vec3 lightVector;
 varying float lightFactor;
+
+//fragcolor
 
 void main(void) {
 #include std_main_uv.inc
@@ -652,8 +670,4 @@ void main(void) {
   gl_PointSize = unib[2][2] / dist; // NB this line stops the shader working on windows platforms!
 }
 ",
-            "", "",
-"//precision mediump float;",
-"#version 120",
-"precision mediump float;",
-"#version 100"];
+            "", ""];

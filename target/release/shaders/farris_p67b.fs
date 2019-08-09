@@ -1,10 +1,12 @@
-#include version
-#include precision
+#version 120
+precision mediump float;
 
 varying vec2 texcoordout;
 
 uniform sampler2D tex0;
 uniform vec3 unif[20];
+
+//fragcolor
 
 float TWO_PI = radians(360.0);
 float INV_RT3 = inversesqrt(3.0);
@@ -49,6 +51,5 @@ void main(void) {
   mat2 rotn = mat2(cos(c_angl), sin(c_angl),
                   -sin(c_angl), cos(c_angl)); 
   gl_FragColor = texture2D(tex0, rotn * (uv_coord - vec2(0.5)) + vec2(0.5));
-
 }
 

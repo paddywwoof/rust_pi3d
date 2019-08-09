@@ -19,7 +19,7 @@ fn reset_params(obj: &mut pi3d::shape::Shape) {
 
 fn main() {
     // setup display
-    let mut display = pi3d::display::create("Farris page 67", W, H, "GL", 2, 1).unwrap();
+    let mut display = pi3d::display::create("Farris page 67", W, H, "GLES", 2, 0).unwrap();
             display.set_background(&[0.1, 0.1, 0.2, 1.0]);
             display.set_mouse_relative(true);
             display.set_target_fps(1000.0);
