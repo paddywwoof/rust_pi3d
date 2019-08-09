@@ -179,7 +179,7 @@ impl Shader {
                            .replace("attribute", "in")
                            .replace("Texture2D", "Texture")
                            .replace("//fragcolor", "out vec4 fragColor;")
-                           .replace("gl_fragColor", "fragColor");
+                           .replace("gl_FragColor", "fragColor");
             if shader_kind == gl::VERTEX_SHADER {
                 source = source.replace("varying", "out");
             }
