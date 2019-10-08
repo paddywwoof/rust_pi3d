@@ -59,6 +59,10 @@ but I've not tried that. (Let me know if you do and what the problems are).
 
 TODO::
 
+~~installation, requirements and compile instructions on here!~~
+
+~~build script to copy support files (images, models, fonts etc) to target
+directory~~
 
 ~~Fonts and lettering.~~
 
