@@ -143,10 +143,10 @@ impl Program {
 
 impl Drop for Program {
     fn drop(&mut self) {
-        unsafe {
-            //println!("NOT deleting program {:?}", self.id);
-            //gl::DeleteProgram(self.id); //TODO use lifetimes to do this properly!
-        }
+        /*unsafe {
+            println!("NOT deleting program {:?}", self.id);
+            gl::DeleteProgram(self.id); //TODO use lifetimes to do this properly!
+        }*/
     }
 }
 
@@ -212,10 +212,10 @@ impl Shader {
 
 impl Drop for Shader {
     fn drop(&mut self) {
-        unsafe {
-            //println!("NOT deleting shader {:?}", self.id);
-            //gl::DeleteShader(self.id); //TODO use lifetimes to do this properly!
-        }
+        /*unsafe {
+              println!("NOT deleting shader {:?}", self.id);
+              gl::DeleteShader(self.id); //TODO use lifetimes to do this properly!
+        }*/
     }
 }
 

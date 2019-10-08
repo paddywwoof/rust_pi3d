@@ -93,8 +93,8 @@ impl Buffer {
         self.textures = textures.clone();
         self.unib[[0, 0]] = ntiles;
         self.unib[[0, 1]] = shiny;
-        self.unib[[3, 0]] = umult;
-        self.unib[[3, 1]] = vmult;
+        self.unib[[2, 0]] = umult;
+        self.unib[[2, 1]] = vmult;
         self.unib[[3, 2]] = bump_factor;
     }
 

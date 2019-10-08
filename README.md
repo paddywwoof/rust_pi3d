@@ -24,18 +24,29 @@ patrick@thiscomputer:~/rust/rust_pi3d$ sudo apt-get install libsdl2-dev
 ```
 
 See the tutorial link at the top or the rust sdl2 crate site for what to
-do for windows.
+do for windows. PS I have added the SDL2.dll v2.0.10 x86 but you should
+download and install the one appropriate for your windows and machine.
 
 Then in the terminal navigate to wherever you cloned or extracted this
-repo and build the executables using cargo, and run them like this:
+repo and build the executables using cargo, and run them like this (NB
+now cd to the pi3d directory):
 
 ```sh
-patrick@thiscomputer:~/rust/rust_pi3d$ cargo build --release
-patrick@thiscomputer:~/rust/rust_pi3d$ target/release/game
-patrick@thiscomputer:~/rust/rust_pi3d$ target/release/forest_walk
+patrick@thiscomputer:~/rust/rust_pi3d/pi3d$ cargo build --examples --release
 ```
+then
+```
+patrick@thiscomputer:~/rust/rust_pi3d/pi3d$ target/release/examples/game
+patrick@thiscomputer:~/rust/rust_pi3d/pi3d$ target/release/examples/forest_walk
+```
+you only have to do the initial build once as this runs the build.rs script
+that copies over the examples dependencies. After that you can run examples using.
+```
+patrick@thiscomputer:~/rust/rust_pi3d/pi3d$ cargo run --example game
+```
+and all the source will be checked and recompiled as required.
 
-Building for release will take longer and exclude debugging symbols etc but
+Building for release will take longer (maybe) and exclude debugging symbols etc but
 run faster (obviously) and will be much smaller. If you want to build for
 debug (probably sensible) exclude the `--release`. However if you do this
 the required support files in `target/release/textures`, `models`, `ecubes`
@@ -48,10 +59,6 @@ but I've not tried that. (Let me know if you do and what the problems are).
 
 TODO::
 
-~~installation, requirements and compile instructions on here!~~
-
-build script to copy support files (images, models, fonts etc) to target
-directory
 
 ~~Fonts and lettering.~~
 

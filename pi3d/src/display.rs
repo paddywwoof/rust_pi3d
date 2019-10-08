@@ -124,13 +124,36 @@ impl Display {
 
     pub fn was_resized(&mut self) -> bool {
         let previous_value = self.resized;
-        self.resized = false;
+        self.resized = false; // calling this method resets flag
         previous_value
+    }
+
+    pub fn get_size(&mut self) -> (f32, f32) {
+        (self.width.clone(), self.height.clone())
+    }
+
+    pub fn set_fullscreen(&mut self, on: bool) {
+        match self.window.set_fullscreen(
+            if on {sdl2::video::FullscreenType::Desktop} 
+            else {sdl2::video::FullscreenType::Off}) {
+                Ok(_) => {
+                    let (w, h) = self.window.drawable_size();
+                    unsafe {
+                        gl::Viewport(0, 0, w as GLsizei, h as GLsizei);
+                    }
+                    self.resized = true;
+                    self.width = w as f32;
+                    self.height = h as f32;
+                }
+                Err(e) => {
+                    println!("Error toggleing fullscreen - {:?}", e);
+                },
+        }
     }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
 pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, minor: u8
-              ) -> Result<Display, Box<Error>> {
+              ) -> Result<Display, Box<dyn Error>> {
     let mut res = ::util::resources::from_exe_path().unwrap();
             res.set_gl_id(profile, major, minor);
     let sdl = sdl2::init()?;//.unwrap();
@@ -177,7 +200,7 @@ pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, min
         height,
         near: 1.0,
         far: 1000.0,
-        fov: 45.0,
+        fov: 1.0,
         keys_pressed: vec![],
         keys_down: vec![],
         mouse_moved: false,
@@ -186,7 +209,7 @@ pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, min
         mouse_relative: true,
         start: Instant::now(),
         fps: 0.0,
-        target_frame_tm: 20000000, //ms -> 50fps default target
+        target_frame_tm: 20000000, //ns -> 50fps default target
         resized: false,
     })
 }

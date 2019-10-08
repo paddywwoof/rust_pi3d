@@ -2,11 +2,19 @@
 name = "pi3d"
 version = "0.1.0"
 authors = ["paddywwof <patrick@eldwick.org.uk>"]
+build = "build.rs"
 
 [dependencies]
 sdl2 = "0.31"
 gl = "0.10"
 ndarray = "0.11"
 image = "0.19"
-rand = "0.4.2"
+rand = "^0.6.5"
 rusttype = "0.6"
+
+[build-dependencies]
+fs_extra = "^1.1"
+
+[profile.release]
+codegen-units = 1
+incremental = true

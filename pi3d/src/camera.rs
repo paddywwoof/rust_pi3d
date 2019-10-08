@@ -45,9 +45,10 @@ impl Camera {
     }
 
     pub fn set_lens_from_display(&mut self, display: &::display::Display) {
-        self.lens = nd::arr1(&[display.near, display.far, display.fov, display.width / display.height]);
-        self.width = display.width;
-        self.height = display.height;
+        self.lens = nd::arr1(&[display.near, display.far, display.fov,
+                               display.width as f32 / display.height as f32]);
+        self.width = display.width as f32;
+        self.height = display.height as f32;
         self.reset();
     }
 
@@ -176,8 +177,8 @@ pub fn create(display: &::display::Display) -> Camera {
         at,
         lens,
         scale: 1.0,
-        width: display.width,
-        height: display.height,
+        width: display.width as f32,
+        height: display.height as f32,
         is_3d: true,
         was_moved: true,
         rotated: false,

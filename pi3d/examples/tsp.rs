@@ -3,14 +3,16 @@ extern crate rand;
 #[macro_use(s)]
 extern crate ndarray as nd;
 
-use rand::{Rng, ThreadRng};
+use rand::{thread_rng, Rng};
+use rand::prelude::ThreadRng;
+use rand::seq::SliceRandom;
 use std::{collections::HashMap,
           cmp::Ordering,
           io::prelude::*,
           fs::File};
 
 const POP_N: usize = 800;
-const N_CITIES: usize = 42; // with cities from file this need to be mutated, i.e. use cities.len()
+const N_CITIES: usize = 80; // with cities from file this need to be mutated, i.e. use cities.len()
 const W: f32 = 800.0;
 const H: f32 = 800.0;
 
@@ -27,10 +29,10 @@ fn main() {
   let mut camera = pi3d::camera::create(&display);
           camera.set_3d(false);
 
-  let mut rng: ThreadRng = rand::thread_rng(); // one instance of random number gen passed as argument to methods
+  let mut rng = thread_rng(); // one instance of random number gen passed as argument to methods
   //parsing text from file
   let mut cities: Vec<Point> = vec![];
-  match File::open("cities42.txt") {
+  match File::open("cities/cities80.txt") { // NB needs to be in step with N_CITIES define above
     Ok(mut f) => {
           let mut buffer = String::new();
           match f.read_to_string(&mut buffer) {
@@ -203,7 +205,7 @@ impl Organism {
   }
   ////////////////////////////
   fn shuffle(&mut self, rng: &mut ThreadRng) {
-    rng.shuffle(&mut self.genes);
+    self.genes.shuffle(rng);
     self.length = -1.0f32;
   }
   ////////////////////////////
@@ -275,7 +277,7 @@ impl Organism {
     let n = self.genes.len();
     if num < 2 || num >= n {println!("error"); return;}
     let mut indices: Vec<usize> = (0..n).collect();
-    rng.shuffle(&mut indices);
+    indices.shuffle(rng);
     for i in 0..num {
       let tmp: usize = self.genes[indices[i]];
       self.genes[indices[i]] = self.genes[indices[(i + 1) % num]];

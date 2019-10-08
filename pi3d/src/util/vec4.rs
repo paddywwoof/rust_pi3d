@@ -4,8 +4,8 @@ extern crate ndarray;
 
 use ndarray as nd;
 
-/// invert a 4x4 matrix
-fn inv_matrix(m: &nd::Array2<f32>) -> nd::Array2<f32> { 
+/// invert a 4x4 matrix TODO not used at the moment
+fn _inv_matrix(m: &nd::Array2<f32>) -> nd::Array2<f32> { 
     let a2323 = m[[2,2]] * m[[3,3]] - m[[2,3]] * m[[3,2]];
     let a1323 = m[[2, 1]] * m[[3, 3]] - m[[2, 3]] * m[[3, 1]];
     let a1223 = m[[2, 1]] * m[[3, 2]] - m[[2, 2]] * m[[3, 1]];

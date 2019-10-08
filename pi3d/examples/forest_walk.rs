@@ -7,7 +7,7 @@ const H:f32 = 480.0;
 
 fn main() {
     // setup display
-    let mut display = pi3d::display::create("experimental window", W, H, "GLES", 3, 0).unwrap();
+    let mut display = pi3d::display::create("forest_walk window", W, H, "GL", 2, 1).unwrap();
             display.set_background(&[0.1, 0.1, 0.2, 1.0]);
             display.set_mouse_relative(true);
             display.set_target_fps(1000.0);

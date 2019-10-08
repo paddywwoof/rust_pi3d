@@ -19,7 +19,7 @@ fn reset_params(obj: &mut pi3d::shape::Shape) {
 
 fn main() {
     // setup display
-    let mut display = pi3d::display::create("Farris page 67", W, H, "GLES", 2, 0).unwrap();
+    let mut display = pi3d::display::create("Farris page 67", W, H, "GL", 2, 1).unwrap();
             display.set_background(&[0.1, 0.1, 0.2, 1.0]);
             display.set_mouse_relative(true);
             display.set_target_fps(1000.0);
@@ -36,7 +36,7 @@ fn main() {
             camera2d.set_3d(false);
 
     // textures
-    let tex = pi3d::texture::create_from_file(&display, "models/pi3d.jpg");
+    let tex = pi3d::texture::create_from_file(&display, "textures/poppy1.jpg");
 
     // cube
     let mut cube = pi3d::shapes::cuboid::create(10.0, 10.0, 10.0, 1.0, 1.0, 1.0);
@@ -106,7 +106,7 @@ fn main() {
         let cd = camera.get_direction();
         let dx = cd[0] * df - cd[2] * ds;
         x += dx;
-        //y += cd[1] * df;
+        y += cd[1] * df;
         let dz = cd[2] * df + cd[0] * ds;
         z += dz;
         camera.reset();

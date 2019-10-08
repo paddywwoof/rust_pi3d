@@ -1,8 +1,6 @@
 use std::path::PathBuf;
 use std::fs;
 use std::io::{self, Read};
-use std::ffi;
-
 
 use ::shaders::built_in_shaders::NAMES;
 use ::shaders::built_in_shaders::CODES;
@@ -38,12 +36,12 @@ impl Resources {
     }
 
     pub fn resource_name_to_path(&self, location: &str) -> PathBuf {
-        //TODO if location starts with '/' use fs root rather than exe root
-        let mut path: PathBuf = self.root_path.clone();
-        for part in location.split("/") {
-            path = path.join(part);
+        let new_path = PathBuf::from(location);
+        let mut path = PathBuf::new();
+        if !new_path.has_root() { // only start from exe root path if not /
+            path = self.root_path.clone();
         }
-        path
+        path.join(new_path)
     }
 
     pub fn set_gl_id(&mut self, version: &str, major: u8, minor: u8) {

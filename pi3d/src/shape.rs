@@ -63,6 +63,11 @@ macro_rules! make_shape {
                     self.buf[i].set_shader(&shader_program.clone());
                 }
             }
+            pub fn set_textures(&mut self, tex_ids: &Vec<GLuint>) {
+                for i in 0..self.buf.len() {
+                    self.buf[i].set_textures(tex_ids);
+                }
+            }
             pub fn set_draw_details(&mut self, shader_program: &::shader::Program,
                 tex_ids: &Vec<GLuint>, ntiles: f32, shiny: f32, umult: f32,
                 vmult:f32, bump_factor: f32) {
