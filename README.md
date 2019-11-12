@@ -42,7 +42,7 @@ patrick@thiscomputer:~/rust/rust_pi3d/pi3d$ target/release/examples/forest_walk
 you only have to do the initial build once as this runs the build.rs script
 that copies over the examples dependencies. After that you can run examples using.
 ```
-patrick@thiscomputer:~/rust/rust_pi3d/pi3d$ cargo run --example game
+patrick@thiscomputer:~/rust/rust_pi3d/pi3d$ cargo run --example game --release
 ```
 and all the source will be checked and recompiled as required.
 

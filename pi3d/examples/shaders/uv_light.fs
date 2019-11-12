@@ -1,5 +1,5 @@
 #version 120
-precision mediump float;
+//precision mediump float;
 
 uniform sampler2D tex0;
 uniform sampler2D tex1;
