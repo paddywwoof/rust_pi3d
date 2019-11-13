@@ -150,6 +150,10 @@ impl Display {
                 },
         }
     }
+
+    pub fn set_opacity(&mut self, alpha: f32) {
+        self.window.set_opacity(alpha).unwrap();
+    }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
 pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, minor: u8

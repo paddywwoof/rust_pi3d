@@ -177,7 +177,7 @@ impl Shader {
             source = source.replace("version 120", "version 300 es")
                            .replace("//precision", "precision")
                            .replace("attribute", "in")
-                           .replace("Texture2D", "Texture")
+                           .replace("texture2D", "texture")
                            .replace("//fragcolor", "out vec4 fragColor;")
                            .replace("gl_FragColor", "fragColor");
             if shader_kind == gl::VERTEX_SHADER {
