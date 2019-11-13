@@ -151,7 +151,7 @@ void main(void) {
 
 "            //mat_pointsprite.fs
 #version 120
-precision mediump float;
+//precision mediump float;
 uniform vec3 unib[5];
 //uniform float hardness => unib[0][0]
 //uniform float discard => unib[0][2]
@@ -171,7 +171,7 @@ void main(void) {
 
 "            //mat_pointsprite.vs
 #version 120
-precision mediump float;
+//precision mediump float;
 attribute vec3 vertex;
 attribute vec3 normal;
 attribute vec2 texcoord;
@@ -272,7 +272,7 @@ void main(void) {
             "//std_head_fs.inc
 // ----- boiler-plate code for fragment shader variable definition
 #version 120
-precision mediump float;
+//precision mediump float;
 
 uniform sampler2D tex0;
 uniform sampler2D tex1;
@@ -289,7 +289,7 @@ varying float fog_start;",
             "//std_head_vs.inc
 // ----- boiler-plate code for vertex shader variable definition
 #version 120
-precision mediump float;
+//precision mediump float;
 
 attribute vec3 vertex;
 attribute vec3 normal;
@@ -560,7 +560,7 @@ void main(void) {
 
 "            ////uv_pointsprite.fs
 #version 120
-precision mediump float;
+//precision mediump float;
 uniform sampler2D tex0;
 uniform vec3 unib[5];
 
@@ -589,7 +589,7 @@ void main(void) {
 
 "            //uv_pointsprite.vs
 #version 120
-precision mediump float;
+//precision mediump float;
 attribute vec3 vertex;
 attribute vec3 normal;
 attribute vec2 texcoord;
