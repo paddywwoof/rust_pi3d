@@ -1,3 +1,5 @@
+extern crate gl;
+
 use std::path::PathBuf;
 use std::fs;
 use std::io::{self, Read};
@@ -44,8 +46,31 @@ impl Resources {
         path.join(new_path)
     }
 
-    pub fn set_gl_id(&mut self, version: &str, major: u8, minor: u8) {
-      self.gl_id = format!("{}{}{}", version, major, minor);
+    pub fn set_gl_id(&mut self) {
+        // NB must be run after GL initialized
+        let mut gl_str = String::from("");
+        unsafe {
+            let version = gl::GetString(gl::VERSION);
+            for i in 0..12 {
+                if version.add(i).is_null() || *version.add(1) == 0 {
+                    break;
+                }
+                gl_str.push(*version.add(i) as char);
+            }
+        }
+        self.gl_id = String::from("GL");
+        if gl_str.contains("ES") {
+            self.gl_id.push_str("ES");
+        }
+        for s in gl_str.split(" ") {
+            if s.contains(".") {
+                for n in s.split(".").take(2) {
+                    self.gl_id.push_str(n);
+                }
+                break;
+            }
+        }
+        println!("gl_id: {}", self.gl_id);
     } 
 
     fn load_includes(&self, resource_name: &str, mut listing: &mut Vec<String>, depth: u32) -> Result<(), Error> {
@@ -86,8 +111,6 @@ pub fn from_exe_path() -> Result<Resources, Error> {
     let exe_path = exe_file_name.parent().ok_or(Error::FailedToGetExePath)?;
     Ok(Resources {
       root_path: exe_path.into(),
-      gl_id: "GL21".to_string(),
+      gl_id: String::from("GL21"),
     })
 }
-
-

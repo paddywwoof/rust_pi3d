@@ -14,6 +14,8 @@ macro_rules! make_shape {
      x:f32=0.0, y: u8=1, z : f32 = 666.0
      */
         use gl::types::*; // needs to be inside macro to allow it to be called elsewhere
+        use std::cell::RefCell;
+        use std::rc::Rc;
 
         pub struct $s {
             pub unif: nd::Array2<f32>,
@@ -28,19 +30,23 @@ macro_rules! make_shape {
             pub matrix: nd::Array3<f32>,
             //pub children: Vec<::shape::Shape>, //children have to be owned by parent shape to avoid nightmare lifetime controls
             pub children: Vec<$s>, //children have to be owned by parent shape to avoid nightmare lifetime controls
+            cam: Rc<RefCell<::camera::CameraInternals>>,
             $($att: $typ,)*
         }
 
         impl $s {
-            pub fn draw(&mut self, mut camera: &mut ::camera::Camera) {
-                self.draw_with_children(&mut camera, &nd::Array::eye(4));
+            pub fn draw(&mut self) {
+                self.draw_with_children(&nd::Array::eye(4));
             }
 
-            fn draw_with_children(&mut self, mut camera: &mut ::camera::Camera, next_m: &nd::Array2<f32>) {
-                if !camera.mtrx_made {
-                    camera.make_mtrx();
+            fn draw_with_children(&mut self, next_m: &nd::Array2<f32>) {
+                { // borrow mut just for this block, and later due to recursive draw for children
+                    let mut cam = self.cam.borrow_mut();
+                    if !cam.mtrx_made {
+                        cam.make_mtrx();
+                    }
+                    self.unif.slice_mut(s![6, ..]).assign(&cam.eye);
                 }
-                self.unif.slice_mut(s![6, ..]).assign(&camera.eye);
                 let m = &self.tr2.dot(
                         &self.scl.dot(
                         &self.roy.dot(
@@ -49,10 +55,11 @@ macro_rules! make_shape {
                             &self.tr1.dot(
                             next_m))))));
                 for i in 0..self.children.len() {
-                    self.children[i].draw_with_children(&mut camera, m);
+                    self.children[i].draw_with_children(m);
                 }
                 self.matrix.slice_mut(s![0, .., ..]).assign(m);
-                self.matrix.slice_mut(s![1, .., ..]).assign(&m.dot(&camera.mtrx));
+                self.matrix.slice_mut(s![1, .., ..]).assign(
+                                        &m.dot(&self.cam.borrow().mtrx));
                 for i in 0..self.buf.len() {
                     self.buf[i].draw(&self.matrix, &self.unif);
                 }
@@ -196,7 +203,7 @@ macro_rules! make_shape {
         }
 
         // TODO impl this as ::new() ?
-        pub fn create(buf: Vec<::buffer::Buffer>) -> $s {
+        pub fn create(buf: Vec<::buffer::Buffer>, cam: Rc<RefCell<::camera::CameraInternals>>) -> $s {
             $s {
                 unif: nd::arr2(&[
                         [0.0, 0.0, 0.0], //00 location
@@ -220,7 +227,7 @@ macro_rules! make_shape {
                         [0.0, 0.0, 0.0], //18 available
                         [0.0, 0.0, 0.0], //19 available
                         ]),//
-                buf: buf,
+                buf,
                 tr1: nd::Array::eye(4),
                 rox: nd::Array::eye(4),
                 roy: nd::Array::eye(4),
@@ -230,6 +237,7 @@ macro_rules! make_shape {
                 m_flag: true,
                 matrix: nd::Array::zeros((3, 4, 4)),
                 children: vec![],
+                cam,
                 $($att: $val,)*
             }
         }

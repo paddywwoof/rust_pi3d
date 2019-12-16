@@ -45,11 +45,11 @@ fn main() {
             display.set_fullscreen(true);
             display.set_background(&[0.2, 0.2, 0.2, 1.0]);
             display.set_target_fps(30.0);
-    let shader = pi3d::shader::Program::from_res(&display, "shaders/blend_new").unwrap();
+    let shader = pi3d::shader::Program::from_res("shaders/blend_new").unwrap();
     let mut camera = pi3d::camera::create(&display);
             camera.set_3d(false); // make it a 2D shader
     let (w, h) = display.get_size();
-    let mut slide = pi3d::shapes::plane::create(w as f32, h as f32); // fullscreen
+    let mut slide = pi3d::shapes::plane::create(camera.reference(), w as f32, h as f32); // fullscreen
             slide.set_draw_details(&shader, &vec![], 1.0, 1.0, 1.0, 1.0, 1.0);
             //slide.position_z(5.0);
 
@@ -76,7 +76,7 @@ fn main() {
                     sbg = sfg.take(); // leave None in its place
                 }
                 if !sfg.is_some() { // as could have been set to None
-                    let mut tex = pi3d::texture::create_from_file(&display, file_list[pic_num].as_str());
+                    let mut tex = pi3d::texture::create_from_file(file_list[pic_num].as_str());
                             tex.set_mirrored_repeat(true);
                     sfg = Some(tex);
                     pic_num += 1;
@@ -115,7 +115,7 @@ fn main() {
             let a: f32 = delta_tm.as_millis() as f32 / fade_time.as_millis() as f32;
             slide.unif[[14, 2]] = if a < 1.0 {a} else {1.0};
         }
-        slide.draw(&mut camera);
+        slide.draw();
         //TODO sleep while nothing's changing?
     }
 }

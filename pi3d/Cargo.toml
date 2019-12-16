@@ -6,7 +6,7 @@ build = "build.rs"
 
 [dependencies]
 sdl2 = "^0.32.1"
-gl = "0.10"
+gl = "^0.10"
 ndarray = "0.11"
 image = "0.19"
 rand = "^0.6.5"

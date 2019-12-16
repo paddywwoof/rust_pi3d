@@ -25,10 +25,10 @@ fn main() {
             display.set_target_fps(1000.0);
 
     // shaders
-    let shader = pi3d::shader::Program::from_res(&display, "shaders/farris_p67b").unwrap();
-    let textsh = pi3d::shader::Program::from_res(&display, "uv_pointsprite").unwrap();
-    //let shader = pi3d::shader::Program::from_res(&display, "shaders/farris_p67b_ES30").unwrap();
-    //let textsh = pi3d::shader::Program::from_res(&display, "shaders/uv_pointsprite_ES30").unwrap();
+    let shader = pi3d::shader::Program::from_res("shaders/farris_p67b").unwrap();
+    let textsh = pi3d::shader::Program::from_res("uv_pointsprite").unwrap();
+    //let shader = pi3d::shader::Program::from_res("shaders/farris_p67b_ES30").unwrap();
+    //let textsh = pi3d::shader::Program::from_res("shaders/uv_pointsprite_ES30").unwrap();
 
     // cameras
     let mut camera = pi3d::camera::create(&display);
@@ -36,16 +36,16 @@ fn main() {
             camera2d.set_3d(false);
 
     // textures
-    let tex = pi3d::texture::create_from_file(&display, "textures/poppy1.jpg");
+    let tex = pi3d::texture::create_from_file("textures/poppy1.jpg");
 
     // cube
-    let mut cube = pi3d::shapes::cuboid::create(10.0, 10.0, 10.0, 1.0, 1.0, 1.0);
+    let mut cube = pi3d::shapes::cuboid::create(camera.reference(), 10.0, 10.0, 10.0, 1.0, 1.0, 1.0);
             cube.set_draw_details(&shader, &vec![tex.id], 1.0, 0.0, 0.1, 0.1, 0.0);
             cube.position_z(50.0);
             cube.buf[0].unib[[3, 0]] = 0.05;
 
     // plane
-    let mut plane = pi3d::shapes::plane::create(W, H);
+    let mut plane = pi3d::shapes::plane::create(camera2d.reference(), W, H);
             plane.set_draw_details(&shader, &vec![tex.id], 1.0, 0.0, 0.1, 0.1, 0.0);
             plane.position_z(9900.0);
             plane.buf[0].unib[[3, 0]] = 0.05;
@@ -54,8 +54,8 @@ fn main() {
     reset_params(&mut plane);
 
     // fps counter
-    let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "", 64.0);
-    let mut fps_text = pi3d::shapes::point_text::create(&font, 20, 24.0);
+    let font = pi3d::util::font::create("fonts/NotoSans-Regular.ttf", "", "", 64.0);
+    let mut fps_text = pi3d::shapes::point_text::create(camera2d.reference(), &font, 20, 24.0);
             fps_text.set_shader(&textsh);
     let fps_blk = fps_text.add_text_block(&font, &[-W * 0.5 + 20.0, -H * 0.5 + 20.0, 0.1], 19, "00.0 FPS");
 
@@ -78,8 +78,8 @@ fn main() {
                 param_point = 0;
             }
         }
-        cube.draw(&mut camera);
-        plane.draw(&mut camera2d);
+        cube.draw();
+        plane.draw();
         if x.abs() > 300.0 { // draw tiled maps
             //TODO some kind of navigation
         }
@@ -87,7 +87,7 @@ fn main() {
             //TODO
         }
         fps_text.set_text(&font, fps_blk, &format!("{:5.1} FPS", display.fps()));
-        fps_text.draw(&mut camera2d);
+        fps_text.draw();
         
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.mouse_moved {

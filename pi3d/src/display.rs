@@ -158,8 +158,6 @@ impl Display {
 
 pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, minor: u8
               ) -> Result<Display, Box<dyn Error>> {
-    let mut res = ::util::resources::from_exe_path().unwrap();
-            res.set_gl_id(profile, major, minor);
     let sdl = sdl2::init()?;//.unwrap();
     let video_subsystem = sdl.video()?;//.unwrap();
     let gl_attr = video_subsystem.gl_attr();
@@ -193,6 +191,8 @@ pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, min
         gl::Enable(gl::BLEND);
         gl::ColorMask(1, 1, 1, 0);
     }
+    let mut res = ::util::resources::from_exe_path().unwrap();
+            res.set_gl_id();
 
     Ok(Display {
         res,

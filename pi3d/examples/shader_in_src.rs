@@ -121,7 +121,7 @@ void main() {
     let mut camera = pi3d::camera::create(&display);
             camera.set_3d(false); // make it a 2D shader
     let (w, h) = display.get_size();
-    let mut slide = pi3d::shapes::plane::create(0.5 * w as f32, 0.5 * h as f32); // fullscreen
+    let mut slide = pi3d::shapes::plane::create(camera.reference(), 0.5 * w as f32, 0.5 * h as f32); // fullscreen
             slide.set_draw_details(&shader, &vec![], 1.0, 1.0, 1.0, 1.0, 1.0);
             slide.unif[[19, 0]] = w as f32;
             slide.unif[[19, 1]] = h as f32;
@@ -138,6 +138,6 @@ void main() {
         }
         slide.unif[[18, 0]] = 2.0 * mx / w - 1.0;
         slide.unif[[18, 1]] = 2.0 * my / h - 1.0;
-        slide.draw(&mut camera);
+        slide.draw();
     }
 }

@@ -24,12 +24,13 @@ pub struct TextureFont {
     pub size: f32,
 }
 
-pub fn create(disp: &::display::Display, file_name: &str, glyphs: &str,
-                            add_glyphs: &str, size: f32) -> TextureFont {
+pub fn create(file_name: &str, glyphs: &str,
+              add_glyphs: &str, size: f32) -> TextureFont {
 
     let grid_n = TEX_SZ / (size as usize); //TODO magic numbers!
     // Load the font
-    let path_buf = disp.res.resource_name_to_path(file_name);
+    let res = ::util::resources::from_exe_path().unwrap();
+    let path_buf = res.resource_name_to_path(file_name);
     let mut f = File::open(path_buf).expect("file not found");
     let mut contents = Vec::new();
     f.read_to_end(&mut contents)

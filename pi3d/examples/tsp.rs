@@ -21,11 +21,11 @@ fn main() {
           display.set_background(&[0.2, 0.2, 0.6, 1.0]);
           display.set_target_fps(1000.0);
   let flatsh = pi3d::shader::Program::from_res(
-        &display, "mat_flat").unwrap();
+        "mat_flat").unwrap();
   let pointsh = pi3d::shader::Program::from_res(
-        &display, "mat_pointsprite").unwrap();
+        "mat_pointsprite").unwrap();
   let textsh = pi3d::shader::Program::from_res(
-        &display, "uv_pointsprite").unwrap();
+        "uv_pointsprite").unwrap();
   let mut camera = pi3d::camera::create(&display);
           camera.set_3d(false);
 
@@ -66,19 +66,19 @@ fn main() {
       start_verts.push(2.0);
   }
 
-  let mut route = pi3d::shapes::lines::create(&start_verts, 4.0, true);
+  let mut route = pi3d::shapes::lines::create(camera.reference(), &start_verts, 4.0, true);
           route.set_shader(&flatsh);
           route.set_material(&[0.5, 0.1, 0.4]);
 
-  let mut points = pi3d::shapes::points::create(&start_verts, 30.0);
+  let mut points = pi3d::shapes::points::create(camera.reference(), &start_verts, 30.0);
           points.set_shader(&pointsh);
           points.buf[0].array_buffer.slice_mut(s![.., 2..7])
                                 .assign(&nd::arr1(&[1.99, 1.0, 0.5, 0.0, 1.0]));
           points.buf[0].re_init();
           points.buf[0].unib[[0, 0]] = 1.0;
 
-  let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "", 64.0);
-  let mut labels = pi3d::shapes::point_text::create(&font, 600, 24.0);
+  let font = pi3d::util::font::create("fonts/NotoSans-Regular.ttf", "", "", 64.0);
+  let mut labels = pi3d::shapes::point_text::create(camera.reference(), &font, 600, 24.0);
           labels.set_shader(&textsh);
   for i in 0..N_CITIES {
     let blk = labels.add_text_block(&font, &[cities[i].x - 5.0, cities[i].y + 5.0, 0.0], 3, &format!("{}", i));
@@ -86,7 +86,7 @@ fn main() {
     labels.set_rgba(&font, blk, &[0.0, 1.0, 1.0, 1.0]);
   }
 
-  let mut score = pi3d::shapes::point_text::create(&font, 16, 48.0);
+  let mut score = pi3d::shapes::point_text::create(camera.reference(), &font, 16, 48.0);
           score.set_shader(&textsh);
   let score_blk = score.add_text_block(&font, &[-W * 0.5 + 10.0, H * 0.5 - 50.0, 0.0], 15, "----------");
 
@@ -103,10 +103,10 @@ fn main() {
   let mut recalc = true;
 
     while display.loop_running() { // escape key and exit included by default
-          route.draw(&mut camera);
-          points.draw(&mut camera);
-          labels.draw(&mut camera);
-          score.draw(&mut camera);
+          route.draw();
+          points.draw();
+          labels.draw();
+          score.draw();
           if recalc {
             gen += 1;
           //for gen in 0..5000 {

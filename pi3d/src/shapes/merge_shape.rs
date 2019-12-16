@@ -1,6 +1,8 @@
 extern crate ndarray;
 extern crate rand;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 use ndarray as nd;
 use std::f32::consts;
 
@@ -156,9 +158,10 @@ pub fn cluster(merge_to: &mut ::shape::Shape, new_shape: &::shape::Shape,
 
 /// initial creation produces a shape with an empty buffer
 ///
-pub fn create() -> ::shape::Shape {
+pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
+              ) -> ::shape::Shape {
     let new_buffer = ::buffer::create_empty();
-    ::shape::create(vec![new_buffer])
+    ::shape::create(vec![new_buffer], cam)
 }
 
 //TODO pub fn radial_copy();

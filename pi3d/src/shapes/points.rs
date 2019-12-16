@@ -1,8 +1,11 @@
 extern crate ndarray;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 use ndarray as nd;
 
-pub fn create(verts: &Vec<f32>, point_size: f32) -> ::shape::Shape {
+pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
+              verts: &Vec<f32>, point_size: f32) -> ::shape::Shape {
     //TODO sort out reason for extra vertex (uv point)
     let nverts = verts.len() / 3;
     let nfaces = nverts / 3 + 1;
@@ -23,5 +26,5 @@ pub fn create(verts: &Vec<f32>, point_size: f32) -> ::shape::Shape {
 
     new_buffer.set_point_size(point_size);
 
-    ::shape::create(vec![new_buffer])
+    ::shape::create(vec![new_buffer], cam)
 }

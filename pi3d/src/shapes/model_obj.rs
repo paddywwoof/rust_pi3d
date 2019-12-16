@@ -5,6 +5,8 @@ use std::str::FromStr;
 use std::fs;
 use std::io::{self, BufRead};
 use std::path::PathBuf;
+use std::rc::Rc;
+use std::cell::RefCell;
 use ndarray as nd;
 
 struct Face {
@@ -38,7 +40,8 @@ pub fn parse_vertex(text: &str) -> (i32, i32, i32) {
     (v, t, n)
 }
 
-pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, HashMap<String, ::texture::Texture>) {
+pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
+              file_name: &str) -> (::shape::Shape, HashMap<String, ::texture::Texture>) {
     /*Loads an obj file with associated mtl file to produce Buffer object
     as part of a Shape. Arguments:
     */
@@ -53,7 +56,8 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
     let mut material: String = "".to_string();
     let mut mtllib: String = "".to_string();
 
-    let path_buf = disp.res.resource_name_to_path(file_name);
+    let res = ::util::resources::from_exe_path().unwrap();
+    let path_buf = res.resource_name_to_path(file_name);
     //if !path_buf.is_file() {return Err(Error::MissingResource);} //TODO error catching
     let file = fs::File::open(path_buf).unwrap();
     let file = io::BufReader::new(file);
@@ -220,7 +224,7 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
 
     let mut tmp_f = file_path.clone();
     tmp_f.push(mtllib); //
-    let path_buf = disp.res.resource_name_to_path(tmp_f.to_str().unwrap());
+    let path_buf = res.resource_name_to_path(tmp_f.to_str().unwrap());
     let file = fs::File::open(path_buf).unwrap(); //TODO error checking
     let file = io::BufReader::new(file);
     for l in file.lines() {
@@ -241,7 +245,7 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
                 if !tex_list.contains_key(&chunks[1]) {
                     let mut tmp_f = file_path.clone();
                     tmp_f.push(&chunks[1]);
-                    let mut tex = ::texture::create_from_file(disp, tmp_f.to_str().unwrap());
+                    let mut tex = ::texture::create_from_file(tmp_f.to_str().unwrap());
                     tex.flip_image(true, false);
                     tex_list.insert(chunks[1].to_string(), tex);
                 }
@@ -249,7 +253,7 @@ pub fn create(disp: &::display::Display, file_name: &str) -> (::shape::Shape, Ha
         }
     }
 
-    let mut model = ::shape::create(bufs);
+    let mut model = ::shape::create(bufs, cam);
     for i in 0..model.buf.len() {
         // buf number -> material name -> image file -> Texture struct
         if i < materials.len() {

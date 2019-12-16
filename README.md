@@ -84,3 +84,7 @@ More elaborate Camera functions.
 
 Other Texture types i.e. different internal storage modes supported
 by OpenGL
+
+**As at 16 Dec 19 there are some trials making a python wrapper**
+
+*see pyo3_module directory*

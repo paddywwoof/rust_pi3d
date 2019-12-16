@@ -81,8 +81,9 @@ pub fn create_from_array(image: nd::Array3<u8>) -> Texture {
     tex
 }
 
-pub fn create_from_file(disp: &::display::Display, name: &str) -> Texture {
-    let pb = disp.res.resource_name_to_path(name);
+pub fn create_from_file(name: &str) -> Texture {
+    let res = ::util::resources::from_exe_path().unwrap();
+    let pb = res.resource_name_to_path(name);
     let im = image::open(pb).unwrap();
     let (w, h) = im.dimensions();
     let c_type: usize = match im.color() {

@@ -2,7 +2,7 @@ use gl;
 use gl::types::*;
 use std;
 use std::ffi::{CString, CStr};
-use ::util::resources::{self, Resources};
+use ::util::resources;
 
 #[derive(Debug)]
 pub enum Error {
@@ -43,10 +43,10 @@ impl Program {
         }
     }
 
-    pub fn from_res(display: &::display::Display, name: &str) -> Result<Program, Error> {
+    pub fn from_res(name: &str) -> Result<Program, Error> {
         let shaders = [".vs", ".fs"].iter()
             .map(|extn| {
-                  Shader::from_res(&display.res, &format!("{}{}", name, extn))
+                  Shader::from_res(&format!("{}{}", name, extn))
                 })
             .collect::<Result<Vec<Shader>, Error>>()?;
 
@@ -155,7 +155,7 @@ pub struct Shader {
 }
 
 impl Shader {
-    pub fn from_res(res: &Resources, name: &str) -> Result<Shader, Error> {
+    pub fn from_res(name: &str) -> Result<Shader, Error> {
         const POSSIBLE_EXT: [(&str, GLenum); 2] = [
             (".vs", gl::VERTEX_SHADER),
             (".fs", gl::FRAGMENT_SHADER),
@@ -167,13 +167,15 @@ impl Shader {
             })
             .map(|&(_, kind)| kind)
             .ok_or_else(|| Error::CanNotDetermineShaderTypeForResource { name: name.into() })?;
+        let mut res = ::util::resources::from_exe_path().unwrap();
+                res.set_gl_id();
         let mut source = res.load_string(name)
             .map_err(|e| Error::ResourceLoad { name: name.into(), inner: e })?;
-        if res.gl_id == "GLES20" {
+        if res.gl_id == "GLES20" || res.gl_id == "GLES2" {
             source = source.replace("version 120", "version 100")
                            .replace("//precision", "precision");
         }
-        if res.gl_id == "GLES30" {
+        if res.gl_id == "GLES30" || res.gl_id == "GLES3" {
             source = source.replace("version 120", "version 300 es")
                            .replace("//precision", "precision")
                            .replace("attribute", "in")

@@ -21,12 +21,14 @@ make_shape!(ElevationMap, ix:f32=0.0, iz:f32=0.0, width:f32=200.0, depth:f32=200
 /// i.e. 33x33 image for 32x32 squares in grid
 /// 
 /// TODO put this as class method (i.e. ::new())
-pub fn new_map(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
-              height: f32, ix: usize, iz: usize, ntiles: f32, _texmap: &str) -> ElevationMap {
+pub fn new_map(cam: Rc<RefCell<::camera::CameraInternals>>,
+               mapfile: &str, width: f32, depth: f32, height: f32, ix: usize, iz: usize,
+               ntiles: f32, _texmap: &str) -> ElevationMap {
 
     let ix = if ix < 200 {ix + 1} else {200}; // one more vertex in each direction than number of divisions
     let iz = if iz < 200 {iz + 1} else {200};
-    let f = disp.res.resource_name_to_path(mapfile);
+    let res = ::util::resources::from_exe_path().unwrap();
+    let f = res.resource_name_to_path(mapfile);
     //println!("f={:?}", f);
     let im = image::open(f).unwrap();
     // convert to Gray
@@ -80,7 +82,7 @@ pub fn new_map(disp: &::display::Display, mapfile: &str, width: f32, depth: f32,
                 nd::Array2::<f32>::zeros((0, 3)),
                 nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
                 nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), true);
-    let mut new_shape = ::shapes::elevation_map::create(vec![new_buffer]);
+    let mut new_shape = ::shapes::elevation_map::create(vec![new_buffer], cam);
     new_shape.ix = ix as f32 - 1.0; // hold these for calc_height in additional attributes
     new_shape.iz = iz as f32 - 1.0;
     new_shape.width = width;

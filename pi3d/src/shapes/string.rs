@@ -1,12 +1,15 @@
 extern crate ndarray;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 use ndarray as nd;
 
 const GAP: f32 = 1.0; // line spacing
 const SPACE: f32 = 0.03; // between char (proportion of line space)
 const NORMALS: [[f32; 3]; 4] = [[0.0, 0.0, -1.0]; 4];
 
-pub fn create(font: &::util::font::TextureFont, string: &str, justify: f32) -> ::shape::Shape {
+pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
+              font: &::util::font::TextureFont, string: &str, justify: f32) -> ::shape::Shape {
     //TODO sort out reason for extra vertex (uv point)
     let mut verts = Vec::<f32>::new();
     let mut norms = Vec::<f32>::new();
@@ -87,5 +90,5 @@ pub fn create(font: &::util::font::TextureFont, string: &str, justify: f32) -> :
                 nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), false);
     new_buffer.set_textures(&vec![font.tex.id]);
     new_buffer.set_blend(true);
-    ::shape::create(vec![new_buffer])
+    ::shape::create(vec![new_buffer], cam)
 }

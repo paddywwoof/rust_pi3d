@@ -11,19 +11,19 @@ fn main() {
             display.set_background(&[0.1, 0.1, 0.2, 1.0]);
             display.set_mouse_relative(true);
             display.set_target_fps(1000.0);
-    let shader_program = pi3d::shader::Program::from_res(&display, "uv_reflect").unwrap();
-    let flatsh = pi3d::shader::Program::from_res(&display, "uv_flat").unwrap();
-    let textsh = pi3d::shader::Program::from_res(&display, "uv_pointsprite").unwrap();
+    let shader_program = pi3d::shader::Program::from_res("uv_reflect").unwrap();
+    let flatsh = pi3d::shader::Program::from_res("uv_flat").unwrap();
+    let textsh = pi3d::shader::Program::from_res("uv_pointsprite").unwrap();
     let mut camera = pi3d::camera::create(&display);
     let mut camera2d = pi3d::camera::create(&display);
             camera2d.set_3d(false);
 
-    let tex = pi3d::texture::create_from_file(&display, "textures/pattern.png");
-    let maptex = pi3d::texture::create_from_file(&display, "textures/mountains3_512.jpg");
-    let mapnorm = pi3d::texture::create_from_file(&display, "textures/grasstile_n.jpg");
-    let stars = pi3d::texture::create_from_file(&display, "textures/stars.jpg");
-    let font = pi3d::util::font::create(&display, "fonts/NotoSans-Regular.ttf", "", "ęĻ", 64.0);
-    let mut mystring = pi3d::shapes::string::create(&font, "\"The quick brown
+    let tex = pi3d::texture::create_from_file("textures/pattern.png");
+    let maptex = pi3d::texture::create_from_file("textures/mountains3_512.jpg");
+    let mapnorm = pi3d::texture::create_from_file("textures/grasstile_n.jpg");
+    let stars = pi3d::texture::create_from_file("textures/stars.jpg");
+    let font = pi3d::util::font::create("fonts/NotoSans-Regular.ttf", "", "ęĻ", 64.0);
+    let mut mystring = pi3d::shapes::string::create(camera2d.reference(), &font, "\"The quick brown
 fox `jumps`
 over thę Ļazy
 dog\"", 0.0);
@@ -32,23 +32,23 @@ dog\"", 0.0);
     //let mut camera2d = pi3d::camera::create(&display);
     //        camera2d.set_3d(false);
     
-    let mut candlestick = pi3d::shapes::lathe::create(vec![[0.0, 2.0], [0.1, 1.8], [0.1, 1.2],
+    let mut candlestick = pi3d::shapes::lathe::create(camera.reference(), vec![[0.0, 2.0], [0.1, 1.8], [0.1, 1.2],
             [0.5, 1.0], [0.6, 0.6], [0.2, 0.5], [0.2, 0.2], [1.0, 0.1], [1.2, -0.3], [0.0, -2.0]],
             144, 0.0, 1.0);
             candlestick.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id, stars.id], 1.0, 0.1, 1.0, 1.0, 1.0);
             candlestick.position(&[-2.0, 30.0, 15.0]);
             candlestick.set_material(&[1.0, 0.0, 0.0]);
 
-    let mut sphere = pi3d::shapes::sphere::create(1.5, 16, 32, 0.3, false);
+    let mut sphere = pi3d::shapes::sphere::create(camera.reference(), 1.5, 16, 32, 0.3, false);
             sphere.buf[0].set_textures(&vec![tex.id, mapnorm.id]);
             sphere.set_shader(&shader_program);
 
-    let mut cube2 = pi3d::shapes::cuboid::create(3.0, 2.0, 1.0, 1.0, 1.0, 1.0);
+    let mut cube2 = pi3d::shapes::cuboid::create(camera.reference(), 3.0, 2.0, 1.0, 1.0, 1.0, 1.0);
             cube2.set_draw_details(&shader_program, &vec![tex.id, mapnorm.id, stars.id], 2.0, 0.1, 2.0, 3.0, 1.0);
             cube2.set_light(0, &[1.5, 1.5, 4.0], &[10.0, 10.0, 10.0], &[0.05, 0.1, 0.05], true);
             cube2.add_child(sphere);
 
-    let mut junk = pi3d::shapes::merge_shape::create();
+    let mut junk = pi3d::shapes::merge_shape::create(camera.reference());
     pi3d::shapes::merge_shape::add_shapes(&mut junk,
      vec![&cube2, &cube2, &candlestick],
      vec![&[2.0, 1.0, 1.0], &[-1.0, -1.0, 1.0], &[0.0, 0.0, -0.5]],
@@ -58,25 +58,25 @@ dog\"", 0.0);
     junk.buf[1].set_material(&[1.0, 1.0, 0.0, 1.0]);
     junk.position(&[1.0, 30.0, 7.5]);
 
-    let mut map = pi3d::shapes::elevation_map::new_map(&display, "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 64, 64, 1.0, "nothing");
+    let mut map = pi3d::shapes::elevation_map::new_map(camera.reference(), "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 64, 64, 1.0, "nothing");
             map.set_draw_details(&shader_program, &vec![maptex.id, mapnorm.id, stars.id], 128.0, 0.0, 1.0, 1.0, 2.0);
 
-    let (mut iss, _texlist) = pi3d::shapes::model_obj::create(&display, "models/iss.obj");
+    let (mut iss, _texlist) = pi3d::shapes::model_obj::create(camera.reference(), "models/iss.obj");
             iss.set_shader(&shader_program);
             iss.set_normal_shine(&vec![mapnorm.id, stars.id], 16.0, 0.1, 1.0, 1.0, 0.1, true);
             iss.position(&[20.0, 50.0, 10.0]);
             iss.scale(&[40.0, 40.0, 40.0]);
 
-    let mut clust = pi3d::shapes::merge_shape::create();
+    let mut clust = pi3d::shapes::merge_shape::create(camera.reference(), );
     pi3d::shapes::merge_shape::cluster(&mut clust, &cube2, &map, -20.0, -100.0,
             200.0, 150.0, 0.5, 2.5, 200);
 
-    let (mut ecube, _tex_list) = pi3d::shapes::environment_cube::create(&display, 500.0,
-                "ecubes/miramar_256", "png");
+    let (mut ecube, _tex_list) = pi3d::shapes::environment_cube::create(camera.reference(),
+                 500.0, "ecubes/miramar_256", "png");
     ecube.set_shader(&flatsh);
 
     // fps counter
-    let mut fps_text = pi3d::shapes::point_text::create(&font, 20, 24.0);
+    let mut fps_text = pi3d::shapes::point_text::create(camera2d.reference(), &font, 20, 24.0);
     fps_text.set_shader(&textsh);
     let fps_blk = fps_text.add_text_block(&font, &[-W * 0.5 + 20.0, -H * 0.5 + 20.0, 0.1], 19, "00.0 FPS");
 
@@ -111,16 +111,16 @@ dog\"", 0.0);
         }
         clust.buf[0].re_init();
 
-        ecube.draw(&mut camera);
-        cube2.draw(&mut camera);
-        candlestick.draw(&mut camera);
-        junk.draw(&mut camera);
-        map.draw(&mut camera);
-        iss.draw(&mut camera);
-        clust.draw(&mut camera);
-        mystring.draw(&mut camera2d);
+        ecube.draw();
+        cube2.draw();
+        candlestick.draw();
+        junk.draw();
+        map.draw();
+        iss.draw();
+        clust.draw();
+        mystring.draw();
         fps_text.set_text(&font, fps_blk, &format!("{:5.1} FPS", display.fps()));
-        fps_text.draw(&mut camera2d);
+        fps_text.draw();
 
         if display.keys_pressed.contains(&Keycode::Escape) {break;}
         if display.keys_down.contains(&Keycode::A) {cube2.offset(&[t % 3.0, 0.0, 0.0]);}

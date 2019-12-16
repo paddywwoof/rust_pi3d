@@ -1,3 +1,6 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 pub struct TextBlock {
     x: f32,
     y: f32,
@@ -56,8 +59,8 @@ impl PointText {
         block_id
     }
 
-    pub fn draw(&mut self, mut camera: &mut ::camera::Camera) {
-        self.points.draw(&mut camera);
+    pub fn draw(&mut self) {
+        self.points.draw();
     }
 
     pub fn set_shader(&mut self, shader: &::shader::Program) {
@@ -187,9 +190,10 @@ impl PointText {
     }
 }
 
-pub fn create(font: &::util::font::TextureFont, max_chars: usize, point_size: f32) -> PointText {
+pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
+              font: &::util::font::TextureFont, max_chars: usize, point_size: f32) -> PointText {
     let verts: Vec<f32> = vec![0.0; max_chars * 3];
-    let mut new_shape = ::shapes::points::create(&verts, point_size);
+    let mut new_shape = ::shapes::points::create(cam, &verts, point_size);
     new_shape.buf[0].set_textures(&vec![font.tex.id]);
     new_shape.buf[0].set_blend(true);
     new_shape.unif[[16, 0]] = 0.05; //TODO base on point_size and 

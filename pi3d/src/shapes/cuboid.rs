@@ -1,8 +1,11 @@
 extern crate ndarray;
 
+use std::rc::Rc;
+use std::cell::RefCell;
 use ndarray as nd;
 
-pub fn create(w: f32, h: f32, d: f32, tw: f32, th: f32, td: f32) -> ::shape::Shape {
+pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
+              w: f32, h: f32, d: f32, tw: f32, th: f32, td: f32) -> ::shape::Shape {
     let wh = w * 0.5; let hh = h * 0.5; let dh = d * 0.5;
     let verts: nd::Array2<f32> = nd::arr2(
       &[[-wh, hh, dh], [wh, hh, dh],   [wh, -hh, dh],  [-wh, -hh, dh],
@@ -39,5 +42,5 @@ pub fn create(w: f32, h: f32, d: f32, tw: f32, th: f32, td: f32) -> ::shape::Sha
         [9, 8, 11],  [11, 10, 9], [14, 13, 12], [12, 15, 14],
         [17, 16, 19],[19, 18, 17],[21, 20, 23], [23, 22, 21]]);
     let new_buffer = ::buffer::create(&::shader::Program::new(), verts, norms, texcoords, faces, true);
-    ::shape::create(vec![new_buffer])
+    ::shape::create(vec![new_buffer], cam)
 }
