@@ -15,19 +15,19 @@ struct Display {
 #[pymethods]
 impl Display {
     #[new]
-    fn new(obj: &PyRawObject, name: &str) {
+    fn new(obj: &PyRawObject, name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) {
         obj.init({
             Display {
-                r_display: pi3d::display::create(name, 500.0, 500.0, "GLES", 3, 0).unwrap(),
+                r_display: pi3d::display::create(name, w, h, profile, major, minor).unwrap(),
             }
         });
     }
 
     #[staticmethod]
-    fn create() -> PyResult<Py<Display>> {
+    fn create(name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) -> PyResult<Py<Display>> {
         let gil = Python::acquire_gil();
         let py = gil.python();
-        let mut r_display = pi3d::display::create("rpi3d window", 500.0, 500.0, "GLES", 3, 0).unwrap();
+        let mut r_display = pi3d::display::create(name, w, h, profile, major, minor).unwrap();
         r_display.set_target_fps(1000.0);
         Py::new(py, Display { 
                         r_display,
