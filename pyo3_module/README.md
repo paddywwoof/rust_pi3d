@@ -9,3 +9,6 @@ or:
 
     in pyo3_module run ``cargo build --release`` then copy and rename
     ``librpi3d.so`` to ``pyo3_module/test/rpi3d.so``
+
+NB you must use nightly for pyo3 ``rustup install nightly`` then
+``rust default nightly``, switch back with ``rustup default stable``
