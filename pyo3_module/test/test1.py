@@ -1,7 +1,7 @@
 import rpi3d
 import os 
 
-display = rpi3d.Display.create("pyo3 minimal", 1000, 600, "GLES", 3, 0)
+display = rpi3d.Display.create("pyo3 minimal", 500, 500, "GLES", 2, 0)
 shader = rpi3d.Shader("uv_flat")
 dir_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                         "pattern.png")
