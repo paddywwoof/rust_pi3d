@@ -202,11 +202,22 @@ macro_rules! generate_shape {
                 self.$r_slower.set_blend(blend);
             }
             #[args(child="*")]
-            fn add_child(&mut self, child: &PyTuple) {
-                println!("{:?}", child.get_item(0)); // testing with &PyTuple
-            /*fn add_child(&mut self, child: &$supper)
-                self.$r_slower.add_child(child.get_shape());*/
+            fn add_child(&mut self, child: &PyTuple) {// testing with &PyTuple
+                println!("here again");
+                let r_ln: Result<&Lines, _> = child.get_item(0).try_into();
+                match r_ln {
+                    Ok(ln) => {println!("lines m_flag{:?}", ln.r_lines.m_flag); },
+                    _ => {let r_sp: Result<&Sphere, _> = child.get_item(0).try_into();
+                          match r_sp {
+                              Ok(sp) => {println!("was a sphere"); },
+                              _ => {println!("neither lines nor sphere");},
+                          }
+                    },
+                }
             }
+            /*fn add_child(&mut self, child: &$supper)
+                self.$r_slower.add_child(child.get_shape());
+            }*/
             fn rotate_child_x(&mut self, child_index: usize, da: f32)  -> PyResult<()>{
                 if child_index >= self.$r_slower.children.len() {
                     return Err(PyErr::new::<exceptions::IndexError, _>("There isn't a child at that ix"));

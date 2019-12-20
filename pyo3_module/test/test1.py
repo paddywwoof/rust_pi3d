@@ -39,7 +39,7 @@ string = rpi3d.PyString(camera2d, font, "Hello from rust pi3d", 0.0)
 string.set_shader(shader_flat)
 string.position([100.0, 100.0, 4.0])
 
-cube.add_child(lines)
+cube.add_child(points)
 
 n=0
 tm = time.time()
