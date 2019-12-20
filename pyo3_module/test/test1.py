@@ -7,6 +7,7 @@ shader = rpi3d.Shader("uv_light")
 shader_flat = rpi3d.Shader("uv_flat")
 dir_path = os.path.dirname(os.path.realpath(__file__))
 tex = rpi3d.Texture(os.path.join(dir_path, "pattern.png"))
+
 camera = rpi3d.Camera(display)
 camera2d = rpi3d.Camera(display)
 camera2d.set_3d(False)
@@ -71,3 +72,4 @@ while display.loop_running():
     n += 1
 
 print("{:.1f} FPS".format(n / (time.time() - tm)))
+
