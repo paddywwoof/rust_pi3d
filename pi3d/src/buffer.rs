@@ -6,6 +6,7 @@ use std::f32;
 use gl::types::*;
 use ndarray as nd;
 
+#[derive(Clone)]
 pub struct Buffer {
     pub unib: nd::Array2<f32>,
     pub array_buffer: nd::Array2<f32>,

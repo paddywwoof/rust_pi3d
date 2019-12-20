@@ -17,6 +17,7 @@ macro_rules! make_shape {
         use std::cell::RefCell;
         use std::rc::Rc;
 
+        #[derive(Clone)]
         pub struct $s {
             pub unif: nd::Array2<f32>,
             pub buf: Vec<::buffer::Buffer>,
@@ -161,16 +162,16 @@ macro_rules! make_shape {
                 self.unif[[0, 2]] = pos;
                 self.tr1[[3, 2]] = self.unif[[0, 2]] - self.unif[[3, 2]];
             }
-            pub fn position(&mut self, pos: &[f32; 3]) {
+            pub fn position(&mut self, pos: &[f32]) {
                 self.position_x(pos[0]);
                 self.position_y(pos[1]);
                 self.position_z(pos[2]);
             }
-            pub fn offset(&mut self, offs: &[f32; 3]) {
+            pub fn offset(&mut self, offs: &[f32]) {
                 self.unif.slice_mut(s![3, ..]).assign(&nd::arr1(offs));
                 self.tr2.slice_mut(s![3, ..3]).assign(&nd::arr1(offs));
             }
-            pub fn scale(&mut self, scale: &[f32; 3]) {
+            pub fn scale(&mut self, scale: &[f32]) {
                 self.unif.slice_mut(s![2, ..]).assign(&nd::arr1(scale));
                 self.scl[[0, 0]] = scale[0];
                 self.scl[[1, 1]] = scale[1];
@@ -185,7 +186,7 @@ macro_rules! make_shape {
                 self.unif.slice_mut(s![10 + num * 2, ..]).assign(&nd::arr1(amb));
             }
 
-            pub fn set_fog(&mut self, shade: &[f32; 3], dist: f32, alpha: f32) {
+            pub fn set_fog(&mut self, shade: &[f32], dist: f32, alpha: f32) {
                 self.unif.slice_mut(s![4, ..]).assign(&nd::arr1(shade));
                 self.unif[[5, 0]] = dist;
                 self.unif[[5, 1]] = alpha;
