@@ -202,22 +202,45 @@ macro_rules! generate_shape {
                 self.$r_slower.set_blend(blend);
             }
             #[args(child="*")]
-            fn add_child(&mut self, child: &PyTuple) {// testing with &PyTuple
-                println!("here again");
-                let r_ln: Result<&Lines, _> = child.get_item(0).try_into();
+            fn add_child(&mut self, child: &PyTuple) {// testing with &PyTuple - this is still unsatisfactory
+              if child.len() == 1 {
+                let r_ln: Result<&mut Lines, _> = child.get_item(0).try_into_mut();
                 match r_ln {
-                    Ok(ln) => {println!("lines m_flag{:?}", ln.r_lines.m_flag); },
-                    _ => {let r_sp: Result<&Sphere, _> = child.get_item(0).try_into();
-                          match r_sp {
-                              Ok(sp) => {println!("was a sphere"); },
-                              _ => {println!("neither lines nor sphere");},
-                          }
-                    },
+                  Ok(s) => {self.$r_slower.add_child(s.get_shape()); },
+                  _ => {let r_sp: Result<&mut Sphere, _> = child.get_item(0).try_into_mut();
+                    match r_sp {
+                      Ok(s) => {self.$r_slower.add_child(s.get_shape()); },
+                      _ => {let r_cu: Result<&mut Cuboid, _> = child.get_item(0).try_into_mut();
+                        match r_cu {
+                          Ok(s) => {self.$r_slower.add_child(s.get_shape()); },
+                          _ => {let r_po: Result<&mut Points, _> = child.get_item(0).try_into_mut();
+                            match r_po{
+                              Ok(s) => {self.$r_slower.add_child(s.get_shape()); },
+                              _ => {let r_pl: Result<&mut Plane, _> = child.get_item(0).try_into_mut();
+                                match r_pl {
+                                  Ok(s) => {self.$r_slower.add_child(s.get_shape()); },
+                                  _ => {let r_la: Result<&mut Lathe, _> = child.get_item(0).try_into_mut();
+                                    match r_la {
+                                      Ok(s) => {self.$r_slower.add_child(s.get_shape()); },
+                                      _ => {let r_ps: Result<&mut PyString, _> = child.get_item(0).try_into_mut();
+                                        match r_ps {
+                                          Ok(s) => {self.$r_slower.add_child(s.get_shape()); },
+                                          _ => {println!("not lines, sphere, cuboid, points, plane");},
+                                        }
+                                      },
+                                    }
+                                  },
+                                }
+                              },
+                            }
+                          },
+                        }
+                      },
+                    }
+                  },
                 }
+              }
             }
-            /*fn add_child(&mut self, child: &$supper)
-                self.$r_slower.add_child(child.get_shape());
-            }*/
             fn rotate_child_x(&mut self, child_index: usize, da: f32)  -> PyResult<()>{
                 if child_index >= self.$r_slower.children.len() {
                     return Err(PyErr::new::<exceptions::IndexError, _>("There isn't a child at that ix"));

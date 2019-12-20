@@ -20,6 +20,10 @@ cube = rpi3d.Cuboid(camera, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0)
 cube.set_draw_details(shader, [tex], 1.0, 0.0, 1.0, 1.0, 0.0)
 cube.position([-2.0, -2.0, 5.0])
 
+sphere = rpi3d.Sphere(camera, 1.0,  16, 16, 2.0, False)
+sphere.set_draw_details(shader, [tex], 1.0, 0.0, 1.0, 1.0, 0.0)
+sphere.position([0.0, 0.0, 4.0])
+
 verts = [[0.0, 2.0],[0.5, 1.9],[0.2, 1.8],[1.0, 0.5],[1.0,0.4],[0.0,0.0]]
 lathe = rpi3d.Lathe(camera, verts, 32, 2.1, 8.0)
 lathe.set_draw_details(shader, [tex], 1.0, 0.0, 1.0, 1.0, 0.0)
@@ -39,7 +43,11 @@ string = rpi3d.PyString(camera2d, font, "Hello from rust pi3d", 0.0)
 string.set_shader(shader_flat)
 string.position([100.0, 100.0, 4.0])
 
-cube.add_child(points)
+sphere.scale([0.5, 1.5, 0.5])
+sphere.position([1.0, 1.0, 1.0])
+cube.add_child(sphere)
+sphere.position([0.0, 0.0, 4.0])
+sphere.scale([0.7, 0.7, 0.7])
 
 n=0
 tm = time.time()
@@ -48,9 +56,15 @@ while display.loop_running():
     plane.rotate_inc_z(0.001)
 
     cube.draw()
+    cube.rotate_child_y(0, 0.01)
     cube.rotate_inc_z(0.001)
     cube.rotate_inc_x(0.0021)
     cube.rotate_inc_y(0.0011)
+
+    sphere.draw()
+    sphere.rotate_inc_z(0.001)
+    sphere.rotate_inc_x(0.0021)
+    sphere.rotate_inc_y(0.007)
 
     lathe.draw()
     lathe.rotate_inc_z(0.001)
