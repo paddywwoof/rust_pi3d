@@ -20,12 +20,12 @@ cube = rpi3d.Cuboid(camera, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0)
 cube.set_draw_details(shader, [tex], 1.0, 0.0, 1.0, 1.0, 0.0)
 cube.position([-2.0, -2.0, 5.0])
 
-sphere = rpi3d.Sphere(camera, 1.0,  16, 16, 2.0, False)
+sphere = rpi3d.Sphere(camera, 1.0,  16, 16, 0.0, False)
 sphere.set_draw_details(shader, [tex], 1.0, 0.0, 1.0, 1.0, 0.0)
 sphere.position([0.0, 0.0, 4.0])
 
-verts = [[0.0, 2.0],[0.5, 1.9],[0.2, 1.8],[1.0, 0.5],[1.0,0.4],[0.0,0.0]]
-lathe = rpi3d.Lathe(camera, verts, 32, 2.1, 8.0)
+verts = [[0.0, 2.0], [0.5, 1.9], [0.2, 1.8], [1.0, 0.5], [1.0, 0.4], [0.0, 0.0]]
+lathe = rpi3d.Lathe(camera, verts, 16, 0.0, 1.0)
 lathe.set_draw_details(shader, [tex], 1.0, 0.0, 1.0, 1.0, 0.0)
 lathe.position([2.0, -2.0, 4.0])
 
