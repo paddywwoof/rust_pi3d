@@ -5,12 +5,15 @@ extern crate gl;
 use pyo3::prelude::*;
 use pyo3::{PyObject, PyRawObject};
 use pyo3::exceptions;
-use pyo3::types::{PyTuple, PyList, PyDict, PyAny};
+//use pyo3::types::{PyTuple, PyList, PyDict, PyAny};
 //use gl::types::GLuint;
+
+use std::cell::RefCell;
+use std::rc::Rc;
 
 #[pyclass(module="rpi3d")]
 struct Display {
-    r_display: pi3d::display::Display,
+    r_display: Rc<RefCell<pi3d::display::Display>>,
 }
 
 #[pymethods]
@@ -19,7 +22,9 @@ impl Display {
     fn new(obj: &PyRawObject, name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) {
         obj.init({
             Display {
-                r_display: pi3d::display::create(name, w, h, profile, major, minor).unwrap(),
+                r_display: Rc::new(RefCell::new(
+                    pi3d::display::create(name, w, h, profile, major, minor).unwrap()
+                )),
             }
         });
     }
@@ -28,15 +33,18 @@ impl Display {
     fn create(name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) -> PyResult<Py<Display>> {
         let gil = Python::acquire_gil();
         let py = gil.python();
-        let mut r_display = pi3d::display::create(name, w, h, profile, major, minor).unwrap();
-        r_display.set_target_fps(1000.0); //TODO set to 60; testing run as fast as poss 
+        let r_display = Rc::new(RefCell::new(
+            pi3d::display::create(name, w, h, profile, major, minor).unwrap()
+        ));
+        r_display.borrow_mut().set_target_fps(1000.0); //TODO set to 60; testing run as fast as poss 
+        r_display.borrow_mut().set_mouse_relative(true);
         Py::new(py, Display { 
                         r_display,
                 })
     }
 
     fn loop_running(&mut self) -> PyResult<bool> {
-        Ok(self.r_display.loop_running())
+        Ok(self.r_display.borrow_mut().loop_running())
     }
 }
 
@@ -53,13 +61,26 @@ impl Camera {
     fn new(obj: &PyRawObject, display: &Display) {
         obj.init({
             Camera {
-                r_camera: pi3d::camera::create(&display.r_display),
+                r_camera: pi3d::camera::create(&display.r_display.borrow()),
             }
         });
     }
-
+    fn reset(&mut self) {
+        self.r_camera.reset();
+    }
     fn set_3d(&mut self, is_3d: bool) {
         self.r_camera.set_3d(is_3d);
+    }
+    fn position(&mut self, pos: Vec<f32>) {
+        if pos.len() != 3 {return;}
+        self.r_camera.position(&[pos[0], pos[1], pos[2]]);
+    }
+    fn rotate(&mut self, rot: Vec<f32>) {
+        if rot.len() != 3 {return;}
+        self.r_camera.rotate(&[rot[0], rot[1], rot[2]]);
+    }
+    fn get_direction(&mut self) -> Vec<f32> {
+        self.r_camera.get_direction().to_vec()
     }
 }
 
@@ -81,6 +102,59 @@ impl Shader {
         });
     }
 }
+
+/// Keyboard stuff
+/// 
+#[pyclass(module="rpi3d")]
+struct Keyboard {
+    r_display: Rc<RefCell<pi3d::display::Display>>,
+}
+
+#[pymethods]
+impl Keyboard {
+    #[new]
+    fn new(obj: &PyRawObject, display: &Display) {
+        obj.init({
+            Keyboard {
+                r_display: display.r_display.clone(),
+            }
+        });
+    }
+    /// crude char reading as per pi3d
+    fn read_code(&self) -> String {
+        let disp = self.r_display.borrow();
+        if disp.keys_pressed.len() > 0 {
+            return disp.keys_pressed.last().unwrap().name();
+        }
+        "".to_string()
+    }
+}
+
+
+/// Mouse stuff
+/// 
+#[pyclass(module="rpi3d")]
+struct Mouse {
+    r_display: Rc<RefCell<pi3d::display::Display>>,
+}
+
+#[pymethods]
+impl Mouse {
+    #[new]
+    fn new(obj: &PyRawObject, display: &Display) {
+        obj.init({
+            Mouse {
+                r_display: display.r_display.clone(),
+            }
+        });
+    }
+    /// also need velocity, values depend on mouse relative (also visibility of cursor)
+    fn position(&self) -> (i32, i32) {
+        let disp = self.r_display.borrow();
+        (disp.mouse_x, disp.mouse_y)
+    }
+}
+
 
 /// Texture stuff
 ///
@@ -215,32 +289,30 @@ impl Shape {
     }
 }
 
-#[pyclass(extends=Shape)]
-struct Plane {}
-#[pymethods]
-impl Plane {
-    #[new]
-    fn new(obj: &PyRawObject, camera: &mut Camera, w:f32, h:f32) {
-        obj.init({
-            Shape {
-                r_shape: pi3d::shapes::plane::create(camera.r_camera.reference(), w, h),
+macro_rules! shape_from {
+    ($sh_cap:ident, $sh_lwr:ident, $($att:ident : $typ:ty) , *) => {
+        #[pyclass(extends=Shape)]
+        struct $sh_cap {}
+        #[pymethods]
+        impl $sh_cap {
+            #[new]
+            fn new(obj: &PyRawObject, camera: &mut Camera $(,$att: $typ)*) {
+                obj.init({
+                    Shape {
+                        r_shape: pi3d::shapes::$sh_lwr::create(camera.r_camera.reference() $(,$att)*),
+                    }
+                });
             }
-        });
-    }
+        } 
+    };
 }
-#[pyclass(extends=Shape)]
-struct Cuboid {}
-#[pymethods]
-impl Cuboid {
-    #[new]
-    fn new(obj: &PyRawObject, camera: &mut Camera, w: f32, h: f32, d: f32, tw: f32, th: f32, td: f32) {
-        obj.init({
-            Shape {
-                r_shape: pi3d::shapes::cuboid::create(camera.r_camera.reference(), w, h, d, tw, th, td),
-            }
-        });
-    }
-}
+shape_from! (Plane, plane, w:f32, h:f32);
+shape_from! (Cuboid, cuboid, w: f32, h: f32, d: f32, tw: f32, th: f32, td: f32);
+shape_from! (Sphere, sphere, radius: f32, slices: usize, sides: usize, hemi: f32, invert: bool);
+/* Canvas, Cone, Cylinder, Disk, EnvironmentCube, Extrude, Helix, LodSprite,
+MergeShape, Model, MultiSprite, Polygon, Sprite, Tetrahedron, Torus, Triangle, Tube,
+TCone */
+
 #[pyclass(extends=Shape)]
 struct Lathe {}
 #[pymethods]
@@ -281,19 +353,6 @@ impl Points {
         });
     }
 }
-#[pyclass(extends=Shape)]
-struct Sphere {}
-#[pymethods]
-impl Sphere {
-    #[new]
-    fn new(obj: &PyRawObject, camera: &mut Camera, radius: f32, slices: usize, sides: usize, hemi: f32, invert: bool) {
-        obj.init({
-            Shape {
-                r_shape: pi3d::shapes::sphere::create(camera.r_camera.reference(), radius, slices, sides, hemi, invert),
-            }
-        });
-    }
-}
 
 /// Font stuff
 ///
@@ -327,7 +386,11 @@ impl PyString {
         });
     }
 }
-/*generate_shape!(ElevationMap, r_elevation_map, pi3d::shapes::elevation_map::ElevationMap);
+
+#[pyclass]
+struct ElevationMap {
+    r_elevation_map: pi3d::shapes::elevation_map::ElevationMap,
+}
 #[pymethods]
 impl ElevationMap {
     #[new]
@@ -344,54 +407,40 @@ impl ElevationMap {
     fn calc_height(&self, px: f32, pz: f32) -> (f32, Vec<f32>) {
         pi3d::shapes::elevation_map::calc_height(&self.r_elevation_map, px, pz)
     }
-}*/
-/*#[pyclass(module="rpi3d")]
-struct Shape {
-    name: String,
-    children: Vec<String>,
-}
-
-#[pymethods]
-impl Shape {
-    fn add_child(&mut self, child: &Shape) {
-      self.children.push(child.name.clone());
+    fn set_draw_details(&mut self, shader: &Shader, textures: Vec<&Texture>,
+                ntiles: f32, shiny: f32, umult: f32,
+                vmult:f32, bump_factor: f32) -> PyResult<()>{
+        let texlist = textures.iter().map(|t| t.r_texture.id).collect();
+        self.r_elevation_map.set_draw_details(&shader.r_shader, &texlist, ntiles, shiny,
+                            umult, vmult, bump_factor);
+        Ok(())
     }
-    fn print_children(&self) {
-      println!("{:?}", self.children);
+    fn draw(&mut self) {
+        self.r_elevation_map.draw();
     }
-}
-
-#[pyclass(extends=Shape)] 
-struct Cone {}
-#[pymethods]
-impl Cone {
-    #[new]
-    fn new(obj: &PyRawObject) {
-        obj.init({ Shape {
-           name: "Cone".to_string(),
-           children: vec![],
-        } });
+    fn set_shader(&mut self, shader: &Shader) {
+        self.r_elevation_map.set_shader(&shader.r_shader);
+    }
+    fn set_textures(&mut self, textures: Vec<&Texture>) {
+        let texlist = textures.iter().map(|t| t.r_texture.id).collect();
+        self.r_elevation_map.set_textures(&texlist);
+    }
+    fn set_material(&mut self, material: Vec<f32>) {
+        self.r_elevation_map.set_material(&material);
+    }
+    fn position(&mut self, pos: Vec<f32>) {
+        self.r_elevation_map.position(&pos);
     }
 }
 
-#[pyclass(extends=Shape)] 
-struct Tetra {}
-#[pymethods]
-impl Tetra {
-    #[new]
-    fn new(obj: &PyRawObject) {
-        obj.init({ Shape {
-           name: "Tetra".to_string(),
-           children: vec![],
-        } });
-    }
-}*/
 #[pymodule]
 fn rpi3d(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Display>()?;
-    m.add_class::<Shader>()?;
-    m.add_class::<Texture>()?;
     m.add_class::<Camera>()?;
+    m.add_class::<Shader>()?;
+    m.add_class::<Keyboard>()?;
+    m.add_class::<Mouse>()?;
+    m.add_class::<Texture>()?;
     m.add_class::<Shape>()?;
     m.add_class::<Plane>()?;
     m.add_class::<Cuboid>()?;
@@ -401,6 +450,6 @@ fn rpi3d(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Sphere>()?;
     m.add_class::<Font>()?;
     m.add_class::<PyString>()?;
-    //m.add_class::<ElevationMap>()?;
+    m.add_class::<ElevationMap>()?;
     Ok(())
 }
