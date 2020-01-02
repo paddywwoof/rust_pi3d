@@ -1,6 +1,8 @@
 extern crate image;
 
+pub mod cone;
 pub mod cuboid;
+pub mod cylinder;
 pub mod elevation_map;
 pub mod environment_cube;
 pub mod lathe;
@@ -12,3 +14,6 @@ pub mod points;
 pub mod point_text;
 pub mod sphere;
 pub mod string;
+pub mod tcone;
+pub mod torus;
+pub mod tube;

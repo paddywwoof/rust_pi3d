@@ -5,6 +5,8 @@ import time
 display = rpi3d.Display.create("pyo3 minimal", 600, 550, "GLES", 2, 0)
 shader = rpi3d.Shader("uv_light")
 shader_flat = rpi3d.Shader("uv_flat")
+shader_mat = rpi3d.Shader("mat_light")
+
 dir_path = os.path.dirname(os.path.realpath(__file__))
 keybd = rpi3d.Keyboard(display)
 mouse = rpi3d.Mouse(display)
@@ -19,7 +21,7 @@ plane = rpi3d.Plane(camera, 300.0, 300.0) # NB camera has to be passed to Shape 
 plane.set_draw_details(shader_flat, [tex], 1.0, 0.0, 1.0, 1.0, 0.0)
 plane.position_z(300.0)
 
-cube = rpi3d.Cuboid(camera, 2.0, 2.0, 2.0, 1.0, 1.0, 1.0)
+cube = rpi3d.Tube(camera, 2.0, 0.5, 2.0, 32, True)
 cube.set_draw_details(shader, [tex], 1.0, 0.0, 1.0, 1.0, 0.0)
 cube.position([-2.0, 8.0, 5.0])
 
@@ -57,6 +59,24 @@ terrain = rpi3d.ElevationMap(camera, os.path.join(dir_path, "mountainsHgt.png"),
 terrain.set_draw_details(shader, [tex2], 1.0, 0.0, 1.0, 1.0, 0.0)
 terrain.position([0.0, -2.0, 0.0])
 
+tree_tex = rpi3d.Texture(os.path.join(dir_path, "hornbeam2.png"))
+treeplane = rpi3d.Plane(camera, 2.0, 2.0)
+treemodel = rpi3d.MergeShape(camera)
+treemodel.add_shapes([treeplane, treeplane], [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0], [0.0, 1.5, 0.0]],
+                [[1.0, 2.0, 1.0], [1.0, 2.0, 1.0]], [0, 0])
+trees = rpi3d.MergeShape(camera)
+trees.cluster(treemodel, terrain, 50.0, 50.0, 100.0, 50.0, 0.5, 7.5, 100)
+trees.set_draw_details(shader_flat, [tree_tex], 1.0, 0.0, 1.0, 1.0, 0.0)
+
+model = rpi3d.Model(camera, os.path.join(dir_path, "rust_pi3d.obj"))
+model.set_shader(shader_mat)
+model.position([-30, 10, 30])
+model.scale([20, 20, 20])
+model.rotate_to_y(-2.5)
+
+ecube = rpi3d.EnvironmentCube(camera, 900, os.path.join(dir_path, "sbox"), "jpg")
+ecube.set_shader(shader_flat)
+
 n=0
 tm = time.time()
 (mx, my) = (0, 0)
@@ -69,9 +89,9 @@ while display.loop_running():
 
     cube.draw()
     cube.rotate_child_y(0, 0.01)
-    cube.rotate_inc_z(0.001)
+    cube.rotate_inc_z(0.0017)
     cube.rotate_inc_x(0.0021)
-    cube.rotate_inc_y(0.0011)
+    cube.rotate_inc_y(0.0001)
 
     sphere.draw()
     sphere.rotate_inc_z(0.001)
@@ -96,7 +116,13 @@ while display.loop_running():
     string.draw()
     string.rotate_inc_z(0.001)
 
+    model.draw()
+
+    trees.draw()
+
     terrain.draw()
+
+    ecube.draw()
 
     n += 1
     k = keybd.read_code()

@@ -19,7 +19,7 @@ use ::util::vec3::{rotate_vec, rotate_vec_slice};
 /// * `num` Vec of index values to merge_to.buf[] for merging new Buffers
 ///
 pub fn add_buffers(merge_to: &mut ::shape::Shape, new_bufs: Vec<&::buffer::Buffer>,
-                    loc: Vec<&[f32; 3]>, rot: Vec<&[f32; 3]>, scl: Vec<&[f32; 3]>,
+                    loc: Vec<[f32; 3]>, rot: Vec<[f32; 3]>, scl: Vec<[f32; 3]>,
                     num: Vec<usize>) {
     if new_bufs.len() != loc.len() || loc.len() != rot.len() || rot.len() != scl.len() {
         panic!("\n\nadd_buffers() needs four Vecs of same size\n\n");
@@ -52,14 +52,14 @@ pub fn add_buffers(merge_to: &mut ::shape::Shape, new_bufs: Vec<&::buffer::Buffe
             new_buf_ix.push(0);
         }
         // scale then rotate new verts then add displacement
-        let new_verts = &new_bufs[i].array_buffer.slice(s![.., 0..3]) * &nd::arr1(scl[i]);
-        let new_verts = rotate_vec(rot[i], &new_verts) + &nd::arr1(loc[i]);
+        let new_verts = &new_bufs[i].array_buffer.slice(s![.., 0..3]) * &nd::arr1(&scl[i]);
+        let new_verts = rotate_vec(&rot[i], &new_verts) + &nd::arr1(&loc[i]);
         // then add them to existing verts
         verts[num[i]] = nd::stack(nd::Axis(0),
                         &[verts[num[i]].view(),
                           new_verts.view()]).unwrap();
         // rotate new normals
-        let new_norms = rotate_vec_slice(rot[i], &new_bufs[i].array_buffer.slice(s![.., 3..6]));
+        let new_norms = rotate_vec_slice(&rot[i], &new_bufs[i].array_buffer.slice(s![.., 3..6]));
         // then add them to existing normals
         norms[num[i]] = nd::stack(nd::Axis(0),
                         &[norms[num[i]].view(),
@@ -98,19 +98,19 @@ pub fn add_buffers(merge_to: &mut ::shape::Shape, new_bufs: Vec<&::buffer::Buffe
 /// and will the buf Vec and add all the Buffer objects
 ///
 pub fn add_shapes(merge_to: &mut ::shape::Shape, new_shapes: Vec<&::shape::Shape>,
-                    loc: Vec<&[f32; 3]>, rot: Vec<&[f32; 3]>, scl: Vec<&[f32; 3]>,
+                    loc: Vec<[f32; 3]>, rot: Vec<[f32; 3]>, scl: Vec<[f32; 3]>,
                     num: Vec<usize>) {
     let mut bufs = Vec::<&::buffer::Buffer>::new();
-    let mut new_loc = Vec::<&[f32; 3]>::new();
-    let mut new_rot = Vec::<&[f32; 3]>::new();
-    let mut new_scl = Vec::<&[f32; 3]>::new();
+    let mut new_loc = Vec::<[f32; 3]>::new();
+    let mut new_rot = Vec::<[f32; 3]>::new();
+    let mut new_scl = Vec::<[f32; 3]>::new();
     let mut new_num = Vec::<usize>::new();
     for i in 0..new_shapes.len() {
         for j in 0..new_shapes[i].buf.len() {
             bufs.push(&new_shapes[i].buf[j]);
-            new_loc.push(&loc[i]);
-            new_rot.push(&rot[i]);
-            new_scl.push(&scl[i]);
+            new_loc.push([loc[i][0], loc[i][1], loc[i][2]]);
+            new_rot.push([rot[i][0], rot[i][1], rot[i][2]]);
+            new_scl.push([scl[i][0], scl[i][1], scl[i][2]]);
             new_num.push(num[i]);
         }
     }
@@ -149,9 +149,6 @@ pub fn cluster(merge_to: &mut ::shape::Shape, new_shape: &::shape::Shape,
             new_num.push(j);
         }
     }
-    let new_loc: Vec<&[f32; 3]> = new_loc.iter().map(|x| x).collect();
-    let new_rot: Vec<&[f32; 3]> = new_rot.iter().map(|x| x).collect();
-    let new_scl: Vec<&[f32; 3]> = new_scl.iter().map(|x| x).collect();
         
     add_buffers(merge_to, bufs, new_loc, new_rot, new_scl, new_num);
 }

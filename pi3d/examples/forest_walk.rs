@@ -55,16 +55,16 @@ fn main() {
     let mut treemodel1 = pi3d::shapes::merge_shape::create(camera.reference());
     pi3d::shapes::merge_shape::add_shapes(&mut treemodel1,
         vec![&treeplane, &treeplane],
-        vec![&[0.0, 2.0, 0.0], &[0.0, 2.0, 0.0]],
-        vec![&[0.0, 0.0, 0.0], &[0.0, 1.571, 0.0]],
-        vec![&[1.0, 1.0, 1.0], &[1.0, 1.0, 1.0]],
+        vec![[0.0, 2.0, 0.0], [0.0, 2.0, 0.0]],
+        vec![[0.0, 0.0, 0.0], [0.0, 1.571, 0.0]],
+        vec![[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
         vec![0, 0]);
     let mut treemodel2 = pi3d::shapes::merge_shape::create(camera.reference());
     pi3d::shapes::merge_shape::add_shapes(&mut treemodel2,
         vec![&treeplane, &treeplane, &treeplane],
-        vec![&[0.0, 2.0, 0.0], &[0.0, 2.0, 0.0], &[0.0, 2.0, 0.0]],
-        vec![&[0.0, 0.0, 0.0], &[0.0, 1.047, 0.0], &[0.0, 2.094, 0.0]],
-        vec![&[1.0, 1.0, 1.0], &[1.0, 1.0, 1.0], &[1.0, 1.0, 1.0]],
+        vec![[0.0, 2.0, 0.0], [0.0, 2.0, 0.0], [0.0, 2.0, 0.0]],
+        vec![[0.0, 0.0, 0.0], [0.0, 1.047, 0.0], [0.0, 2.094, 0.0]],
+        vec![[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]],
         vec![0, 0, 0]);
     // scatter
     let mut mytrees1 = pi3d::shapes::merge_shape::create(camera.reference());
