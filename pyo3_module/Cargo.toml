@@ -16,3 +16,7 @@ gl = "^0.10"
 [dependencies.pyo3]
 version = "0.8"
 features = ["extension-module"]
+
+[profile.release]
+codegen-units = 1
+incremental = true
