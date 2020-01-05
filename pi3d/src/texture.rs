@@ -5,6 +5,7 @@ extern crate image;
 use gl::types::*;
 use ndarray as nd;
 use texture::image::GenericImage; // confusing name texture
+use ::util::resources;
 
 pub struct Texture {
     pub id: GLuint,
@@ -82,8 +83,7 @@ pub fn create_from_array(image: nd::Array3<u8>) -> Texture {
 }
 
 pub fn create_from_file(name: &str) -> Texture {
-    let res = ::util::resources::from_exe_path().unwrap();
-    let pb = res.resource_name_to_path(name);
+    let pb = resources::resource_name_to_path(name);
     let im = image::open(pb).unwrap();
     let (w, h) = im.dimensions();
     let c_type: usize = match im.color() {

@@ -3,6 +3,7 @@ use gl::types::*;
 use std;
 use std::ffi::{CString, CStr};
 use ::util::resources;
+use ::GL_ID;
 
 #[derive(Debug)]
 pub enum Error {
@@ -167,15 +168,13 @@ impl Shader {
             })
             .map(|&(_, kind)| kind)
             .ok_or_else(|| Error::CanNotDetermineShaderTypeForResource { name: name.into() })?;
-        let mut res = ::util::resources::from_exe_path().unwrap();
-                res.set_gl_id();
-        let mut source = res.load_string(name)
+        let mut source = resources::load_string(name)
             .map_err(|e| Error::ResourceLoad { name: name.into(), inner: e })?;
-        if res.gl_id == "GLES20" || res.gl_id == "GLES2" {
+        if *GL_ID == "GLES20" || *GL_ID == "GLES2" {
             source = source.replace("version 120", "version 100")
                            .replace("//precision", "precision");
         }
-        if res.gl_id == "GLES30" || res.gl_id == "GLES3" {
+        if *GL_ID == "GLES30" || *GL_ID == "GLES3" {
             source = source.replace("version 120", "version 300 es")
                            .replace("//precision", "precision")
                            .replace("attribute", "in")

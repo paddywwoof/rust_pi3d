@@ -17,6 +17,7 @@ pub struct Shape {
 
 #[pymethods]
 impl Shape {
+    #[args(ntiles="1.0", shiny="0.0", umult="1.0", vmult="1.0", bump_factor="1.0")]
     fn set_draw_details(&mut self, shader: &::core::Shader, textures: Vec<&::core::Texture>,
                 ntiles: f32, shiny: f32, umult: f32,
                 vmult:f32, bump_factor: f32) -> PyResult<()>{
@@ -38,6 +39,7 @@ impl Shape {
     fn set_material(&mut self, material: Vec<f32>) {
         self.r_shape.set_material(&material);
     }
+    #[args(ntiles="1.0", shiny="0.0", umult="1.0", vmult="1.0", bump_factor="1.0", is_uv="false")]
     fn set_normal_shine(&mut self, textures: Vec<&::core::Texture>, ntiles: f32,
             shiny: f32, umult: f32, vmult:f32, bump_factor: f32, is_uv: bool) {
         let texlist = textures.iter().map(|t| t.r_texture.id).collect();
@@ -83,6 +85,7 @@ impl Shape {
     fn scale(&mut self, scale: Vec<f32>) {
         self.r_shape.scale(&scale);
     }
+    #[args(point="false")]
     fn set_light(&mut self, num: usize, posn: Vec<f32>,
                     rgb: Vec<f32>, amb: Vec<f32>, point: bool) {
         self.r_shape.set_light(num, &posn, &rgb, &amb, point);
@@ -139,12 +142,13 @@ impl Shape {
 }
 
 macro_rules! shape_from {
-    ($sh_cap:ident, $sh_lwr:ident, $($att:ident : $typ:ty) , *) => {
+    ($sh_cap:ident, $sh_lwr:ident, $($att:ident : $typ:ty => $default:expr) , *) => {
         #[pyclass(extends=Shape)]
         pub struct $sh_cap {}
         #[pymethods]
         impl $sh_cap {
             #[new]
+            #[args( $($att=$default,)*)]
             fn new(obj: &PyRawObject, camera: &mut ::core::Camera $(,$att: $typ)*) {
                 obj.init({
                     Shape {
@@ -156,15 +160,16 @@ macro_rules! shape_from {
         } 
     };
 }
-shape_from! (Cone, cone, radius: f32, height: f32, sides: usize);
-shape_from! (Cylinder, cylinder, radius: f32, height: f32, sides: usize);
-shape_from! (Cuboid, cuboid, w: f32, h: f32, d: f32, tw: f32, th: f32, td: f32);
+
+shape_from! (Cone, cone, radius:f32=>"1.0", height:f32=>"2.0", sides:usize=>"12");
+shape_from! (Cylinder, cylinder, radius:f32=>"1.0", height:f32=>"2.0", sides:usize=>"12");
+shape_from! (Cuboid, cuboid, w:f32=>"1.0", h:f32=>"1.0", d:f32=>"1.0", tw:f32=>"1.0", th:f32=>"1.0", td:f32=>"1.0");
 shape_from! (MergeShape, merge_shape,);
-shape_from! (Plane, plane, w:f32, h:f32);
-shape_from! (Sphere, sphere, radius: f32, slices: usize, sides: usize, hemi: f32, invert: bool);
-shape_from! (Torus, torus, radius: f32, thickness: f32, ringrots: usize, sides: usize);
-shape_from! (Tube, tube, radius: f32, thickness: f32, height: f32, sides: usize, use_lathe: bool);
-shape_from! (TCone, tcone, radius_bot: f32, radius_top: f32, height: f32, sides: usize);
+shape_from! (Plane, plane, w:f32=>"1.0", h:f32=>"1.0");
+shape_from! (Sphere, sphere, radius:f32=>"1.0", slices:usize=>"16", sides:usize=>"12", hemi:f32=>"0.0", invert:bool=>"false");
+shape_from! (Torus, torus, radius:f32=>"2.0", thickness:f32=>"0.5", ringrots:usize=>"6", sides:usize=>"12");
+shape_from! (Tube, tube, radius:f32=>"1.0", thickness:f32=>"0.2", height:f32=>"2.0", sides:usize=>"12", use_lathe:bool=>"true");
+shape_from! (TCone, tcone, radius_bot:f32=>"1.0", radius_top:f32=>"0.5", height:f32=>"2.0", sides:usize=>"12");
 /* Canvas, Disk, Extrude, Helix, LodSprite,
 MultiSprite, Polygon, Sprite, Tetrahedron, Triangle */
 
@@ -173,6 +178,7 @@ pub struct Lathe {}
 #[pymethods]
 impl Lathe {
     #[new]
+    #[args(sides="12",rise="0.0", loops="1.0")]
     fn new(obj: &PyRawObject, camera: &mut ::core::Camera, path: Vec<Vec<f32>>, sides: usize, rise: f32, loops: f32) {
         let vec_arr: Vec<[f32; 2]> = path.iter().map(|v| [v[0], v[1]]).collect(); //TODO error if wrong dim 
         obj.init({
@@ -278,6 +284,7 @@ impl ElevationMap {
     fn calc_height(&self, px: f32, pz: f32) -> (f32, Vec<f32>) {
         pi3d::shapes::elevation_map::calc_height(&self.r_elevation_map, px, pz)
     }
+    #[args(ntiles="1.0", shiny="0.0", umult="1.0", vmult="1.0", bump_factor="1.0")]
     fn set_draw_details(&mut self, shader: &::core::Shader, textures: Vec<&::core::Texture>,
                 ntiles: f32, shiny: f32, umult: f32,
                 vmult:f32, bump_factor: f32) -> PyResult<()>{

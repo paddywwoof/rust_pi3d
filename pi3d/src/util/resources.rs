@@ -23,94 +23,65 @@ impl From<io::Error> for Error {
     }
 }
 
-pub struct Resources {
-    root_path: PathBuf,
-    pub gl_id: String,
+pub fn load_string(resource_name: &str) -> Result<String, Error> {
+    let mut listing = Vec::<String>::new();
+    load_includes(&resource_name, &mut listing, 0)?;
+    Ok(listing.join("\n"))
+}
+/*
+pub fn resource_name_to_path(location: &str) -> PathBuf {
+    let new_path = PathBuf::from(location);
+    let mut path = PathBuf::new();
+    if !new_path.has_root() { // only start from exe root path if not /
+        path = (*EXE_PATH).to_path_buf(); //why does it need this (clone says it's a Path)
+    }
+    path.join(new_path)
+}
+*/
+pub fn resource_name_to_path(location: &str) -> PathBuf {
+    //let new_path = PathBuf::from(location);
+    let mut exe_path = (*::EXE_PATH).to_path_buf();
+    exe_path.push(location);
+    let mut cur_path = (*::CURRENT_DIR).to_path_buf();
+    cur_path.push(location);
+    if cur_path.is_file() {
+        return cur_path;
+    }
+    if exe_path.is_file() {
+        return exe_path;
+    }
+    if cur_path.is_dir() {
+        return cur_path;
+    }
+    exe_path
 }
 
-impl Resources {
-    pub fn load_string(&self, resource_name: &str) -> Result<String, Error> {
-        let mut listing = Vec::<String>::new();
-        self.load_includes(&resource_name, &mut listing, 0)?;
-        Ok(listing.join("\n"))
-        //let buffer: Vec<u8> = listing.join("\n").as_bytes().to_vec();
-        //ffi::CString::new(buffer).map_err(|_e| Error::FileContainsNil)
+fn load_includes(resource_name: &str, mut listing: &mut Vec<String>, depth: u32) -> Result<(), Error> {
+    if depth > 16 {return Err(Error::RecursionDepth);}
+    let mut text_chunk = String::new();
+    for (i, name) in NAMES.iter().enumerate() { // first try built_in_shaders
+        if *name == resource_name.trim() {
+            text_chunk = CODES[i].to_string();
+            break;
+        }
     }
-
-    pub fn resource_name_to_path(&self, location: &str) -> PathBuf {
-        let new_path = PathBuf::from(location);
-        let mut path = PathBuf::new();
-        if !new_path.has_root() { // only start from exe root path if not /
-            path = self.root_path.clone();
-        }
-        path.join(new_path)
+    if text_chunk == "" { // now check file path
+        let path_buf = resource_name_to_path(resource_name);
+        if !path_buf.is_file() {return Err(Error::MissingResource);} // nope
+        let mut file = fs::File::open(path_buf).unwrap();
+        file.read_to_string(&mut text_chunk)?;
     }
-
-    pub fn set_gl_id(&mut self) {
-        // NB must be run after GL initialized
-        let mut gl_str = String::from("");
-        unsafe {
-            let version = gl::GetString(gl::VERSION);
-            for i in 0..12 {
-                if version.add(i).is_null() || *version.add(1) == 0 {
-                    break;
-                }
-                gl_str.push(*version.add(i) as char);
+    if text_chunk == "" {return Err(Error::MissingResource);} // still not got anything
+    for s in (&text_chunk).lines() {
+        match s.find("#include") { 
+            Some(ix) => {
+                let (_, new_key) = s.split_at(ix + 9);
+                load_includes(&new_key, &mut listing, depth + 1)?;
+            },
+            None => {
+                listing.push(s.to_string());
             }
         }
-        self.gl_id = String::from("GL");
-        if gl_str.contains("ES") {
-            self.gl_id.push_str("ES");
-        }
-        for s in gl_str.split(" ") {
-            if s.contains(".") {
-                for n in s.split(".").take(2) {
-                    self.gl_id.push_str(n);
-                }
-                break;
-            }
-        }
-        println!("gl_id: {}", self.gl_id);
-    } 
-
-    fn load_includes(&self, resource_name: &str, mut listing: &mut Vec<String>, depth: u32) -> Result<(), Error> {
-        if depth > 16 {return Err(Error::RecursionDepth);}
-        let mut text_chunk = String::new();
-        for (i, name) in NAMES.iter().enumerate() { // first try built_in_shaders
-            if *name == resource_name.trim() {
-                text_chunk = CODES[i].to_string();
-                break;
-            }
-        }
-        if text_chunk == "" { // now check file path
-            let path_buf = self.resource_name_to_path(resource_name);
-            if !path_buf.is_file() {return Err(Error::MissingResource);} // nope
-            let mut file = fs::File::open(path_buf).unwrap();
-            file.read_to_string(&mut text_chunk)?;
-        }
-        if text_chunk == "" {return Err(Error::MissingResource);} // still not got anything
-        for s in (&text_chunk).lines() {
-            match s.find("#include") { 
-                Some(ix) => {
-                    let (_, new_key) = s.split_at(ix + 9);
-                    self.load_includes(&new_key, &mut listing, depth + 1)?;
-                },
-                None => {
-                    listing.push(s.to_string());
-                }
-            }
-        }
-        Ok(())
     }
-}
-
-pub fn from_exe_path() -> Result<Resources, Error> {
-    //! creates a Resource object containing the root path to the exe
-    //! that's running
-    let exe_file_name = ::std::env::current_exe().map_err(|_| Error::FailedToGetExePath)?;
-    let exe_path = exe_file_name.parent().ok_or(Error::FailedToGetExePath)?;
-    Ok(Resources {
-      root_path: exe_path.into(),
-      gl_id: String::from("GL21"),
-    })
+    Ok(())
 }

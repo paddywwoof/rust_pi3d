@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use std::rc::Rc;
 use std::cell::RefCell;
 use ndarray as nd;
+use ::util::resources;
 
 struct Face {
     vertex: Vec<i32>,
@@ -56,8 +57,8 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
     let mut material: String = "".to_string();
     let mut mtllib: String = "".to_string();
 
-    let res = ::util::resources::from_exe_path().unwrap();
-    let path_buf = res.resource_name_to_path(file_name);
+    //let res = ::util::resources::from_exe_path().unwrap();
+    let path_buf = resources::resource_name_to_path(file_name);
     //if !path_buf.is_file() {return Err(Error::MissingResource);} //TODO error catching
     let file = fs::File::open(path_buf).unwrap();
     let file = io::BufReader::new(file);
@@ -224,7 +225,7 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
 
     let mut tmp_f = file_path.clone();
     tmp_f.push(mtllib); //
-    let path_buf = res.resource_name_to_path(tmp_f.to_str().unwrap());
+    let path_buf = resources::resource_name_to_path(tmp_f.to_str().unwrap());
     let file = fs::File::open(path_buf).unwrap(); //TODO error checking
     let file = io::BufReader::new(file);
     for l in file.lines() {

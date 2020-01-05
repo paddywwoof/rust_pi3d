@@ -53,8 +53,8 @@ fn main() {
             slide.set_draw_details(&shader, &vec![], 1.0, 1.0, 1.0, 1.0, 1.0);
             //slide.position_z(5.0);
 
-    // there is a Resources object attached to Display that checks if path has root
-    let file_path = display.res.resource_name_to_path(FILE_DIR);
+    // pi3d has a resources function that checks if path has root
+    let file_path = pi3d::util::resources::resource_name_to_path(FILE_DIR);
     let mut file_list: Vec<String> = vec![];
     get_files(&file_path, &mut file_list);
     let mut rng = thread_rng();

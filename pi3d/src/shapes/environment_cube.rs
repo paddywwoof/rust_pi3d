@@ -61,7 +61,7 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
         nd::arr2(&[[3, 1, 0], [2, 1, 3]]), false)); //back
 
     let mut tex_list = HashMap::<String, ::texture::Texture>::new();
-    //let path_buf = disp.res.resource_name_to_path(stem);
+
     for i in 0..bufs.len() {
         //let path_str = path_buf.to_str().unwrap();
         let fname = format!("{}_{}.{}", &stem, &parts[i], &suffix);

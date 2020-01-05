@@ -11,7 +11,6 @@ const GL_POINT_SPRITE: GLenum = 0x8861; // needed for NVIDIA driver
 
 
 pub struct Display {
-    pub res: ::util::resources::Resources,
     sdl: sdl2::Sdl,
     pub window: sdl2::video::Window,
     event_pump: sdl2::EventPump,
@@ -191,11 +190,8 @@ pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, min
         gl::Enable(gl::BLEND);
         gl::ColorMask(1, 1, 1, 0);
     }
-    let mut res = ::util::resources::from_exe_path().unwrap();
-            res.set_gl_id();
 
     Ok(Display {
-        res,
         window,
         event_pump: sdl.event_pump()?,//.unwrap(),
         sdl,

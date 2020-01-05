@@ -2,6 +2,7 @@ extern crate ndarray;
 extern crate image;
 
 use ndarray as nd;
+use ::util::resources;
 
 // create a new struct definition 
 make_shape!(ElevationMap, ix:f32=0.0, iz:f32=0.0, width:f32=200.0, depth:f32=200.0);
@@ -27,8 +28,8 @@ pub fn new_map(cam: Rc<RefCell<::camera::CameraInternals>>,
 
     let ix = if ix < 200 {ix + 1} else {200}; // one more vertex in each direction than number of divisions
     let iz = if iz < 200 {iz + 1} else {200};
-    let res = ::util::resources::from_exe_path().unwrap();
-    let f = res.resource_name_to_path(mapfile);
+    //let res = ::util::resources::from_exe_path().unwrap();
+    let f = resources::resource_name_to_path(mapfile);
     //println!("f={:?}", f);
     let im = image::open(f).unwrap();
     // convert to Gray
