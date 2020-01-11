@@ -1,19 +1,21 @@
 import rpi3d
 import os 
 import time
+import numpy as np
 
-display = rpi3d.Display.create("pyo3 minimal", 900, 550, "GLES", 2, 0)
+display = rpi3d.Display.create("pyo3 minimal", w=800, h=600, profile="GLES", major=2, minor=0)
 shader = rpi3d.Shader("uv_light")
 shader_flat = rpi3d.Shader("uv_flat")
-shader_mat = rpi3d.Shader("mat_light")
+shader_mat = rpi3d.Shader("mat_reflect")
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 keybd = rpi3d.Keyboard(display)
 mouse = rpi3d.Mouse(display)
-#tex = rpi3d.Texture(os.path.join(dir_path, "pattern.png"))
-#tex2 = rpi3d.Texture(os.path.join(dir_path, "mountains3_512.jpg"))
 tex = rpi3d.Texture("pattern.png")
 tex2 = rpi3d.Texture("mountains3_512.jpg")
+ntex = tex.image.copy()
+ntex[:64,:,:2] += 64
+tex.image = ntex
 
 camera = rpi3d.Camera(display)
 camera2d = rpi3d.Camera(display)
@@ -69,8 +71,10 @@ trees = rpi3d.MergeShape(camera)
 trees.cluster(treemodel, terrain, 50.0, 50.0, 100.0, 50.0, 0.5, 7.5, 100)
 trees.set_draw_details(shader_flat, [tree_tex])
 
+normtex = rpi3d.Texture("floor_nm.jpg")
 model = rpi3d.Model(camera, "rust_pi3d.obj")
 model.set_shader(shader_mat)
+model.set_normal_shine(normtex=normtex, ntiles=4.0, shinetex=tree_tex, shiny=0.05, bump_factor=0.02)
 model.position([-30, 10, 30])
 model.scale([20, 20, 20])
 model.rotate_to_y(-2.5)
@@ -98,6 +102,10 @@ while display.loop_running():
     sphere.rotate_inc_z(0.001)
     sphere.rotate_inc_x(0.0021)
     sphere.rotate_inc_y(0.007)
+    if n % 5 == 0:
+        pb = sphere.array_buffer.copy()
+        pb[:,:3] *= np.random.random((len(pb), 3)) * 0.004 + 0.998
+        sphere.array_buffer = pb
 
     lathe.draw()
     lathe.rotate_inc_z(0.001)

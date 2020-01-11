@@ -4,13 +4,14 @@ extern crate gl;
 
 use pyo3::prelude::*;
 use pyo3::{PyObject, PyRawObject};
+use pyo3::exceptions;
 
+use numpy::{IntoPyArray, PyArray3};
 
 use std::cell::RefCell;
 use std::rc::Rc;
 
-
-#[pyclass(module="rpi3d")]
+#[pyclass]
 pub struct Display {
     r_display: Rc<RefCell<pi3d::display::Display>>,
 }
@@ -18,23 +19,42 @@ pub struct Display {
 #[pymethods]
 impl Display {
     #[new]
+    #[args(name="\"\"", w="0.0", h="0.0", profile="\"GLES\"", major="2", minor="0")]
     fn new(obj: &PyRawObject, name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) {
         obj.init({
+            let (wnew, hnew, fullscreen) = if w <= 0.0 || h <= 0.0 {
+                (100.0, 100.0, true)
+            } else {
+                (w, h, false)
+            };
+            let dispnew = Rc::new(RefCell::new(
+                    pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
+                ));
+            if  fullscreen {
+                dispnew.borrow_mut().set_fullscreen(true);
+            }
             Display {
-                r_display: Rc::new(RefCell::new(
-                    pi3d::display::create(name, w, h, profile, major, minor).unwrap()
-                )),
+                r_display: dispnew,
             }
         });
     }
 
     #[staticmethod]
+    #[args(name="\"\"", w="0.0", h="0.0", profile="\"GLES\"", major="2", minor="0")]
     fn create(name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) -> PyResult<Py<Display>> {
         let gil = Python::acquire_gil();
         let py = gil.python();
+        let (wnew, hnew, fullscreen) = if w <= 0.0 || h <= 0.0 {
+            (100.0, 100.0, true)
+        } else {
+            (w, h, false)
+        };
         let r_display = Rc::new(RefCell::new(
-            pi3d::display::create(name, w, h, profile, major, minor).unwrap()
+            pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
         ));
+        if  fullscreen {
+            r_display.borrow_mut().set_fullscreen(true);
+        }
         r_display.borrow_mut().set_target_fps(1000.0); //TODO set to 60; testing run as fast as poss 
         r_display.borrow_mut().set_mouse_relative(true);
         Py::new(py, Display { 
@@ -49,7 +69,7 @@ impl Display {
 
 /// Camera stuff
 ///
-#[pyclass(module="rpi3d")]
+#[pyclass]
 pub struct Camera {
     pub r_camera: pi3d::camera::Camera,
 }
@@ -85,7 +105,7 @@ impl Camera {
 
 /// Shader stuff
 ///
-#[pyclass(module="rpi3d")]
+#[pyclass]
 pub struct Shader {
     pub r_shader: pi3d::shader::Program,
 }
@@ -104,7 +124,7 @@ impl Shader {
 
 /// Keyboard stuff
 /// 
-#[pyclass(module="rpi3d")]
+#[pyclass]
 struct Keyboard {
     r_display: Rc<RefCell<pi3d::display::Display>>,
 }
@@ -132,7 +152,7 @@ impl Keyboard {
 
 /// Mouse stuff
 /// 
-#[pyclass(module="rpi3d")]
+#[pyclass]
 struct Mouse {
     r_display: Rc<RefCell<pi3d::display::Display>>,
 }
@@ -157,7 +177,7 @@ impl Mouse {
 
 /// Texture stuff
 ///
-#[pyclass(module="rpi3d")]
+#[pyclass]
 pub struct Texture {
     pub r_texture: pi3d::texture::Texture,
 }
@@ -166,15 +186,36 @@ pub struct Texture {
 impl Texture {
     #[new]
     fn new(obj: &PyRawObject, file_name: &str) {
-        /*let current_dir: Vec<PathBuf> = std::env::split_paths(&std::env::current_dir()
-                                            .unwrap()).collect();
-        let file_path = std::env::join*/
         obj.init({
             Texture {
                 r_texture: pi3d::texture::create_from_file(file_name),
             }
         });
     }
+    #[getter]
+    fn get_image(&mut self) -> PyResult<Py<PyArray3<u8>>> {
+        let gil = pyo3::Python::acquire_gil();
+        let py = gil.python();
+        Ok(self.r_texture.image
+            .clone()
+            .into_pyarray(py)
+            .to_owned()
+        )
+    }
+    #[setter]
+    fn set_image(&mut self, im_arr: &PyArray3<u8>) -> PyResult<()> {
+        let new_im_arr = im_arr.as_array().to_owned();
+        let new_shape = new_im_arr.shape();
+        let old_shape = self.r_texture.image.shape();
+        if new_shape[0] != old_shape[0] || new_shape[1] != old_shape[1] {
+            return Err(PyErr::new::<exceptions::RuntimeError, _>("array wrong shape"));
+        }
+        //TODO fix different 3rd dim size (1,3,4)
+        self.r_texture.image = new_im_arr;
+        self.r_texture.update_ndarray();
+        Ok(())
+    }
+
 }
 
 #[pymodule]

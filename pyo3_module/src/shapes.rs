@@ -1,15 +1,17 @@
 extern crate pyo3;
 extern crate pi3d;
 extern crate gl;
+extern crate numpy;
 
 use pyo3::prelude::*;
-use pyo3::{PyObject, PyRawObject};
 use pyo3::exceptions;
+use numpy::{IntoPyArray, PyArray2};
 use std::collections::HashMap;
+use gl::types::GLuint;
 
 /// Shape stuff
 ///
-#[pyclass(module="rpi3d")]
+#[pyclass]
 pub struct Shape {
     r_shape: pi3d::shape::Shape,
     _texlist: HashMap<String, pi3d::texture::Texture>,
@@ -39,12 +41,18 @@ impl Shape {
     fn set_material(&mut self, material: Vec<f32>) {
         self.r_shape.set_material(&material);
     }
-    #[args(ntiles="1.0", shiny="0.0", umult="1.0", vmult="1.0", bump_factor="1.0", is_uv="false")]
-    fn set_normal_shine(&mut self, textures: Vec<&::core::Texture>, ntiles: f32,
-            shiny: f32, umult: f32, vmult:f32, bump_factor: f32, is_uv: bool) {
-        let texlist = textures.iter().map(|t| t.r_texture.id).collect();
+    #[args(ntiles="1.0", shinetex="None", shiny="0.0", bump_factor="1.0", is_uv="true")]
+    fn set_normal_shine(&mut self, normtex: &::core::Texture, ntiles: f32,
+            shinetex: Option<&::core::Texture>, shiny: f32, bump_factor: f32, is_uv: bool) {
+        let mut texlist: Vec<GLuint> = vec![normtex.r_texture.id];
+        match shinetex {
+            Some(tex) => {
+                texlist.push(tex.r_texture.id);
+            },
+            None => {},
+        };
         self.r_shape.set_normal_shine(&texlist, ntiles, shiny,
-                            umult, vmult, bump_factor, is_uv);
+                            1.0, 1.0, bump_factor, is_uv);
     }
     fn set_specular(&mut self, specular: Vec<f32>) {
         self.r_shape.set_specular(&specular);
@@ -120,6 +128,7 @@ impl Shape {
         self.r_shape.children[child_index].rotate_inc_z(da);
         Ok(())
     }
+
     fn add_shapes(&mut self, new_shapes: Vec<&Shape>,
                     loc: Vec<Vec<f32>>, rot: Vec<Vec<f32>>, scl: Vec<Vec<f32>>,
                     num: Vec<usize>) {
@@ -139,9 +148,45 @@ impl Shape {
         pi3d::shapes::merge_shape::cluster(&mut self.r_shape, &new_shape.r_shape, &map.r_elevation_map,
                                            xpos, zpos, w, d, minscl, maxscl, count);
     }
+
+    fn get_buffer_num(&mut self, n: usize) -> PyResult<Py<PyArray2<f32>>> {
+        if self.r_shape.buf.len() < (n + 1) {
+            return Err(PyErr::new::<exceptions::RuntimeError, _>("array index too big"));
+        }
+        let gil = pyo3::Python::acquire_gil();
+        let py = gil.python();
+        Ok(self.r_shape.buf[n].array_buffer
+            .clone()
+            .into_pyarray(py)
+            .to_owned()
+        )
+    }
+    #[getter]
+    fn get_array_buffer(&mut self) -> PyResult<Py<PyArray2<f32>>> {
+        self.get_buffer_num(0)
+    }
+
+    fn set_buffer_num(&mut self, n: usize, buff: &PyArray2<f32>) -> PyResult<()> {
+        if self.r_shape.buf.len() < (n + 1) {
+            return Err(PyErr::new::<exceptions::RuntimeError, _>("there aren't that many buffers"));
+        }
+        let new_buff = buff.as_array().to_owned();
+        let new_shape = new_buff.shape();
+        let old_shape = self.r_shape.buf[n].array_buffer.shape();
+        if new_shape[0] != old_shape[0] || new_shape[1] != old_shape[1] {
+            return Err(PyErr::new::<exceptions::RuntimeError, _>("array wrong shape"));
+        }
+        self.r_shape.buf[n].array_buffer = new_buff;
+        self.r_shape.buf[n].re_init();
+        Ok(())
+    }
+    #[setter]
+    fn set_array_buffer(&mut self, buff: &PyArray2<f32>)  -> PyResult<()> {
+        self.set_buffer_num(0, buff)
+    }
 }
 
-macro_rules! shape_from {
+macro_rules! shape_from { // NB the : and => below are arbitrary dividers in the $(),* params
     ($sh_cap:ident, $sh_lwr:ident, $($att:ident : $typ:ty => $default:expr) , *) => {
         #[pyclass(extends=Shape)]
         pub struct $sh_cap {}

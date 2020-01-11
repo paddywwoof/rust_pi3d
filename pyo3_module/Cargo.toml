@@ -9,7 +9,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 numpy = "0.7.0"
-ndarray = "0.13"
+ndarray = "^0.13"
 pi3d = {path = "../pi3d"}
 gl = "^0.10"
 

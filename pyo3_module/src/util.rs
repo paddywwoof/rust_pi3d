@@ -7,7 +7,7 @@ use pyo3::{PyObject, PyRawObject};
 
 /// Font stuff
 ///
-#[pyclass(module="rpi3d")]
+#[pyclass]
 pub struct Font {
     pub r_font: pi3d::util::font::TextureFont,
 }
