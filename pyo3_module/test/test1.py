@@ -2,13 +2,14 @@ import rpi3d
 import os 
 import time
 import numpy as np
+from PIL import Image
 
 display = rpi3d.Display.create("pyo3 minimal", w=800, h=600, profile="GLES", major=2, minor=0)
 shader = rpi3d.Shader("uv_light")
 shader_flat = rpi3d.Shader("uv_flat")
 shader_mat = rpi3d.Shader("mat_reflect")
+shader_post = rpi3d.Shader("post_base")
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
 keybd = rpi3d.Keyboard(display)
 mouse = rpi3d.Mouse(display)
 tex = rpi3d.Texture("pattern.png")
@@ -47,7 +48,7 @@ points = rpi3d.Points(camera, verts, 40.0)
 points.set_draw_details(shader, [tex])
 points.position([-2.0, 12.0, 5.0])
 
-font = rpi3d.Font(os.path.join(dir_path, "NotoSerif-Regular.ttf"), "", "", 64)
+font = rpi3d.Font("NotoSerif-Regular.ttf", "", "", 64)
 string = rpi3d.PyString(camera2d, font, "Hello from rust pi3d", 0.0)
 string.set_shader(shader_flat)
 string.position([100.0, 100.0, 4.0])
@@ -82,6 +83,8 @@ model.rotate_to_y(-2.5)
 ecube = rpi3d.EnvironmentCube(camera, 900, "sbox", "jpg")
 ecube.set_shader(shader_flat)
 
+post = rpi3d.PostProcess(camera2d, display, shader_post, [], 1.0)
+
 n=0
 tm = time.time()
 (mx, my) = (0, 0)
@@ -89,6 +92,10 @@ tm = time.time()
 (x, y, z) = (0, 0, 0)
 ds = 0.01
 while display.loop_running():
+    string.draw()
+    string.rotate_inc_z(0.001)
+
+    post.start_capture(True)
     plane.draw()
     plane.rotate_inc_z(0.001)
 
@@ -102,9 +109,9 @@ while display.loop_running():
     sphere.rotate_inc_z(0.001)
     sphere.rotate_inc_x(0.0021)
     sphere.rotate_inc_y(0.007)
-    if n % 5 == 0:
+    if n % 50 == 0:
         pb = sphere.array_buffer.copy()
-        pb[:,:3] *= np.random.random((len(pb), 3)) * 0.004 + 0.998
+        pb[:,:3] *= np.random.random((len(pb), 3)) * 0.01 + 0.995
         sphere.array_buffer = pb
 
     lathe.draw()
@@ -122,9 +129,6 @@ while display.loop_running():
     points.rotate_inc_x(0.0021)
     points.rotate_inc_y(0.0011)
 
-    string.draw()
-    string.rotate_inc_z(0.001)
-
     model.draw()
 
     trees.draw()
@@ -132,6 +136,7 @@ while display.loop_running():
     terrain.draw()
 
     ecube.draw()
+    post.end_capture()
 
     n += 1
     k = keybd.read_code()
@@ -158,5 +163,8 @@ while display.loop_running():
         y = newy + 0.0
         camera.position([x, y, z])
     ds = 0.0 ## to trick camera setting to terrail
+    f = (tilt + rot) * 0.2 + (400 + x + y + z) * 0.01
+    f = abs(f % 10.0 - 5.0) # triangular rather than saw-tooth
+    post.draw([(16, 0, f), (16, 1, 0.0), (16, 2, 0.0)])
 
 print("{:.1f} FPS".format(n / (time.time() - tm)))

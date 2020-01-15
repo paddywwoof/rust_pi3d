@@ -12,7 +12,7 @@ pub struct Texture {
     pub image: nd::Array3<u8>,
     pub width: usize,
     pub height: usize,
-    repeat: GLint,
+    pub repeat: GLint,
 }
 
 impl Texture {

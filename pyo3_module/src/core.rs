@@ -13,7 +13,7 @@ use std::rc::Rc;
 
 #[pyclass]
 pub struct Display {
-    r_display: Rc<RefCell<pi3d::display::Display>>,
+    pub r_display: Rc<RefCell<pi3d::display::Display>>,
 }
 
 #[pymethods]
@@ -228,6 +228,7 @@ fn rpi3d(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Texture>()?;
 
     m.add_class::<::util::Font>()?;
+    m.add_class::<::util::PostProcess>()?;
 
     m.add_class::<::shapes::Shape>()?;
     m.add_class::<::shapes::Cone>()?;
