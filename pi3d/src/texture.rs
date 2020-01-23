@@ -19,8 +19,10 @@ impl Texture {
     pub fn update_ndarray(&mut self) {
         let (h, w, d) = self.image.dim();
         let c_type = match d {
+            1 => gl::RED,
+            2 => gl::RG,
             3 => gl::RGB,
-            _ => gl::RGBA, //TODO better catching, Gray or GrayA also valid
+            _ => gl::RGBA, //TODO catching other types such as 5_6_5 or 4_4_4_4
         };
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);

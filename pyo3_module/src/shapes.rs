@@ -6,14 +6,17 @@ extern crate numpy;
 use pyo3::prelude::*;
 use pyo3::exceptions;
 use numpy::{IntoPyArray, PyArray2};
-use std::collections::HashMap;
 use gl::types::GLuint;
 
-/// Shape stuff
+use std::collections::HashMap;
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::clone::Clone;
+
 ///
 #[pyclass]
 pub struct Shape {
-    r_shape: pi3d::shape::Shape,
+    pub r_shape: pi3d::shape::Shape,
     _texlist: HashMap<String, pi3d::texture::Texture>,
 }
 
@@ -104,10 +107,10 @@ impl Shape {
     fn set_blend(&mut self, blend: bool) {
         self.r_shape.set_blend(blend);
     }
-    fn add_child(&mut self, child: &Shape) {
-        self.r_shape.add_child(child.r_shape.clone());
+    fn add_child(&mut self, child: &RefShape) {
+        self.r_shape.add_child(child.r_shape_ref.clone());
     }
-    fn rotate_child_x(&mut self, child_index: usize, da: f32)  -> PyResult<()>{
+    /*fn rotate_child_x(&mut self, child_index: usize, da: f32)  -> PyResult<()>{
         if child_index >= self.r_shape.children.len() {
             return Err(PyErr::new::<exceptions::IndexError, _>("There isn't a child at that ix"));
         }
@@ -127,7 +130,7 @@ impl Shape {
         }
         self.r_shape.children[child_index].rotate_inc_z(da);
         Ok(())
-    }
+    }*/
 
     fn add_shapes(&mut self, new_shapes: Vec<&Shape>,
                     loc: Vec<Vec<f32>>, rot: Vec<Vec<f32>>, scl: Vec<Vec<f32>>,
@@ -353,5 +356,62 @@ impl ElevationMap {
     }
     fn position(&mut self, pos: Vec<f32>) {
         self.r_elevation_map.position(&pos);
+    }
+}
+
+/// RefShape stuff
+#[pyclass]
+pub struct RefShape {
+    r_shape_ref: Rc<RefCell<pi3d::shape::Shape>>,
+}
+#[pymethods]
+impl RefShape {
+    #[new]
+    fn new(obj: &PyRawObject, shape: &mut Shape) {
+        obj.init({
+            RefShape {
+                r_shape_ref: shape.r_shape.clone().reference(),
+            }
+        });
+    }
+
+    fn rotate_inc_x(&mut self, da: f32) {
+        self.r_shape_ref.borrow_mut().rotate_inc_x(da);
+    }
+    fn rotate_inc_y(&mut self, da: f32) {
+        self.r_shape_ref.borrow_mut().rotate_inc_y(da);
+    }
+    fn rotate_inc_z(&mut self, da: f32) {
+        self.r_shape_ref.borrow_mut().rotate_inc_z(da);
+    }
+    fn rotate_to_x(&mut self, a: f32) {
+        self.r_shape_ref.borrow_mut().rotate_to_x(a);
+    }
+    fn rotate_to_y(&mut self, a: f32) {
+        self.r_shape_ref.borrow_mut().rotate_to_y(a);
+    }
+    fn rotate_to_z(&mut self, a: f32) {
+        self.r_shape_ref.borrow_mut().rotate_to_z(a);
+    }
+    fn position_x(&mut self, pos: f32) {
+        self.r_shape_ref.borrow_mut().position_x(pos);
+    }
+    fn position_y(&mut self, pos: f32) {
+        self.r_shape_ref.borrow_mut().position_y(pos);
+    }
+    fn position_z(&mut self, pos: f32) {
+        self.r_shape_ref.borrow_mut().position_z(pos);
+    }
+    fn position(&mut self, pos: Vec<f32>) {
+        self.r_shape_ref.borrow_mut().position(&pos);
+    }
+    fn offset(&mut self, offs: Vec<f32>) {
+        self.r_shape_ref.borrow_mut().offset(&offs);
+    }
+    fn scale(&mut self, scale: Vec<f32>) {
+        self.r_shape_ref.borrow_mut().scale(&scale);
+    }
+    fn add_child(&mut self, child: &RefShape) {
+        self.r_shape_ref.borrow_mut().add_child(child.r_shape_ref.clone());
     }
 }

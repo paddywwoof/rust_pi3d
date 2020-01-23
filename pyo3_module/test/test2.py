@@ -7,16 +7,12 @@ from PIL import Image
 display = rpi3d.Display.create("pyo3 minimal", w=800, h=600, profile="GLES", major=2, minor=0)
 shader = rpi3d.Shader("uv_light")
 shader_flat = rpi3d.Shader("uv_flat")
-shader_mat = rpi3d.Shader("mat_reflect")
 shader_post = rpi3d.Shader("post_base")
 
 keybd = rpi3d.Keyboard(display)
 mouse = rpi3d.Mouse(display)
 tex = rpi3d.Texture("pattern.png")
 tex2 = rpi3d.Texture("mountains3_512.jpg")
-ntex = tex.image.copy()
-ntex[:64,:,:2] += 64
-tex.image = ntex
 
 camera = rpi3d.Camera(display)
 camera2d = rpi3d.Camera(display)
@@ -53,36 +49,11 @@ string = rpi3d.PyString(camera2d, font, "Hello from rust pi3d", 0.0)
 string.set_shader(shader_flat)
 string.position([100.0, 100.0, 4.0])
 
-sphere.scale([0.5, 1.5, 0.5])
-sphere.position([1.0, 1.0, 1.0])
-child = rpi3d.RefShape(sphere)
-sphere.position([0.0, 10.0, 4.0])
-sphere.scale([0.7, 0.7, 0.7])
-cube.add_child(child)
-
 terrain = rpi3d.ElevationMap(camera, "mountainsHgt.png", 500.0, 500.0, 20.0, 32, 32, 1.0, "nothing") 
 terrain.set_draw_details(shader, [tex2])
 terrain.position([0.0, -2.0, 0.0])
 
-tree_tex = rpi3d.Texture("hornbeam2.png")
-treeplane = rpi3d.Plane(camera, 2.0, 2.0)
-treemodel = rpi3d.MergeShape(camera)
-treemodel.add_shapes([treeplane, treeplane], [[0.0, 0.0, 0.0], [0.0, 0.0, 0.0]], [[0.0, 0.0, 0.0], [0.0, 1.5, 0.0]],
-                [[1.0, 2.0, 1.0], [1.0, 2.0, 1.0]], [0, 0])
-trees = rpi3d.MergeShape(camera)
-trees.cluster(treemodel, terrain, 50.0, 50.0, 100.0, 50.0, 0.5, 7.5, 100)
-trees.set_draw_details(shader_flat, [tree_tex])
-
-normtex = rpi3d.Texture("floor_nm.jpg")
-model = rpi3d.Model(camera, "rust_pi3d.obj")
-model.set_shader(shader_mat)
-model.set_normal_shine(normtex=normtex, ntiles=4.0, shinetex=tree_tex, shiny=0.05, bump_factor=0.02)
-model.position([-30, 10, 30])
-model.scale([20, 20, 20])
-model.rotate_to_y(-2.5)
-
-ecube = rpi3d.EnvironmentCube(camera, 900, "sbox", "jpg")
-ecube.set_shader(shader_flat)
+post = rpi3d.PostProcess(camera2d, display, shader_post, [], 1.0)
 
 n=0
 tm = time.time()
@@ -94,11 +65,11 @@ while display.loop_running():
     string.draw()
     string.rotate_inc_z(0.001)
 
+    post.start_capture(True)
     plane.draw()
     plane.rotate_inc_z(0.001)
 
     cube.draw()
-    child.rotate_inc_y(0.01)
     cube.rotate_inc_z(0.0017)
     cube.rotate_inc_x(0.0021)
     cube.rotate_inc_y(0.0001)
@@ -107,10 +78,6 @@ while display.loop_running():
     sphere.rotate_inc_z(0.001)
     sphere.rotate_inc_x(0.0021)
     sphere.rotate_inc_y(0.007)
-    if n % 50 == 0:
-        pb = sphere.array_buffer.copy()
-        pb[:,:3] *= np.random.random((len(pb), 3)) * 0.01 + 0.995
-        sphere.array_buffer = pb
 
     lathe.draw()
     lathe.rotate_inc_z(0.001)
@@ -127,13 +94,9 @@ while display.loop_running():
     points.rotate_inc_x(0.0021)
     points.rotate_inc_y(0.0011)
 
-    model.draw()
-
-    trees.draw()
-
     terrain.draw()
 
-    ecube.draw()
+    post.end_capture()
 
     n += 1
     k = keybd.read_code()
@@ -160,5 +123,8 @@ while display.loop_running():
         y = newy + 0.0
         camera.position([x, y, z])
     ds = 0.0 ## to trick camera setting to terrail
+    f = (tilt + rot) * 0.2 + (400 + x + y + z) * 0.01
+    f = abs(f % 10.0 - 5.0) # triangular rather than saw-tooth
+    post.draw([(16, 0, f), (16, 1, 0.0), (16, 2, 0.0)])
 
 print("{:.1f} FPS".format(n / (time.time() - tm)))

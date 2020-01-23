@@ -247,5 +247,7 @@ fn rpi3d(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<::shapes::TCone>()?;
     m.add_class::<::shapes::Torus>()?;
     m.add_class::<::shapes::Tube>()?;
+
+    m.add_class::<::shapes::RefShape>()?;
     Ok(())
 }

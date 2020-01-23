@@ -6,7 +6,10 @@ use gl::types::*;
 use ndarray as nd;
 
 pub struct OffscreenTexture {
-    pub tex: ::texture::Texture,
+    pub color_tex_id: GLuint,
+    pub depth_tex_id: GLuint,
+    pub width: usize,
+    pub height: usize,
     pub framebuffer: GLuint,
     pub depthbuffer: GLuint,
 }
@@ -14,17 +17,18 @@ pub struct OffscreenTexture {
 impl OffscreenTexture {
     ///
     pub fn start(&mut self, clear: bool) {
-        //println!("{:?}", self.tex.id);
         unsafe {
-            //gl::BindTexture(gl::TEXTURE_2D, self.tex.id);
             gl::BindFramebuffer(gl::FRAMEBUFFER, self.framebuffer);
-            gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
-                                     gl::TEXTURE_2D, self.tex.id, 0);
             gl::BindRenderbuffer(gl::RENDERBUFFER, self.depthbuffer);
             gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT16,
-                self.tex.width as GLsizei, self.tex.height as GLsizei);
+                self.width as GLsizei, self.height as GLsizei);
             gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT,
                 gl::RENDERBUFFER, self.depthbuffer);
+            gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
+                gl::TEXTURE_2D, self.color_tex_id, 0);
+            gl::BindTexture(gl::TEXTURE_2D, 0); // this seems to be needed here
+            gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT,
+                gl::TEXTURE_2D, self.depth_tex_id, 0);
             if clear { // TODO allow just depth or just color clearing?
                 gl::Clear(gl::DEPTH_BUFFER_BIT | gl::COLOR_BUFFER_BIT);
             }
@@ -44,22 +48,52 @@ impl OffscreenTexture {
         unsafe {
             gl::DeleteFramebuffers(1, &mut self.framebuffer);
             gl::DeleteRenderbuffers(1, &mut self.depthbuffer);
+            gl::BindTexture(gl::TEXTURE, 0);
+            gl::DeleteTextures(1, &self.color_tex_id);
+            gl::DeleteTextures(1, &self.depth_tex_id);
         }
     }
 }
+///
+impl Drop for OffscreenTexture {
+    fn drop(&mut self) {
+        print!("-ost{:?}.{:?} ", self.color_tex_id, self.depth_tex_id);
+        self.delete_buffers();
+    }
+}
 
+///
 pub fn create(display: &::display::Display) -> OffscreenTexture {
     let height = display.height as usize;
     let width = display.width as usize;
-    let image: nd::Array3<u8> = nd::Array3::<u8>::zeros((height, width, 4)); //TODO RGB or RBGA?
-    let tex = ::texture::create_from_array(image);
-    /*let tex = ::texture::Texture {
-        id: 0,
-        image,
-        width,
-        height,
-        repeat: gl::REPEAT as GLint,
-    };*/
+    let mut color_tex_id: GLuint = 0;
+    let mut depth_tex_id: GLuint = 0;
+    unsafe {
+        gl::GenTextures(1, &mut color_tex_id);
+        gl::BindTexture(gl::TEXTURE_2D, color_tex_id);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as GLint);
+        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as GLint, width as GLint,
+                        height as GLint, 0, gl::RGBA, gl::UNSIGNED_BYTE,
+                        std::ptr::null() as *const GLvoid);
+        gl::GenerateMipmap(gl::TEXTURE_2D);
+        gl::BindTexture(gl::TEXTURE_2D, 0);
+
+        gl::GenTextures(1, &mut depth_tex_id);
+        gl::BindTexture(gl::TEXTURE_2D, depth_tex_id);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as GLint);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as GLint);
+        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::DEPTH_COMPONENT16 as GLint, width as GLint,
+                        height as GLint, 0, gl::DEPTH_COMPONENT, gl::UNSIGNED_SHORT,
+                        std::ptr::null() as *const GLvoid);
+        gl::GenerateMipmap(gl::TEXTURE_2D);
+        gl::BindTexture(gl::TEXTURE_2D, 0);
+        gl::Enable(gl::TEXTURE_2D);
+    }
     let mut framebuffer: GLuint = 0;
     let mut depthbuffer: GLuint = 0;
     unsafe {
@@ -67,7 +101,10 @@ pub fn create(display: &::display::Display) -> OffscreenTexture {
         gl::GenRenderbuffers(1, &mut depthbuffer);
     }
     OffscreenTexture {
-        tex,
+        color_tex_id,
+        depth_tex_id,
+        width,
+        height,
         framebuffer,
         depthbuffer,
     }

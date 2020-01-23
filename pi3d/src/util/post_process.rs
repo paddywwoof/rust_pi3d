@@ -17,8 +17,8 @@ impl PostProcess {
     ///
     pub fn start_capture(&mut self, clear: bool) {
         self.offscreen_texture.start(clear);
-        let width = self.offscreen_texture.tex.width as f32;
-        let height = self.offscreen_texture.tex.height as f32;
+        let width = self.offscreen_texture.width as f32;
+        let height = self.offscreen_texture.height as f32;
         //if self.scale != 1.0 {
             let xx = (width / 2.0 * (1.0 - self.scale)) as GLint;
             let yy = (height / 2.0 * (1.0 - self.scale)) as GLint;
@@ -60,7 +60,7 @@ pub fn create(
     sprite.buf[0].unib[[2, 1]] = scale;
     sprite.buf[0].unib[[3, 0]] = (1.0 - scale) * 0.5;
     sprite.buf[0].unib[[3, 1]] = (1.0 - scale) * 0.5;
-    sprite.buf[0].textures = vec![offscreen_texture.tex.id];
+    sprite.buf[0].textures = vec![offscreen_texture.color_tex_id, offscreen_texture.depth_tex_id];
     sprite.buf[0].textures.extend(add_tex.clone());
     sprite.buf[0].set_shader(&shader);
     sprite.position_z(20.0);

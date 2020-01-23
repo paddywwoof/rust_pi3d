@@ -64,7 +64,7 @@ impl PostProcess {
     pub fn draw(&mut self, unif_vals: Vec<(usize, usize, f32)>) {
         self.r_postprocess.draw(unif_vals);
     }
-    #[getter]
+    /*#[getter]//don't think this will work! Probably need gl::ReadPixels()
     fn get_image(&mut self) -> PyResult<Py<PyArray3<u8>>> {
         let gil = pyo3::Python::acquire_gil();
         let py = gil.python();
@@ -73,5 +73,5 @@ impl PostProcess {
             .into_pyarray(py)
             .to_owned()
         )
-    }
+    }*/
 }

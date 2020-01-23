@@ -29,8 +29,7 @@ macro_rules! make_shape {
             tr2: nd::Array2<f32>,
             pub m_flag: bool,
             pub matrix: nd::Array3<f32>,
-            //pub children: Vec<::shape::Shape>, //children have to be owned by parent shape to avoid nightmare lifetime controls
-            pub children: Vec<$s>, //children have to be owned by parent shape to avoid nightmare lifetime controls
+            pub children: Vec<Rc<RefCell<$s>>>, //children have to be reference counted Shape instances
             cam: Rc<RefCell<::camera::CameraInternals>>,
             $($att: $typ,)*
         }
@@ -56,7 +55,7 @@ macro_rules! make_shape {
                             &self.tr1.dot(
                             next_m))))));
                 for i in 0..self.children.len() {
-                    self.children[i].draw_with_children(m);
+                    self.children[i].borrow_mut().draw_with_children(m);
                 }
                 self.matrix.slice_mut(s![0, .., ..]).assign(m);
                 self.matrix.slice_mut(s![1, .., ..]).assign(
@@ -198,8 +197,12 @@ macro_rules! make_shape {
                 }
             }
 
-            pub fn add_child(&mut self, child: $s) {
+            pub fn add_child(&mut self, child: Rc<RefCell<$s>>) {
                 self.children.push(child);
+            }
+
+            pub fn reference(self) -> Rc<RefCell<$s>> { //consumes itself!!
+                Rc::new(RefCell::new(self))
             }
         }
 
