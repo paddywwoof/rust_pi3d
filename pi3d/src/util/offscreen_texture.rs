@@ -3,7 +3,7 @@ extern crate ndarray;
 extern crate image;
 
 use gl::types::*;
-use ndarray as nd;
+//use ndarray as nd;
 
 pub struct OffscreenTexture {
     pub color_tex_id: GLuint,

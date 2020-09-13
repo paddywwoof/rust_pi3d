@@ -138,7 +138,7 @@ pub fn cluster(merge_to: &mut ::shape::Shape, new_shape: &::shape::Shape,
     for _i in 0..count {
         let x = xpos - 0.5 * w + w * rand::random::<f32>();
         let z = zpos - 0.5 * d + d * rand::random::<f32>();
-        let (y, _norm) = ::shapes::elevation_map::calc_height(map, x, z);
+        let (y, _norm) = map.calc_height(x, z);
         let ry = 2.0 * consts::PI * rand::random::<f32>();
         let scl =  minscl + (maxscl - minscl) * rand::random::<f32>();
         for j in 0..new_shape.buf.len() {
@@ -149,7 +149,7 @@ pub fn cluster(merge_to: &mut ::shape::Shape, new_shape: &::shape::Shape,
             new_num.push(j);
         }
     }
-        
+
     add_buffers(merge_to, bufs, new_loc, new_rot, new_scl, new_num);
 }
 

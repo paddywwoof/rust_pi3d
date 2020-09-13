@@ -3,9 +3,9 @@ extern crate pi3d;
 //extern crate gl;
 
 use pyo3::prelude::*;
-use pyo3::{PyObject, PyRawObject};
+use pyo3::{PyObject};
 
-use numpy::{IntoPyArray, PyArray3};
+//use numpy::{IntoPyArray, PyArray3};
 
 /// Font stuff
 ///
@@ -17,18 +17,15 @@ pub struct Font {
 #[pymethods]
 impl Font {
     #[new]
-    fn new(obj: &PyRawObject, file_name: &str, glyphs: &str,
-              add_glyphs: &str, size: f32) {
-        obj.init({
-            Font {
-                r_font: pi3d::util::font::create(file_name, glyphs, add_glyphs, size),
-            }
-        });
+    fn new(file_name: &str, glyphs: &str, add_glyphs: &str, size: f32) -> Self {
+        Font {
+            r_font: pi3d::util::font::create(file_name, glyphs, add_glyphs, size),
+        }
     }
 }
 /// PostProcess stuff
 ///
-#[pyclass]
+#[pyclass(unsendable)]
 pub struct PostProcess {
     pub r_postprocess: pi3d::util::post_process::PostProcess,
 }
@@ -36,24 +33,20 @@ pub struct PostProcess {
 #[pymethods]
 impl PostProcess {
     #[new]
-    fn new(
-            obj: &PyRawObject,
-            camera: &mut ::core::Camera,
+    fn new( camera: &mut ::core::Camera,
             display: &::core::Display,
             shader: &::core::Shader,
-            add_tex: Vec<&::core::Texture>,
-            scale: f32) {
+            add_tex: Vec<PyRef<::core::Texture>>,
+            scale: f32) -> Self {
         let texlist = add_tex.iter().map(|t| t.r_texture.id).collect();
-        obj.init({
-            PostProcess {
-                r_postprocess: pi3d::util::post_process::create(
-                    camera.r_camera.reference(),
-                    &display.r_display.borrow(),
-                    &shader.r_shader,
-                    &texlist,
-                    scale),
-            }
-        });
+        PostProcess {
+            r_postprocess: pi3d::util::post_process::create(
+                camera.r_camera.reference(),
+                &display.r_display.borrow(),
+                &shader.r_shader,
+                &texlist,
+                scale),
+        }
     }
     pub fn start_capture(&mut self, clear: bool) {
         self.r_postprocess.start_capture(clear);

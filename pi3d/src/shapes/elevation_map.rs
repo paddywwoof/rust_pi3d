@@ -2,10 +2,18 @@ extern crate ndarray;
 extern crate image;
 
 use ndarray as nd;
+use std::cell::RefCell;
+use std::rc::Rc;
 use ::util::resources;
 
 // create a new struct definition 
-make_shape!(ElevationMap, ix:f32=0.0, iz:f32=0.0, width:f32=200.0, depth:f32=200.0);
+pub struct ElevationMap {
+    pub shape: ::shape::Shape,
+    ix:f32,
+    iz:f32,
+    width:f32,
+    depth:f32,
+}
 
 /// generate an elevation map Shape
 ///
@@ -22,7 +30,7 @@ make_shape!(ElevationMap, ix:f32=0.0, iz:f32=0.0, width:f32=200.0, depth:f32=200
 /// i.e. 33x33 image for 32x32 squares in grid
 /// 
 /// TODO put this as class method (i.e. ::new())
-pub fn new_map(cam: Rc<RefCell<::camera::CameraInternals>>,
+pub fn new(cam: Rc<RefCell<::camera::CameraInternals>>,
                mapfile: &str, width: f32, depth: f32, height: f32, ix: usize, iz: usize,
                ntiles: f32, _texmap: &str) -> ElevationMap {
 
@@ -83,54 +91,55 @@ pub fn new_map(cam: Rc<RefCell<::camera::CameraInternals>>,
                 nd::Array2::<f32>::zeros((0, 3)),
                 nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
                 nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), true);
-    let mut new_shape = ::shapes::elevation_map::create(vec![new_buffer], cam);
-    new_shape.ix = ix as f32 - 1.0; // hold these for calc_height in additional attributes
-    new_shape.iz = iz as f32 - 1.0;
-    new_shape.width = width;
-    new_shape.depth = depth;
-    new_shape
+    let shape = ::shape::create(vec![new_buffer], cam);
+    ElevationMap {
+        shape,
+        ix: ix as f32 - 1.0, // hold these for calc_height in additional attributes
+        iz: iz as f32 - 1.0,
+        width,
+        depth,
+    }
 }
 
 /// find the value of the y component of the location on the triangle
 /// where the x, z location lies within the elevation_map
 ///
-/// * `map` the Shape object representing the elevation map
 /// * `px` x location in world space
 /// * `pz` z location
 ///
 /// returns a tuple of the (height, normal vector at that point) this can
 /// be used for resistance to movement, bouncing etc.
-/// 
-/// TODO put this as a class method
-pub fn calc_height(map: &ElevationMap, px: f32, pz: f32) -> (f32, Vec<f32>) {
-    //TODO a) the skip method will only work for regular maps
-    // b) Buffer.calc_normals does cross product calc already so should save result
-    // in Buffer on creation
-    let px = px - map.unif[[0, 0]];
-    let pz = pz - map.unif[[0, 2]];
-    let skip_n = (((pz + map.depth * 0.5) * map.iz / map.depth).floor() * map.ix * 2.0
-                  + ((px + map.width * 0.5) * map.ix / map.width).floor() * 2.0) as usize;
-    for f in map.buf[0].element_array_buffer.axis_iter(nd::Axis(0)).skip(skip_n) {
-        let mut v: Vec<Vec<f32>> = vec![vec![0.0; 3]; 3];
-        for i in 0..3 { // the three vertices of this element
-            for j in 0..3 { // the x, y, z components of each vertex
-                v[i][j] = map.buf[0].array_buffer[[f[[i]] as usize, j]];
+impl ElevationMap {
+    pub fn calc_height(&self, px: f32, pz: f32) -> (f32, Vec<f32>) {
+        //TODO a) the skip method will only work for regular maps
+        // b) Buffer.calc_normals does cross product calc already so should save result
+        // in Buffer on creation
+        let px = px - self.shape.unif[[0, 0]];
+        let pz = pz - self.shape.unif[[0, 2]];
+        let skip_n = (((pz + self.depth * 0.5) * self.iz / self.depth).floor() * self.ix * 2.0
+                    + ((px + self.width * 0.5) * self.ix / self.width).floor() * 2.0) as usize;
+        for f in self.shape.buf[0].element_array_buffer.axis_iter(nd::Axis(0)).skip(skip_n) {
+            let mut v: Vec<Vec<f32>> = vec![vec![0.0; 3]; 3];
+            for i in 0..3 { // the three vertices of this element
+                for j in 0..3 { // the x, y, z components of each vertex
+                    v[i][j] = self.shape.buf[0].array_buffer[[f[[i]] as usize, j]];
+                }
+            }
+            if ((v[1][2] - v[0][2]) * (px - v[0][0]) + (-v[1][0] + v[0][0]) * (pz - v[0][2]) >= 0.0) &&
+            ((v[2][2] - v[1][2]) * (px - v[1][0]) + (-v[2][0] + v[1][0]) * (pz - v[1][2]) >= 0.0) &&
+            ((v[0][2] - v[2][2]) * (px - v[2][0]) + (-v[0][0] + v[2][0]) * (pz - v[2][2]) >= 0.0) {
+                let v0 = nd::arr1(&v[0]);
+                let v1 = nd::arr1(&v[1]);
+                let v2 = nd::arr1(&v[2]);
+                //calc normal from two edge vectors v2-v1 and v3-v1
+                let n_vec = ::util::vec3::cross(&(&v1 - &v0), &(v2 - v0));
+                //equation of plane: Ax + By + Cz = k_val where A,B,C are components of normal. x,y,z for point v1 to find k_val
+                let k_val = ::util::vec3::dot(&n_vec, &v1);
+                //return y val i.e. y = (k_val - Ax - Cz)/B also the normal vector seeing as this has been calculated
+                return ((k_val - n_vec[[0]] * px - n_vec[[2]] * pz) / n_vec[[1]], n_vec.to_vec());
             }
         }
-        if ((v[1][2] - v[0][2]) * (px - v[0][0]) + (-v[1][0] + v[0][0]) * (pz - v[0][2]) >= 0.0) &&
-           ((v[2][2] - v[1][2]) * (px - v[1][0]) + (-v[2][0] + v[1][0]) * (pz - v[1][2]) >= 0.0) &&
-           ((v[0][2] - v[2][2]) * (px - v[2][0]) + (-v[0][0] + v[2][0]) * (pz - v[2][2]) >= 0.0) {
-            let v0 = nd::arr1(&v[0]);
-            let v1 = nd::arr1(&v[1]);
-            let v2 = nd::arr1(&v[2]);
-            //calc normal from two edge vectors v2-v1 and v3-v1
-            let n_vec = ::util::vec3::cross(&(&v1 - &v0), &(v2 - v0));
-            //equation of plane: Ax + By + Cz = k_val where A,B,C are components of normal. x,y,z for point v1 to find k_val
-            let k_val = ::util::vec3::dot(&n_vec, &v1);
-            //return y val i.e. y = (k_val - Ax - Cz)/B also the normal vector seeing as this has been calculated
-            return ((k_val - n_vec[[0]] * px - n_vec[[2]] * pz) / n_vec[[1]], n_vec.to_vec());
-        }
+        //TODO fn should return Option<> and need to be unwrapped rather than return something
+        (0.0, vec![0.0, 1.0, 0.0])
     }
-    //TODO fn should return Option<> and need to be unwrapped rather than return something
-    (0.0, vec![0.0, 1.0, 0.0])
 }

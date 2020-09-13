@@ -45,10 +45,10 @@ fn main() {
     let mapsize = 1000.0;
     let halfsize = mapsize * 0.5;
     let mountimg1 = pi3d::texture::create_from_file("textures/mountains3_512.jpg");
-    let mut mymap = pi3d::shapes::elevation_map::new_map(camera.reference(), "textures/mountainsHgt.png",
+    let mut mymap = pi3d::shapes::elevation_map::new(camera.reference(), "textures/mountainsHgt.png",
                                 mapsize, mapsize, 60.0, 32, 32, 1.0, "nothing");
-            mymap.set_draw_details(&shader, &vec![mountimg1.id, bumpimg.id, reflimg.id], 128.0, 0.0, 1.0, 1.0, 2.0);
-            mymap.set_fog(&fog_shade, fog_dist, fog_alpha);
+            mymap.shape.set_draw_details(&shader, &vec![mountimg1.id, bumpimg.id, reflimg.id], 128.0, 0.0, 1.0, 1.0, 2.0);
+            mymap.shape.set_fog(&fog_shade, fog_dist, fog_alpha);
 
     // create trees v.1 2 planes, v.2 3 planes
     let treeplane = pi3d::shapes::plane::create(camera.reference(), 4.0, 5.0);
@@ -86,7 +86,7 @@ fn main() {
     mytrees3.set_fog(&t_fog_shade, t_fog_dist, t_fog_alpha);
 
     // create and position monument
-    let (ht, _norm) = pi3d::shapes::elevation_map::calc_height(&mymap, 100.0, 245.0);
+    let (ht, _norm) = mymap.calc_height(100.0, 245.0);
     let (mut monument, _tex_list) = pi3d::shapes::model_obj::create(camera.reference(), "models/rust_pi3d.obj");
              monument.set_shader(&shinesh);
              monument.set_normal_shine(&vec![bumpimg.id, reflimg.id], 16.0, 0.02, 1.0, 1.0, 0.02, false);
@@ -113,20 +113,20 @@ fn main() {
     let mut mouse_y: f32 = 0.0;
     while display.loop_running() {
         monument.draw();
-        mymap.draw();
+        mymap.shape.draw();
         if x.abs() > 300.0 { // draw tiled maps
-            mymap.position(&[mapsize * x.signum(), 0.0, 0.0]);
-            mymap.draw();
+            mymap.shape.position(&[mapsize * x.signum(), 0.0, 0.0]);
+            mymap.shape.draw();
         }
         if z.abs() > 300.0 {
-            mymap.position(&[ 0.0, 0.0, mapsize * z.signum()]);
-            mymap.draw();
+            mymap.shape.position(&[ 0.0, 0.0, mapsize * z.signum()]);
+            mymap.shape.draw();
             if x.abs() > 300.0 {
-                mymap.position(&[mapsize * x.signum(), 0.0, mapsize * z.signum()]);
-                mymap.draw();
+                mymap.shape.position(&[mapsize * x.signum(), 0.0, mapsize * z.signum()]);
+                mymap.shape.draw();
             }
         }
-        mymap.position(&[0.0, 0.0, 0.0]);
+        mymap.shape.position(&[0.0, 0.0, 0.0]);
         ecube.position(&[x, 0.0, z]);
         ecube.draw();
         mytrees1.draw();
@@ -154,7 +154,7 @@ fn main() {
         camera.reset();
         camera.rotate(&[tilt, rot, 0.0]);
         if ds != 0.0 || df != 0.0 {
-            let (newy, _mapnorm) = pi3d::shapes::elevation_map::calc_height(&mymap, x, z);
+            let (newy, _mapnorm) = mymap.calc_height(x, z);
             y = newy + 5.0;
             camera.position(&[x, y, z]);
         }

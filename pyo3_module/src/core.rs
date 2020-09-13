@@ -3,7 +3,7 @@ extern crate pi3d;
 extern crate gl;
 
 use pyo3::prelude::*;
-use pyo3::{PyObject, PyRawObject};
+use pyo3::{PyObject};//, PyRawObject};
 use pyo3::exceptions;
 
 use numpy::{IntoPyArray, PyArray3};
@@ -11,7 +11,7 @@ use numpy::{IntoPyArray, PyArray3};
 use std::cell::RefCell;
 use std::rc::Rc;
 
-#[pyclass]
+#[pyclass(unsendable)] // think SDL requires this to stay in main thread
 pub struct Display {
     pub r_display: Rc<RefCell<pi3d::display::Display>>,
 }
@@ -20,23 +20,24 @@ pub struct Display {
 impl Display {
     #[new]
     #[args(name="\"\"", w="0.0", h="0.0", profile="\"GLES\"", major="2", minor="0")]
-    fn new(obj: &PyRawObject, name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) {
-        obj.init({
-            let (wnew, hnew, fullscreen) = if w <= 0.0 || h <= 0.0 {
-                (100.0, 100.0, true)
-            } else {
-                (w, h, false)
-            };
-            let dispnew = Rc::new(RefCell::new(
-                    pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
-                ));
-            if  fullscreen {
-                dispnew.borrow_mut().set_fullscreen(true);
-            }
-            Display {
-                r_display: dispnew,
-            }
-        });
+    fn new(name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) -> Self {
+        let (wnew, hnew, fullscreen) = if w <= 0.0 || h <= 0.0 {
+            (100.0, 100.0, true)
+        } else {
+            (w, h, false)
+        };
+        /*let dispnew = Arc::new(Mutex::new(
+                pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
+            ));*/
+        let dispnew = Rc::new(RefCell::new(
+                pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
+            ));
+        if  fullscreen {
+            dispnew.borrow_mut().set_fullscreen(true);
+        }
+        Display {
+            r_display: dispnew,
+        }
     }
 
     #[staticmethod]
@@ -69,7 +70,7 @@ impl Display {
 
 /// Camera stuff
 ///
-#[pyclass]
+#[pyclass(unsendable)]
 pub struct Camera {
     pub r_camera: pi3d::camera::Camera,
 }
@@ -77,12 +78,10 @@ pub struct Camera {
 #[pymethods]
 impl Camera {
     #[new]
-    fn new(obj: &PyRawObject, display: &Display) {
-        obj.init({
-            Camera {
-                r_camera: pi3d::camera::create(&display.r_display.borrow()),
-            }
-        });
+    fn new(display: &Display) -> Self {
+        Camera {
+            r_camera: pi3d::camera::create(&display.r_display.borrow()),
+        }
     }
     fn reset(&mut self) {
         self.r_camera.reset();
@@ -113,18 +112,16 @@ pub struct Shader {
 #[pymethods]
 impl Shader {
     #[new]
-    fn new(obj: &PyRawObject, name: &str) {
-        obj.init({
-            Shader {
-                r_shader: pi3d::shader::Program::from_res(name).unwrap(),
-            }
-        });
+    fn new(name: &str) -> Self {
+        Shader {
+            r_shader: pi3d::shader::Program::from_res(name).unwrap(),
+        }
     }
 }
 
 /// Keyboard stuff
 /// 
-#[pyclass]
+#[pyclass(unsendable)]
 struct Keyboard {
     r_display: Rc<RefCell<pi3d::display::Display>>,
 }
@@ -132,12 +129,10 @@ struct Keyboard {
 #[pymethods]
 impl Keyboard {
     #[new]
-    fn new(obj: &PyRawObject, display: &Display) {
-        obj.init({
-            Keyboard {
-                r_display: display.r_display.clone(),
-            }
-        });
+    fn new(display: &Display) -> Self {
+        Keyboard {
+            r_display: display.r_display.clone(),
+        }
     }
     /// crude char reading as per pi3d
     fn read_code(&self) -> String {
@@ -152,7 +147,7 @@ impl Keyboard {
 
 /// Mouse stuff
 /// 
-#[pyclass]
+#[pyclass(unsendable)]
 struct Mouse {
     r_display: Rc<RefCell<pi3d::display::Display>>,
 }
@@ -160,12 +155,10 @@ struct Mouse {
 #[pymethods]
 impl Mouse {
     #[new]
-    fn new(obj: &PyRawObject, display: &Display) {
-        obj.init({
-            Mouse {
-                r_display: display.r_display.clone(),
-            }
-        });
+    fn new(display: &Display) -> Self {
+        Mouse {
+            r_display: display.r_display.clone(),
+        }
     }
     /// also need velocity, values depend on mouse relative (also visibility of cursor)
     fn position(&self) -> (i32, i32) {
@@ -185,12 +178,13 @@ pub struct Texture {
 #[pymethods]
 impl Texture {
     #[new]
-    fn new(obj: &PyRawObject, file_name: &str) {
-        obj.init({
-            Texture {
-                r_texture: pi3d::texture::create_from_file(file_name),
-            }
-        });
+    fn new(file_name: &str) -> Self {
+        Texture {
+            r_texture: pi3d::texture::create_from_file(file_name),
+        }
+    }
+    fn print_id(&self) {
+        println!("texid={}", self.r_texture.id);
     }
     #[getter]
     fn get_image(&mut self) -> PyResult<Py<PyArray3<u8>>> {
@@ -204,14 +198,16 @@ impl Texture {
     }
     #[setter]
     fn set_image(&mut self, im_arr: &PyArray3<u8>) -> PyResult<()> {
-        let new_im_arr = im_arr.as_array().to_owned();
-        let new_shape = new_im_arr.shape();
-        let old_shape = self.r_texture.image.shape();
-        if new_shape[0] != old_shape[0] || new_shape[1] != old_shape[1] {
-            return Err(PyErr::new::<exceptions::RuntimeError, _>("array wrong shape"));
+        unsafe {
+            let new_im_arr = im_arr.as_array().to_owned();
+            let new_shape = new_im_arr.shape();
+            let old_shape = self.r_texture.image.shape();
+            if new_shape[0] != old_shape[0] || new_shape[1] != old_shape[1] {
+                return Err(PyErr::new::<exceptions::RuntimeError, _>("array wrong shape"));
+            }
+            //TODO fix different 3rd dim size (1,3,4)
+            self.r_texture.image = new_im_arr;
         }
-        //TODO fix different 3rd dim size (1,3,4)
-        self.r_texture.image = new_im_arr;
         self.r_texture.update_ndarray();
         Ok(())
     }

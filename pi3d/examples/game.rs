@@ -56,8 +56,8 @@ dog\"", 0.0);
     junk.buf[1].set_material(&[1.0, 1.0, 0.0, 1.0]);
     junk.position(&[1.0, 30.0, 7.5]);
 
-    let mut map = pi3d::shapes::elevation_map::new_map(camera.reference(), "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 64, 64, 1.0, "nothing");
-            map.set_draw_details(&shader_program, &vec![maptex.id, mapnorm.id, stars.id], 128.0, 0.0, 1.0, 1.0, 2.0);
+    let mut map = pi3d::shapes::elevation_map::new(camera.reference(), "textures/mountainsHgt.png", 400.0, 400.0, 50.0, 64, 64, 1.0, "nothing");
+            map.shape.set_draw_details(&shader_program, &vec![maptex.id, mapnorm.id, stars.id], 128.0, 0.0, 1.0, 1.0, 2.0);
 
     let (mut iss, _texlist) = pi3d::shapes::model_obj::create(camera.reference(), "models/iss.obj");
             iss.set_shader(&shader_program);
@@ -113,7 +113,7 @@ dog\"", 0.0);
         cube2.draw();
         candlestick.draw();
         junk.draw();
-        map.draw();
+        map.shape.draw();
         iss.draw();
         clust.draw();
         mystring.draw();
@@ -136,7 +136,7 @@ dog\"", 0.0);
         camera.reset();
         camera.rotate(&[tilt, rot, 0.0]);
         if ds != 0.0 {
-            let (newy, _mapnorm) = pi3d::shapes::elevation_map::calc_height(&map, x, z);
+            let (newy, _mapnorm) = map.calc_height(x, z);
             y = newy + 5.0;
             camera.position(&[x, y, z]);
         }
