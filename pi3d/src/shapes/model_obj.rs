@@ -1,14 +1,14 @@
 extern crate ndarray;
 
+use ndarray as nd;
+use std::cell::RefCell;
 use std::collections::HashMap;
-use std::str::FromStr;
 use std::fs;
 use std::io::{self, BufRead};
 use std::path::PathBuf;
 use std::rc::Rc;
-use std::cell::RefCell;
-use ndarray as nd;
-use ::util::resources;
+use std::str::FromStr;
+use util::resources;
 
 struct Face {
     vertex: Vec<i32>,
@@ -18,12 +18,12 @@ struct Face {
 
 pub fn parse_vertex(text: &str) -> (i32, i32, i32) {
     /*Parse text chunk specifying single vertex.
-    * Possible formats:
-    *  vertex index
-    *  vertex index / texture index
-    *  vertex index / texture index / normal index
-    *  vertex index / / normal index
-    */
+     * Possible formats:
+     *  vertex index
+     *  vertex index / texture index
+     *  vertex index / texture index / normal index
+     *  vertex index / / normal index
+     */
     let chunks: Vec<&str> = text.split("/").collect();
     let v = i32::from_str_radix(chunks[0].trim(), 10).unwrap();
     let t = if chunks.len() > 1 {
@@ -31,18 +31,24 @@ pub fn parse_vertex(text: &str) -> (i32, i32, i32) {
             Ok(x) => x,
             _ => 0i32,
         }
-    } else {0};
+    } else {
+        0
+    };
     let n = if chunks.len() > 2 {
         match i32::from_str_radix(chunks[2].trim(), 10) {
             Ok(x) => x,
             _ => 0i32,
         }
-    } else {0};
+    } else {
+        0
+    };
     (v, t, n)
 }
 
-pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
-              file_name: &str) -> (::shape::Shape, HashMap<String, ::texture::Texture>) {
+pub fn create(
+    cam: Rc<RefCell<::camera::CameraInternals>>,
+    file_name: &str,
+) -> (::shape::Shape, HashMap<String, ::texture::Texture>) {
     /*Loads an obj file with associated mtl file to produce Buffer object
     as part of a Shape. Arguments:
     */
@@ -91,39 +97,35 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
                 let mut vertex_index: Vec<i32> = vec![];
                 let mut uv_index: Vec<i32> = vec![];
                 let mut normal_index: Vec<i32> = vec![];
-            
 
                 //# Precompute vert / normal / uv lists
                 //# for negative index lookup
                 let vertlen = vertices.len() as i32 / 3 + 1; // 3 entries in Vec per vert
-                let normlen = normals.len() as i32 / 3+ 1; // 3 per norm
+                let normlen = normals.len() as i32 / 3 + 1; // 3 per norm
                 let uvlen = uvs.len() as i32 / 2 + 1; // 2 per uv
 
-                for i in 1..chunks.len() { // could be variable sides of polygon
+                for i in 1..chunks.len() {
+                    // could be variable sides of polygon
                     let (v, t, n) = parse_vertex(&chunks[i]);
-                    if v != 0 { // should always be true otherwise numv will be out
-                        vertex_index.push(
-                                if v < 0 {v + vertlen} else { v }
-                            );
+                    if v != 0 {
+                        // should always be true otherwise numv will be out
+                        vertex_index.push(if v < 0 { v + vertlen } else { v });
                     }
                     if t != 0 {
-                        uv_index.push(
-                                if t < 0 {t + uvlen} else { t }
-                            );
+                        uv_index.push(if t < 0 { t + uvlen } else { t });
                     }
                     if n != 0 {
-                        normal_index.push(
-                                if n < 0 {n + normlen} else { n }
-                            );
+                        normal_index.push(if n < 0 { n + normlen } else { n });
                     }
                 }
                 //{ // block for f_mc to exist
-                    //let f_mc = faces.entry(mcurrent).or_insert(vec![]);
-                    let f_mc = faces.entry(material.to_string()).or_insert(vec![]);
-                    f_mc.push(Face{vertex: vertex_index,
-                                   uv: uv_index,
-                                   normal: normal_index,
-                                   });
+                //let f_mc = faces.entry(mcurrent).or_insert(vec![]);
+                let f_mc = faces.entry(material.to_string()).or_insert(vec![]);
+                f_mc.push(Face {
+                    vertex: vertex_index,
+                    uv: uv_index,
+                    normal: normal_index,
+                });
                 //}
             }
 
@@ -141,18 +143,19 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
                 }
             }
         }
-    }    
+    }
     // should now have material file name in mtllib
 
     // create the buffers, one for each material g
-    for (m, face) in faces.iter() { // m is material, face is Vec of Face structs
+    for (m, face) in faces.iter() {
+        // m is material, face is Vec of Face structs
         let mut m_vertices: Vec<f32> = vec![]; //TODO better to go into ndarray at this stage?
         let mut m_normals: Vec<f32> = vec![];
         let mut m_tex_coords: Vec<f32> = vec![];
         let mut m_faces: Vec<u16> = vec![];
 
         let mut i: usize = 0; //# vertex counter in this material
-        // vert_map checks for reuse of vertex/uv/normal in
+                              // vert_map checks for reuse of vertex/uv/normal in
         let mut vert_map: HashMap<(i32, i32, i32), usize> = HashMap::new();
 
         for f in face.iter() {
@@ -163,20 +166,25 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
 
             for v in 0..length {
                 //vert_tuple (v,n,u) with -1 if n or u missing check in vert_map and
-                let vert_tuple = (f.vertex[v],
-                        if length_n == length {f.normal[v]} else {-1},
-                        if length_uv > 0 {f.uv[v]} else {-1});
+                let vert_tuple = (
+                    f.vertex[v],
+                    if length_n == length { f.normal[v] } else { -1 },
+                    if length_uv > 0 { f.uv[v] } else { -1 },
+                );
                 if vert_map.contains_key(&vert_tuple) {
                     vert_vec.push(*vert_map.get(&vert_tuple).unwrap());
                 } else {
                     //only add here if doesn't already exist
-                    for vi in 0..3 { // xyz components
+                    for vi in 0..3 {
+                        // xyz components
                         m_vertices.push(vertices[(f.vertex[v] as usize - 1) * 3 + vi]);
-                        if length_n == length { //#only use normals if there is one for each vertex
+                        if length_n == length {
+                            //#only use normals if there is one for each vertex
                             m_normals.push(normals[(f.normal[v] as usize - 1) * 3 + vi]);
                         }
                     }
-                    if length_uv > 0  { //&& uvs[f.uv[v] - 1].len() == 2) {
+                    if length_uv > 0 {
+                        //&& uvs[f.uv[v] - 1].len() == 2) {
                         for vi in 0..2 {
                             m_tex_coords.push(uvs[(f.uv[v] as usize - 1) * 2 + vi]);
                         }
@@ -202,17 +210,26 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
         }
 
         let calc_normals = if m_normals.len() == m_vertices.len() {
-                false} else {true
+            false
+        } else {
+            true
         };
 
-        bufs.push(::buffer::create(&::shader::Program::new(),
-                nd::Array::from_shape_vec((m_vertices.len() / 3, 3usize), m_vertices).unwrap(), //TODO make functions return Result and feedback errors
-                nd::Array::from_shape_vec((m_normals.len() / 3, 3usize), m_normals).unwrap(),
-                nd::Array::from_shape_vec((m_tex_coords.len() / 2, 2usize), m_tex_coords).unwrap(),
-                nd::Array::from_shape_vec((m_faces.len() / 3, 3usize), m_faces).unwrap(), calc_normals));
+        bufs.push(::buffer::create(
+            &::shader::Program::new(),
+            nd::Array::from_shape_vec((m_vertices.len() / 3, 3usize), m_vertices).unwrap(), //TODO make functions return Result and feedback errors
+            nd::Array::from_shape_vec((m_normals.len() / 3, 3usize), m_normals).unwrap(),
+            nd::Array::from_shape_vec((m_tex_coords.len() / 2, 2usize), m_tex_coords).unwrap(),
+            nd::Array::from_shape_vec((m_faces.len() / 3, 3usize), m_faces).unwrap(),
+            calc_normals,
+        ));
         materials.push(m.to_string());
     }
-    println!("materials len:  {:?}, mtllib: {:?}", materials.len(), mtllib);
+    println!(
+        "materials len:  {:?}, mtllib: {:?}",
+        materials.len(),
+        mtllib
+    );
 
     // parse mtllib - pi3d only uses Kd and map_Kd
     let mut mtl_ref: String = "".to_string(); // set before each set of specifications
@@ -236,10 +253,14 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
                 mtl_ref = chunks[1].to_string();
             }
             if chunks[0] == "Kd" && chunks.len() >= 4 {
-                color_diffuse.insert(mtl_ref.to_string(),
-                    [f32::from_str(&chunks[1]).unwrap(),
-                     f32::from_str(&chunks[2]).unwrap(),
-                     f32::from_str(&chunks[3]).unwrap()]);
+                color_diffuse.insert(
+                    mtl_ref.to_string(),
+                    [
+                        f32::from_str(&chunks[1]).unwrap(),
+                        f32::from_str(&chunks[2]).unwrap(),
+                        f32::from_str(&chunks[3]).unwrap(),
+                    ],
+                );
             }
             if chunks[0] == "map_Kd" && chunks.len() >= 2 {
                 map_diffuse.insert(mtl_ref.to_string(), chunks[1].to_string());

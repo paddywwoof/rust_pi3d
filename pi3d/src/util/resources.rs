@@ -1,11 +1,11 @@
 extern crate gl;
 
-use std::path::PathBuf;
 use std::fs;
 use std::io::{self, Read};
+use std::path::PathBuf;
 
-use ::shaders::built_in_shaders::NAMES;
-use ::shaders::built_in_shaders::CODES;
+use shaders::built_in_shaders::CODES;
+use shaders::built_in_shaders::NAMES;
 
 #[derive(Debug)]
 pub enum Error {
@@ -14,7 +14,7 @@ pub enum Error {
     FailedToGetExePath,
     MissingResource,
     RecursionDepth,
-    WindowBuildError {name: String},
+    WindowBuildError { name: String },
 }
 
 impl From<io::Error> for Error {
@@ -56,28 +56,40 @@ pub fn resource_name_to_path(location: &str) -> PathBuf {
     exe_path
 }
 
-fn load_includes(resource_name: &str, mut listing: &mut Vec<String>, depth: u32) -> Result<(), Error> {
-    if depth > 16 {return Err(Error::RecursionDepth);}
+fn load_includes(
+    resource_name: &str,
+    mut listing: &mut Vec<String>,
+    depth: u32,
+) -> Result<(), Error> {
+    if depth > 16 {
+        return Err(Error::RecursionDepth);
+    }
     let mut text_chunk = String::new();
-    for (i, name) in NAMES.iter().enumerate() { // first try built_in_shaders
+    for (i, name) in NAMES.iter().enumerate() {
+        // first try built_in_shaders
         if *name == resource_name.trim() {
             text_chunk = CODES[i].to_string();
             break;
         }
     }
-    if text_chunk == "" { // now check file path
+    if text_chunk == "" {
+        // now check file path
         let path_buf = resource_name_to_path(resource_name);
-        if !path_buf.is_file() {return Err(Error::MissingResource);} // nope
+        if !path_buf.is_file() {
+            return Err(Error::MissingResource);
+        } // nope
         let mut file = fs::File::open(path_buf).unwrap();
         file.read_to_string(&mut text_chunk)?;
     }
-    if text_chunk == "" {return Err(Error::MissingResource);} // still not got anything
+    if text_chunk == "" {
+        return Err(Error::MissingResource);
+    } // still not got anything
     for s in (&text_chunk).lines() {
-        match s.find("#include") { 
+        match s.find("#include") {
             Some(ix) => {
                 let (_, new_key) = s.split_at(ix + 9);
                 load_includes(&new_key, &mut listing, depth + 1)?;
-            },
+            }
             None => {
                 listing.push(s.to_string());
             }

@@ -23,7 +23,8 @@ fn main() {
     from_paths.push("examples/fonts");
     from_paths.push("examples/ecubes");
     from_paths.push("examples/cities");
-    if !(targ_triple.find("windows") == None) { // will need dll for windows
+    if !(targ_triple.find("windows") == None) {
+        // will need dll for windows
         from_paths.push("../SDL2.dll");
     }
     println!("{:?}", from_paths);

@@ -1,10 +1,10 @@
 extern crate ndarray;
 
+use ndarray as nd;
+use std::cell::RefCell;
 use std::f32;
 use std::rc::Rc;
-use std::cell::RefCell;
-use ::util::vec3;
-use ndarray as nd;
+use util::vec3;
 
 pub struct CameraInternals {
     pub eye: nd::Array1<f32>,
@@ -33,7 +33,12 @@ impl CameraInternals {
     pub fn reset(&mut self) {
         let view = look_at_matrix(&self.at, &self.reset_eye, &nd::arr1(&[0.0, 1.0, 0.0]));
         let projection = if self.is_3d {
-            projection_matrix(self.lens[0], self.lens[1], self.lens[2] / self.scale, self.lens[3])
+            projection_matrix(
+                self.lens[0],
+                self.lens[1],
+                self.lens[2] / self.scale,
+                self.lens[3],
+            )
         } else {
             orthographic_matrix(self.scale, self.width, self.height)
         };
@@ -58,13 +63,16 @@ impl CameraInternals {
     }
 
     pub fn set_lens_from_display(&mut self, display: &::display::Display) {
-        self.lens = nd::arr1(&[display.near, display.far, display.fov,
-                            display.width as f32 / display.height as f32]);
+        self.lens = nd::arr1(&[
+            display.near,
+            display.far,
+            display.fov,
+            display.width as f32 / display.height as f32,
+        ]);
         self.width = display.width as f32;
         self.height = display.height as f32;
         self.reset();
     }
-
 }
 
 pub struct Camera {
@@ -130,8 +138,10 @@ impl Camera {
             cam.rtn[[0]] = a;
             let c = cam.rtn[[0]].cos();
             let s = cam.rtn[[0]].sin();
-            cam.rx[[1, 1]] = c; cam.rx[[2, 2]] = c;
-            cam.rx[[1, 2]] = s; cam.rx[[2, 1]] = -s;
+            cam.rx[[1, 1]] = c;
+            cam.rx[[2, 2]] = c;
+            cam.rx[[1, 2]] = s;
+            cam.rx[[2, 1]] = -s;
         }
         self.set_rotated_flags();
     }
@@ -141,8 +151,10 @@ impl Camera {
             cam.rtn[[1]] = a;
             let c = cam.rtn[[1]].cos();
             let s = cam.rtn[[1]].sin();
-            cam.ry[[0, 0]] = c; cam.ry[[2, 2]] = c;
-            cam.ry[[0, 2]] = -s; cam.ry[[2, 0]] = s;
+            cam.ry[[0, 0]] = c;
+            cam.ry[[2, 2]] = c;
+            cam.ry[[0, 2]] = -s;
+            cam.ry[[2, 0]] = s;
         }
         self.set_rotated_flags();
     }
@@ -152,8 +164,10 @@ impl Camera {
             cam.rtn[[2]] = a;
             let c = cam.rtn[[2]].cos();
             let s = cam.rtn[[2]].sin();
-            cam.rz[[0, 0]] = c; cam.rz[[1, 1]] = c;
-            cam.rz[[0, 1]] = s; cam.rz[[1, 0]] = -s;
+            cam.rz[[0, 0]] = c;
+            cam.rz[[1, 1]] = c;
+            cam.rz[[0, 1]] = s;
+            cam.rz[[1, 0]] = -s;
         }
         self.set_rotated_flags();
     }
@@ -203,7 +217,9 @@ impl Camera {
     pub fn offset(&mut self, offs: &[f32; 3]) {
         {
             let mut cam = self.cam.borrow_mut();
-            cam.t1.slice_mut(s![3, ..3]).assign(&(nd::arr1(offs) * -1.0));
+            cam.t1
+                .slice_mut(s![3, ..3])
+                .assign(&(nd::arr1(offs) * -1.0));
         }
         self.set_moved_flags();
     }
@@ -251,14 +267,20 @@ pub fn create(display: &::display::Display) -> Camera {
     }
 }
 
-fn look_at_matrix(at: &nd::Array1<f32>, eye: &nd::Array1<f32>, up: &nd::Array1<f32>) -> nd::Array2<f32> {
+fn look_at_matrix(
+    at: &nd::Array1<f32>,
+    eye: &nd::Array1<f32>,
+    up: &nd::Array1<f32>,
+) -> nd::Array2<f32> {
     let mut matrix: nd::Array2<f32> = nd::Array::eye(4);
-    let zaxis = vec3::norm(&vec3::sub(&at, &eye));     // unit vec direction cam pointing
+    let zaxis = vec3::norm(&vec3::sub(&at, &eye)); // unit vec direction cam pointing
     let xaxis = vec3::norm(&vec3::cross(&up, &zaxis)); // local horizontal vec
-    let yaxis = vec3::cross(&zaxis, &xaxis);           // local vert vec
+    let yaxis = vec3::cross(&zaxis, &xaxis); // local vert vec
     for i in 0..3 {
-        matrix[[i, 0]] = xaxis[i]; matrix[[i, 1]] = yaxis[i]; matrix[[i, 2]] = zaxis[i];
-    } 
+        matrix[[i, 0]] = xaxis[i];
+        matrix[[i, 1]] = yaxis[i];
+        matrix[[i, 2]] = zaxis[i];
+    }
     matrix[[3, 0]] = -vec3::dot(&xaxis, &eye); // translations
     matrix[[3, 1]] = -vec3::dot(&yaxis, &eye);
     matrix[[3, 2]] = -vec3::dot(&zaxis, &eye);

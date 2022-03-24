@@ -1,16 +1,27 @@
 use gl;
 use gl::types::*;
 use std;
-use std::ffi::{CString, CStr};
-use ::util::resources;
-use ::GL_ID;
+use std::ffi::{CStr, CString};
+use util::resources;
+use GL_ID;
 
 #[derive(Debug)]
 pub enum Error {
-    ResourceLoad { name: String, inner: resources::Error },
-    CanNotDetermineShaderTypeForResource { name: String },
-    CompileError { name: String, message: String },
-    LinkError { name: String, message: String },
+    ResourceLoad {
+        name: String,
+        inner: resources::Error,
+    },
+    CanNotDetermineShaderTypeForResource {
+        name: String,
+    },
+    CompileError {
+        name: String,
+        message: String,
+    },
+    LinkError {
+        name: String,
+        message: String,
+    },
 }
 
 pub struct Program {
@@ -25,9 +36,9 @@ impl Clone for Program {
     fn clone(&self) -> Program {
         Program {
             id: self.id,
-            attribute_names: self.attribute_names.iter().map(|s| {s.to_string()}).collect(),
+            attribute_names: self.attribute_names.iter().map(|s| s.to_string()).collect(),
             attribute_values: self.attribute_values.clone(),
-            uniform_names: self.uniform_names.iter().map(|s| {s.to_string()}).collect(),
+            uniform_names: self.uniform_names.iter().map(|s| s.to_string()).collect(),
             uniform_values: self.uniform_values.clone(),
         }
     }
@@ -45,22 +56,27 @@ impl Program {
     }
 
     pub fn from_res(name: &str) -> Result<Program, Error> {
-        let shaders = [".vs", ".fs"].iter()
-            .map(|extn| {
-                  Shader::from_res(&format!("{}{}", name, extn))
-                })
+        let shaders = [".vs", ".fs"]
+            .iter()
+            .map(|extn| Shader::from_res(&format!("{}{}", name, extn)))
             .collect::<Result<Vec<Shader>, Error>>()?;
 
-        Program::from_shaders(&shaders[..])
-            .map_err(|message| Error::LinkError { name: name.into(), message })
+        Program::from_shaders(&shaders[..]).map_err(|message| Error::LinkError {
+            name: name.into(),
+            message,
+        })
     }
 
     pub fn from_shaders(shaders: &[Shader]) -> Result<Program, String> {
         let program_id = unsafe { gl::CreateProgram() };
         for shader in shaders {
-            unsafe { gl::AttachShader(program_id, shader.id()); }
+            unsafe {
+                gl::AttachShader(program_id, shader.id());
+            }
         }
-        unsafe { gl::LinkProgram(program_id); }
+        unsafe {
+            gl::LinkProgram(program_id);
+        }
         let mut success: GLint = 1;
         unsafe {
             gl::GetProgramiv(program_id, gl::LINK_STATUS, &mut success);
@@ -78,39 +94,62 @@ impl Program {
                     program_id,
                     len,
                     std::ptr::null_mut(),
-                    error.as_ptr() as *mut GLchar
+                    error.as_ptr() as *mut GLchar,
                 );
             }
 
             return Err(error.to_string_lossy().into_owned());
         }
         for shader in shaders {
-            unsafe { gl::DetachShader(program_id, shader.id()); }
+            unsafe {
+                gl::DetachShader(program_id, shader.id());
+            }
         }
 
         let p_attrib_names: Vec<String> = ["vertex\0", "normal\0", "texcoord\0"]
-            .iter().map(|&s| {s.to_string()}).collect();
-        let p_unif_names: Vec<String> = ["modelviewmatrix\0", "unib\0", "unif\0",
-              "tex0\0", "tex1\0", "tex2\0", "tex3\0", "tex4\0", "tex5\0", "tex6\0", "tex7\0"]
-            .iter().map(|&s| {s.to_string()}).collect();
+            .iter()
+            .map(|&s| s.to_string())
+            .collect();
+        let p_unif_names: Vec<String> = [
+            "modelviewmatrix\0",
+            "unib\0",
+            "unif\0",
+            "tex0\0",
+            "tex1\0",
+            "tex2\0",
+            "tex3\0",
+            "tex4\0",
+            "tex5\0",
+            "tex6\0",
+            "tex7\0",
+        ]
+        .iter()
+        .map(|&s| s.to_string())
+        .collect();
         let mut p_attrib_vals: Vec<GLint> = vec![-1; 3];
         let mut p_unif_vals: Vec<GLint> = vec![-1; 11];
         unsafe {
             for i in 0..p_attrib_names.len() {
-                p_attrib_vals[i] = gl::GetAttribLocation(program_id,
-                p_attrib_names[i].as_bytes().as_ptr() as *const GLchar);
+                p_attrib_vals[i] = gl::GetAttribLocation(
+                    program_id,
+                    p_attrib_names[i].as_bytes().as_ptr() as *const GLchar,
+                );
             }
             for i in 0..p_unif_names.len() {
-                p_unif_vals[i] = gl::GetUniformLocation(program_id,
-                p_unif_names[i].as_bytes().as_ptr() as *const GLchar);
+                p_unif_vals[i] = gl::GetUniformLocation(
+                    program_id,
+                    p_unif_names[i].as_bytes().as_ptr() as *const GLchar,
+                );
             }
         }
 
-        Ok(Program { id: program_id,
-                     attribute_names: p_attrib_names,
-                     attribute_values: p_attrib_vals,
-                     uniform_names: p_unif_names,
-                     uniform_values: p_unif_vals })
+        Ok(Program {
+            id: program_id,
+            attribute_names: p_attrib_names,
+            attribute_values: p_attrib_vals,
+            uniform_names: p_unif_names,
+            uniform_values: p_unif_vals,
+        })
     }
 
     pub fn id(&self) -> GLuint {
@@ -132,7 +171,6 @@ impl Program {
     pub fn uniform_values(&self) -> Vec<GLint> {
         self.uniform_values.clone()
     }
-
 
     pub fn set_used(&self) {
         unsafe {
@@ -157,40 +195,42 @@ pub struct Shader {
 
 impl Shader {
     pub fn from_res(name: &str) -> Result<Shader, Error> {
-        const POSSIBLE_EXT: [(&str, GLenum); 2] = [
-            (".vs", gl::VERTEX_SHADER),
-            (".fs", gl::FRAGMENT_SHADER),
-        ];
+        const POSSIBLE_EXT: [(&str, GLenum); 2] =
+            [(".vs", gl::VERTEX_SHADER), (".fs", gl::FRAGMENT_SHADER)];
 
-        let shader_kind = POSSIBLE_EXT.iter()
-            .find(|&&(file_extension, _)| {
-                name.ends_with(file_extension)
-            })
+        let shader_kind = POSSIBLE_EXT
+            .iter()
+            .find(|&&(file_extension, _)| name.ends_with(file_extension))
             .map(|&(_, kind)| kind)
             .ok_or_else(|| Error::CanNotDetermineShaderTypeForResource { name: name.into() })?;
-        let mut source = resources::load_string(name)
-            .map_err(|e| Error::ResourceLoad { name: name.into(), inner: e })?;
+        let mut source = resources::load_string(name).map_err(|e| Error::ResourceLoad {
+            name: name.into(),
+            inner: e,
+        })?;
         if *GL_ID == "GLES20" || *GL_ID == "GLES2" {
-            source = source.replace("version 120", "version 100")
-                           .replace("//precision", "precision");
+            source = source
+                .replace("version 120", "version 100")
+                .replace("//precision", "precision");
         }
         if *GL_ID == "GLES30" || *GL_ID == "GLES3" {
-            source = source.replace("version 120", "version 300 es")
-                           .replace("//precision", "precision")
-                           .replace("attribute", "in")
-                           .replace("texture2D", "texture")
-                           .replace("//fragcolor", "out vec4 fragColor;")
-                           .replace("gl_FragColor", "fragColor");
+            source = source
+                .replace("version 120", "version 300 es")
+                .replace("//precision", "precision")
+                .replace("attribute", "in")
+                .replace("texture2D", "texture")
+                .replace("//fragcolor", "out vec4 fragColor;")
+                .replace("gl_FragColor", "fragColor");
             if shader_kind == gl::VERTEX_SHADER {
                 source = source.replace("varying", "out");
-            }
-            else {
+            } else {
                 source = source.replace("varying", "in");
             }
         } // the default settings are for GL21
         let c_source = CString::new(source).unwrap();
-        Shader::from_source(&c_source, shader_kind)
-            .map_err(|message| Error::CompileError { name: name.into(), message })
+        Shader::from_source(&c_source, shader_kind).map_err(|message| Error::CompileError {
+            name: name.into(),
+            message,
+        })
     }
 
     pub fn from_source(source: &CStr, kind: GLenum) -> Result<Shader, String> {

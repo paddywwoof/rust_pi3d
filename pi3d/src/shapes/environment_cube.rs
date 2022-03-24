@@ -1,10 +1,10 @@
-extern crate ndarray;
 extern crate image;
+extern crate ndarray;
 
-use std::rc::Rc;
-use std::cell::RefCell;
 use ndarray as nd;
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 /// generate an enviroment cube which uses six textures
 ///
@@ -16,49 +16,179 @@ use std::collections::HashMap;
 /// NB this function returns a tuple of Shape and Vec of Texture object
 /// as they will need to live as long as the enviroment cube is used
 ///
-pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
-              size: f32, stem: &str, suffix: &str) -> (::shape::Shape, HashMap<String, ::texture::Texture>) {
+pub fn create(
+    cam: Rc<RefCell<::camera::CameraInternals>>,
+    size: f32,
+    stem: &str,
+    suffix: &str,
+) -> (::shape::Shape, HashMap<String, ::texture::Texture>) {
     let parts = vec!["front", "right", "top", "bottom", "left", "back"];
     let mut bufs = Vec::<::buffer::Buffer>::new();
     let ww = size / 2.0;
     let hh = size / 2.0;
     let dd = size / 2.0;
     //TODO why does the uv array need a 'sacrificial' entry on the end?
-    bufs.push(::buffer::create(&::shader::Program::new(),
-        nd::arr2(&[[-ww, hh, dd], [ww, hh, dd], [ww, -hh, dd], [-ww, -hh, dd], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 1.0], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.002, 0.002], [0.998, 0.002], [0.998, 0.998],[0.002, 0.998], [0.0, 0.0]]),
-        nd::arr2(&[[3, 0, 1], [2, 3, 1]]), false)); //front
+    bufs.push(::buffer::create(
+        &::shader::Program::new(),
+        nd::arr2(&[
+            [-ww, hh, dd],
+            [ww, hh, dd],
+            [ww, -hh, dd],
+            [-ww, -hh, dd],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 1.0],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.002, 0.002],
+            [0.998, 0.002],
+            [0.998, 0.998],
+            [0.002, 0.998],
+            [0.0, 0.0],
+        ]),
+        nd::arr2(&[[3, 0, 1], [2, 3, 1]]),
+        false,
+    )); //front
 
-    bufs.push(::buffer::create(&::shader::Program::new(),
-        nd::arr2(&[[ww, hh, dd], [ww, hh, -dd], [ww, -hh, -dd], [ww, -hh, dd], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.002, 0.002], [0.998, 0.002], [0.998, 0.998], [0.002, 0.998], [0.0, 0.0]]),
-        nd::arr2(&[[3, 0, 1], [2, 3, 1]]), false)); //right
+    bufs.push(::buffer::create(
+        &::shader::Program::new(),
+        nd::arr2(&[
+            [ww, hh, dd],
+            [ww, hh, -dd],
+            [ww, -hh, -dd],
+            [ww, -hh, dd],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [1.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.002, 0.002],
+            [0.998, 0.002],
+            [0.998, 0.998],
+            [0.002, 0.998],
+            [0.0, 0.0],
+        ]),
+        nd::arr2(&[[3, 0, 1], [2, 3, 1]]),
+        false,
+    )); //right
 
-    bufs.push(::buffer::create(&::shader::Program::new(),
-        nd::arr2(&[[-ww, hh, dd], [-ww, hh, -dd], [ww, hh, -dd],  [ww, hh, dd], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.002, 0.998], [0.002, 0.002], [0.998, 0.002], [0.998, 0.998], [0.0, 0.0]]),
-        nd::arr2(&[[3, 0, 1], [2, 3, 1]]), false)); //top
+    bufs.push(::buffer::create(
+        &::shader::Program::new(),
+        nd::arr2(&[
+            [-ww, hh, dd],
+            [-ww, hh, -dd],
+            [ww, hh, -dd],
+            [ww, hh, dd],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.002, 0.998],
+            [0.002, 0.002],
+            [0.998, 0.002],
+            [0.998, 0.998],
+            [0.0, 0.0],
+        ]),
+        nd::arr2(&[[3, 0, 1], [2, 3, 1]]),
+        false,
+    )); //top
 
-    bufs.push(::buffer::create(&::shader::Program::new(),
-        nd::arr2(&[[ww, -hh, dd], [ww, -hh, -dd], [-ww, -hh, -dd],[-ww, -hh, dd], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.0, -1.0, 0.0], [0.0, -1.0, 0.0], [0.0, -1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.998, 0.002], [0.998, 0.998], [0.002, 0.998], [0.002, 0.002], [0.0, 0.0]]),
-        nd::arr2(&[[3, 0, 1], [2, 3, 1]]), false)); //bottom
+    bufs.push(::buffer::create(
+        &::shader::Program::new(),
+        nd::arr2(&[
+            [ww, -hh, dd],
+            [ww, -hh, -dd],
+            [-ww, -hh, -dd],
+            [-ww, -hh, dd],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.0, -1.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [0.0, -1.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.998, 0.002],
+            [0.998, 0.998],
+            [0.002, 0.998],
+            [0.002, 0.002],
+            [0.0, 0.0],
+        ]),
+        nd::arr2(&[[3, 0, 1], [2, 3, 1]]),
+        false,
+    )); //bottom
 
-    bufs.push(::buffer::create(&::shader::Program::new(),
-        nd::arr2(&[[-ww, -hh, dd],[-ww, -hh, -dd],[-ww, hh, -dd], [-ww, hh, dd], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[-1.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [-1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.998, 0.998], [0.002, 0.998], [0.002, 0.002], [0.998, 0.002], [0.0, 0.0]]),
-        nd::arr2(&[[3, 0, 1], [2, 3, 1]]), false)); //left
+    bufs.push(::buffer::create(
+        &::shader::Program::new(),
+        nd::arr2(&[
+            [-ww, -hh, dd],
+            [-ww, -hh, -dd],
+            [-ww, hh, -dd],
+            [-ww, hh, dd],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [-1.0, 0.0, 0.0],
+            [-1.0, 0.0, 0.0],
+            [-1.0, 0.0, 0.0],
+            [-1.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.998, 0.998],
+            [0.002, 0.998],
+            [0.002, 0.002],
+            [0.998, 0.002],
+            [0.0, 0.0],
+        ]),
+        nd::arr2(&[[3, 0, 1], [2, 3, 1]]),
+        false,
+    )); //left
 
-    bufs.push(::buffer::create(&::shader::Program::new(),
-        nd::arr2(&[[-ww, hh, -dd],[ww, hh, -dd],  [ww, -hh, -dd], [-ww,-hh,-dd], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.0, 0.0, -1.0],[0.0, 0.0, -1.0],[0.0, 0.0, -1.0], [0.0, 0.0, -1.0], [0.0, 0.0, 0.0]]),
-        nd::arr2(&[[0.998, 0.002], [0.002, 0.002], [0.002, 0.998], [0.998, 0.998], [0.0, 0.0]]),
-        nd::arr2(&[[3, 1, 0], [2, 1, 3]]), false)); //back
+    bufs.push(::buffer::create(
+        &::shader::Program::new(),
+        nd::arr2(&[
+            [-ww, hh, -dd],
+            [ww, hh, -dd],
+            [ww, -hh, -dd],
+            [-ww, -hh, -dd],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.0, 0.0, -1.0],
+            [0.0, 0.0, -1.0],
+            [0.0, 0.0, -1.0],
+            [0.0, 0.0, -1.0],
+            [0.0, 0.0, 0.0],
+        ]),
+        nd::arr2(&[
+            [0.998, 0.002],
+            [0.002, 0.002],
+            [0.002, 0.998],
+            [0.998, 0.998],
+            [0.0, 0.0],
+        ]),
+        nd::arr2(&[[3, 1, 0], [2, 1, 3]]),
+        false,
+    )); //back
 
     let mut tex_list = HashMap::<String, ::texture::Texture>::new();
 

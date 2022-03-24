@@ -1,6 +1,6 @@
 extern crate gl;
-extern crate ndarray;
 extern crate image;
+extern crate ndarray;
 
 use gl::types::*;
 //use ndarray as nd;
@@ -20,16 +20,35 @@ impl OffscreenTexture {
         unsafe {
             gl::BindFramebuffer(gl::FRAMEBUFFER, self.framebuffer);
             gl::BindRenderbuffer(gl::RENDERBUFFER, self.depthbuffer);
-            gl::RenderbufferStorage(gl::RENDERBUFFER, gl::DEPTH_COMPONENT16,
-                self.width as GLsizei, self.height as GLsizei);
-            gl::FramebufferRenderbuffer(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT,
-                gl::RENDERBUFFER, self.depthbuffer);
-            gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::COLOR_ATTACHMENT0,
-                gl::TEXTURE_2D, self.color_tex_id, 0);
+            gl::RenderbufferStorage(
+                gl::RENDERBUFFER,
+                gl::DEPTH_COMPONENT16,
+                self.width as GLsizei,
+                self.height as GLsizei,
+            );
+            gl::FramebufferRenderbuffer(
+                gl::FRAMEBUFFER,
+                gl::DEPTH_ATTACHMENT,
+                gl::RENDERBUFFER,
+                self.depthbuffer,
+            );
+            gl::FramebufferTexture2D(
+                gl::FRAMEBUFFER,
+                gl::COLOR_ATTACHMENT0,
+                gl::TEXTURE_2D,
+                self.color_tex_id,
+                0,
+            );
             gl::BindTexture(gl::TEXTURE_2D, 0); // this seems to be needed here
-            gl::FramebufferTexture2D(gl::FRAMEBUFFER, gl::DEPTH_ATTACHMENT,
-                gl::TEXTURE_2D, self.depth_tex_id, 0);
-            if clear { // TODO allow just depth or just color clearing?
+            gl::FramebufferTexture2D(
+                gl::FRAMEBUFFER,
+                gl::DEPTH_ATTACHMENT,
+                gl::TEXTURE_2D,
+                self.depth_tex_id,
+                0,
+            );
+            if clear {
+                // TODO allow just depth or just color clearing?
                 gl::Clear(gl::DEPTH_BUFFER_BIT | gl::COLOR_BUFFER_BIT);
             }
         }
@@ -73,11 +92,27 @@ pub fn create(display: &::display::Display) -> OffscreenTexture {
         gl::BindTexture(gl::TEXTURE_2D, color_tex_id);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as GLint);
-        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::RGBA as GLint, width as GLint,
-                        height as GLint, 0, gl::RGBA, gl::UNSIGNED_BYTE,
-                        std::ptr::null() as *const GLvoid);
+        gl::TexParameteri(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_WRAP_S,
+            gl::CLAMP_TO_EDGE as GLint,
+        );
+        gl::TexParameteri(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_WRAP_T,
+            gl::CLAMP_TO_EDGE as GLint,
+        );
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::RGBA as GLint,
+            width as GLint,
+            height as GLint,
+            0,
+            gl::RGBA,
+            gl::UNSIGNED_BYTE,
+            std::ptr::null() as *const GLvoid,
+        );
         gl::GenerateMipmap(gl::TEXTURE_2D);
         gl::BindTexture(gl::TEXTURE_2D, 0);
 
@@ -85,11 +120,27 @@ pub fn create(display: &::display::Display) -> OffscreenTexture {
         gl::BindTexture(gl::TEXTURE_2D, depth_tex_id);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as GLint);
         gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as GLint);
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as GLint);
-        gl::TexImage2D(gl::TEXTURE_2D, 0, gl::DEPTH_COMPONENT16 as GLint, width as GLint,
-                        height as GLint, 0, gl::DEPTH_COMPONENT, gl::UNSIGNED_SHORT,
-                        std::ptr::null() as *const GLvoid);
+        gl::TexParameteri(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_WRAP_S,
+            gl::CLAMP_TO_EDGE as GLint,
+        );
+        gl::TexParameteri(
+            gl::TEXTURE_2D,
+            gl::TEXTURE_WRAP_T,
+            gl::CLAMP_TO_EDGE as GLint,
+        );
+        gl::TexImage2D(
+            gl::TEXTURE_2D,
+            0,
+            gl::DEPTH_COMPONENT16 as GLint,
+            width as GLint,
+            height as GLint,
+            0,
+            gl::DEPTH_COMPONENT,
+            gl::UNSIGNED_SHORT,
+            std::ptr::null() as *const GLvoid,
+        );
         gl::GenerateMipmap(gl::TEXTURE_2D);
         gl::BindTexture(gl::TEXTURE_2D, 0);
         gl::Enable(gl::TEXTURE_2D);

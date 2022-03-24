@@ -1,13 +1,17 @@
 extern crate ndarray;
 
+use ndarray as nd;
+use std::cell::RefCell;
 use std::f32::consts;
 use std::rc::Rc;
-use std::cell::RefCell;
-use ndarray as nd;
 
-pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
-              path: Vec<[f32; 2]>, sides: usize, rise: f32, loops: f32) -> ::shape::Shape {
-    
+pub fn create(
+    cam: Rc<RefCell<::camera::CameraInternals>>,
+    path: Vec<[f32; 2]>,
+    sides: usize,
+    rise: f32,
+    loops: f32,
+) -> ::shape::Shape {
     let s = path.len(); // iterations along path
     let rl = sides * loops as usize; // iterations around axis
 
@@ -20,8 +24,9 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
     // Find length of the path
     let mut path_len = 0.0;
     for p in 1..s {
-        path_len += ((path[p][0] - path[p-1][0]).powf(2.0) +
-                     (path[p][1] - path[p-1][1]).powf(2.0)).powf(0.5);
+        path_len += ((path[p][0] - path[p - 1][0]).powf(2.0)
+            + (path[p][1] - path[p - 1][1]).powf(2.0))
+        .powf(0.5);
     }
 
     let mut verts = Vec::<f32>::new();
@@ -38,7 +43,7 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
         let mut py = path[p][1]; // and clarity (and need to increment!)
         let step_len = ((px - opx).powf(2.0) + (py - opy).powf(2.0)).powf(0.5);
         if p > 0 {
-            tcy +=  step_len / path_len;
+            tcy += step_len / path_len;
         }
         let dx = (px - opx) / step_len;
         let dy = (py - opy) / step_len;
@@ -64,10 +69,13 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
     }
     let nverts = verts.len() / 3;
     let nfaces = faces.len() / 3;
-    let new_buffer = ::buffer::create(&::shader::Program::new(),
-                nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(), //TODO make functions return Result and feedback errors
-                nd::Array::from_shape_vec((nverts, 3usize), norms).unwrap(),
-                nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
-                nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), false);
+    let new_buffer = ::buffer::create(
+        &::shader::Program::new(),
+        nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(), //TODO make functions return Result and feedback errors
+        nd::Array::from_shape_vec((nverts, 3usize), norms).unwrap(),
+        nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
+        nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(),
+        false,
+    );
     ::shape::create(vec![new_buffer], cam)
 }

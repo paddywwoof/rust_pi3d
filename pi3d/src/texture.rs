@@ -1,11 +1,11 @@
 extern crate gl;
-extern crate ndarray;
 extern crate image;
+extern crate ndarray;
 
 use gl::types::*;
 use ndarray as nd;
 use texture::image::GenericImage; // confusing name texture
-use ::util::resources;
+use util::resources;
 
 pub struct Texture {
     pub id: GLuint,
@@ -27,21 +27,33 @@ impl Texture {
         unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.id);
 
-            gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::LINEAR_MIPMAP_NEAREST as GLint);
+            gl::TexParameteri(
+                gl::TEXTURE_2D,
+                gl::TEXTURE_MIN_FILTER,
+                gl::LINEAR_MIPMAP_NEAREST as GLint,
+            );
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as GLint);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, self.repeat);
             gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, self.repeat);
-            gl::TexImage2D(gl::TEXTURE_2D, 0, c_type as GLint, w as GLint,
-                            h as GLint, 0, c_type, gl::UNSIGNED_BYTE,
-                            self.image.as_ptr() as *const GLvoid);
+            gl::TexImage2D(
+                gl::TEXTURE_2D,
+                0,
+                c_type as GLint,
+                w as GLint,
+                h as GLint,
+                0,
+                c_type,
+                gl::UNSIGNED_BYTE,
+                self.image.as_ptr() as *const GLvoid,
+            );
             gl::Enable(gl::TEXTURE_2D);
             gl::GenerateMipmap(gl::TEXTURE_2D);
         }
     }
 
     pub fn flip_image(&mut self, vert: bool, horizontal: bool) {
-        let v = if vert {-1} else {1};
-        let h = if horizontal {-1} else {1};
+        let v = if vert { -1 } else { 1 };
+        let h = if horizontal { -1 } else { 1 };
         self.image = self.image.slice(s![..;v, ..;h, ..]).to_owned();
         self.update_ndarray();
     }
@@ -52,7 +64,7 @@ impl Texture {
     }
 
     pub fn set_mirrored_repeat(&mut self, on: bool) {
-        self.repeat = if on {gl::MIRRORED_REPEAT} else {gl::REPEAT} as GLint;
+        self.repeat = if on { gl::MIRRORED_REPEAT } else { gl::REPEAT } as GLint;
         self.update_ndarray();
     }
 }
@@ -95,6 +107,7 @@ pub fn create_from_file(name: &str) -> Texture {
         image::ColorType::RGBA(_u8) => 4,
         _ => 4, // TODO catch unrecognised types, need to cope with indexed
     };
-    let image = nd::Array::from_shape_vec((h as usize, w as usize, c_type), im.raw_pixels()).unwrap();
+    let image =
+        nd::Array::from_shape_vec((h as usize, w as usize, c_type), im.raw_pixels()).unwrap();
     create_from_array(image)
 }

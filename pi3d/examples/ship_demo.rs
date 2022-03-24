@@ -1,28 +1,30 @@
 extern crate pi3d;
-extern crate sdl2;
 extern crate rand;
+extern crate sdl2;
 use sdl2::keyboard::Keycode;
 
-const W:f32 = 960.0;
-const H:f32 = 960.0;
+const W: f32 = 960.0;
+const H: f32 = 960.0;
 
 fn main() {
-    let mut display = pi3d::display::create("ship_demo (C Tim Skillman) window", W, H, "GL", 2, 1).unwrap();
-            display.set_background(&[0.1, 0.1, 0.2, 1.0]);
-            display.set_mouse_relative(true);
-            display.set_target_fps(1000.0);
+    let mut display =
+        pi3d::display::create("ship_demo (C Tim Skillman) window", W, H, "GL", 2, 1).unwrap();
+    display.set_background(&[0.1, 0.1, 0.2, 1.0]);
+    display.set_mouse_relative(true);
+    display.set_target_fps(1000.0);
     let flatsh = pi3d::shader::Program::from_res("uv_flat").unwrap();
     let textsh = pi3d::shader::Program::from_res("uv_pointsprite").unwrap();
     let mut camera = pi3d::camera::create(&display);
     let mut camera2d = pi3d::camera::create(&display);
-            camera2d.set_3d(false);
+    camera2d.set_3d(false);
 
     let font = pi3d::util::font::create("fonts/NotoSans-Regular.ttf", "", "ęĻ", 64.0);
 
-    let (mut cargo_hold, _texlist) = pi3d::shapes::model_obj::create(camera.reference(), "models/CargoHoldBaked2.obj");
-             cargo_hold.set_shader(&flatsh);
-             cargo_hold.set_material(&[0.4, 0.4, 0.4]);
-             cargo_hold.set_fog(&[0.3, 0.3, 0.3], 200.2, 1.0);
+    let (mut cargo_hold, _texlist) =
+        pi3d::shapes::model_obj::create(camera.reference(), "models/CargoHoldBaked2.obj");
+    cargo_hold.set_shader(&flatsh);
+    cargo_hold.set_material(&[0.4, 0.4, 0.4]);
+    cargo_hold.set_fog(&[0.3, 0.3, 0.3], 200.2, 1.0);
     let mut radar_num: usize = 0;
     for k in 0..cargo_hold.buf.len() {
         if cargo_hold.buf[k].array_buffer[[0, 0]] == 97.226921 {
@@ -31,21 +33,30 @@ fn main() {
         }
     }
 
-    let (mut ecube, _tex_list) = pi3d::shapes::environment_cube::create(camera.reference(),
-                500.0, "models/maps/sbox_512", "png");
-             ecube.set_shader(&flatsh);
+    let (mut ecube, _tex_list) = pi3d::shapes::environment_cube::create(
+        camera.reference(),
+        500.0,
+        "models/maps/sbox_512",
+        "png",
+    );
+    ecube.set_shader(&flatsh);
 
     // fps counter
     let mut fps_text = pi3d::shapes::point_text::create(camera2d.reference(), &font, 20, 24.0);
-            fps_text.set_shader(&textsh);
-    let fps_blk = fps_text.add_text_block(&font, &[-W * 0.5 + 20.0, -H * 0.5 + 20.0, 0.1], 19, "00.0 FPS");
+    fps_text.set_shader(&textsh);
+    let fps_blk = fps_text.add_text_block(
+        &font,
+        &[-W * 0.5 + 20.0, -H * 0.5 + 20.0, 0.1],
+        19,
+        "00.0 FPS",
+    );
 
     let mut n: usize = 0;
     let mut x: f32 = 0.0;
     let mut y: f32 = 0.0;
     let mut z: f32 = -0.1;
-    let mut df:f32 = 0.01;
-    let mut ds:f32 = 0.0;
+    let mut df: f32 = 0.01;
+    let mut ds: f32 = 0.0;
     let mut rot: f32 = 0.0;
     let mut tilt: f32 = 0.0;
 
@@ -64,17 +75,29 @@ fn main() {
             n = 0;
         }
 
-        if display.keys_pressed.contains(&Keycode::Escape) {break;}
+        if display.keys_pressed.contains(&Keycode::Escape) {
+            break;
+        }
         if display.mouse_moved {
             tilt = (display.mouse_y as f32 - 300.0) * 0.005;
             rot = (display.mouse_x as f32 - 400.0) * 0.005;
         }
-        if display.keys_pressed.contains(&Keycode::W) {df = 0.5}
-        if display.keys_pressed.contains(&Keycode::S) {df = -0.25;}
-        if display.keys_pressed.contains(&Keycode::A) {ds = 0.25;}
-        if display.keys_pressed.contains(&Keycode::D) {ds = -0.25;}
+        if display.keys_pressed.contains(&Keycode::W) {
+            df = 0.5
+        }
+        if display.keys_pressed.contains(&Keycode::S) {
+            df = -0.25;
+        }
+        if display.keys_pressed.contains(&Keycode::A) {
+            ds = 0.25;
+        }
+        if display.keys_pressed.contains(&Keycode::D) {
+            ds = -0.25;
+        }
         let cd = camera.get_direction();
-        x += cd[0] * df - cd[2] * ds; y += cd[1] * df; z += cd[2] * df + cd[0] * ds;
+        x += cd[0] * df - cd[2] * ds;
+        y += cd[1] * df;
+        z += cd[2] * df + cd[0] * ds;
         camera.reset();
         camera.rotate(&[tilt, rot, 0.0]);
         if df != 0.0 || ds != 0.0 {

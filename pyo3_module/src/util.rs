@@ -1,9 +1,9 @@
-extern crate pyo3;
 extern crate pi3d;
+extern crate pyo3;
 //extern crate gl;
 
 use pyo3::prelude::*;
-use pyo3::{PyObject};
+use pyo3::PyObject;
 
 //use numpy::{IntoPyArray, PyArray3};
 
@@ -33,11 +33,13 @@ pub struct PostProcess {
 #[pymethods]
 impl PostProcess {
     #[new]
-    fn new( camera: &mut ::core::Camera,
-            display: &::core::Display,
-            shader: &::core::Shader,
-            add_tex: Vec<PyRef<::core::Texture>>,
-            scale: f32) -> Self {
+    fn new(
+        camera: &mut ::core::Camera,
+        display: &::core::Display,
+        shader: &::core::Shader,
+        add_tex: Vec<PyRef<::core::Texture>>,
+        scale: f32,
+    ) -> Self {
         let texlist = add_tex.iter().map(|t| t.r_texture.id).collect();
         PostProcess {
             r_postprocess: pi3d::util::post_process::create(
@@ -45,7 +47,8 @@ impl PostProcess {
                 &display.r_display.borrow(),
                 &shader.r_shader,
                 &texlist,
-                scale),
+                scale,
+            ),
         }
     }
     pub fn start_capture(&mut self, clear: bool) {

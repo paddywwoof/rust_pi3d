@@ -1,10 +1,10 @@
-extern crate pyo3;
-extern crate pi3d;
 extern crate gl;
+extern crate pi3d;
+extern crate pyo3;
 
-use pyo3::prelude::*;
-use pyo3::{PyObject};//, PyRawObject};
 use pyo3::exceptions;
+use pyo3::prelude::*;
+use pyo3::PyObject; //, PyRawObject};
 
 use numpy::{IntoPyArray, PyArray3};
 
@@ -19,7 +19,14 @@ pub struct Display {
 #[pymethods]
 impl Display {
     #[new]
-    #[args(name="\"\"", w="0.0", h="0.0", profile="\"GLES\"", major="2", minor="0")]
+    #[args(
+        name = "\"\"",
+        w = "0.0",
+        h = "0.0",
+        profile = "\"GLES\"",
+        major = "2",
+        minor = "0"
+    )]
     fn new(name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) -> Self {
         let (wnew, hnew, fullscreen) = if w <= 0.0 || h <= 0.0 {
             (100.0, 100.0, true)
@@ -27,22 +34,34 @@ impl Display {
             (w, h, false)
         };
         /*let dispnew = Arc::new(Mutex::new(
-                pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
-            ));*/
+            pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
+        ));*/
         let dispnew = Rc::new(RefCell::new(
-                pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
-            ));
-        if  fullscreen {
+            pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap(),
+        ));
+        if fullscreen {
             dispnew.borrow_mut().set_fullscreen(true);
         }
-        Display {
-            r_display: dispnew,
-        }
+        Display { r_display: dispnew }
     }
 
     #[staticmethod]
-    #[args(name="\"\"", w="0.0", h="0.0", profile="\"GLES\"", major="2", minor="0")]
-    fn create(name: &str, w: f32, h: f32, profile: &str, major: u8, minor: u8) -> PyResult<Py<Display>> {
+    #[args(
+        name = "\"\"",
+        w = "0.0",
+        h = "0.0",
+        profile = "\"GLES\"",
+        major = "2",
+        minor = "0"
+    )]
+    fn create(
+        name: &str,
+        w: f32,
+        h: f32,
+        profile: &str,
+        major: u8,
+        minor: u8,
+    ) -> PyResult<Py<Display>> {
         let gil = Python::acquire_gil();
         let py = gil.python();
         let (wnew, hnew, fullscreen) = if w <= 0.0 || h <= 0.0 {
@@ -51,16 +70,14 @@ impl Display {
             (w, h, false)
         };
         let r_display = Rc::new(RefCell::new(
-            pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap()
+            pi3d::display::create(name, wnew, hnew, profile, major, minor).unwrap(),
         ));
-        if  fullscreen {
+        if fullscreen {
             r_display.borrow_mut().set_fullscreen(true);
         }
-        r_display.borrow_mut().set_target_fps(1000.0); //TODO set to 60; testing run as fast as poss 
+        r_display.borrow_mut().set_target_fps(1000.0); //TODO set to 60; testing run as fast as poss
         r_display.borrow_mut().set_mouse_relative(true);
-        Py::new(py, Display { 
-                        r_display,
-                })
+        Py::new(py, Display { r_display })
     }
 
     fn loop_running(&mut self) -> PyResult<bool> {
@@ -90,11 +107,15 @@ impl Camera {
         self.r_camera.set_3d(is_3d);
     }
     fn position(&mut self, pos: Vec<f32>) {
-        if pos.len() != 3 {return;}
+        if pos.len() != 3 {
+            return;
+        }
         self.r_camera.position(&[pos[0], pos[1], pos[2]]);
     }
     fn rotate(&mut self, rot: Vec<f32>) {
-        if rot.len() != 3 {return;}
+        if rot.len() != 3 {
+            return;
+        }
         self.r_camera.rotate(&[rot[0], rot[1], rot[2]]);
     }
     fn get_direction(&mut self) -> Vec<f32> {
@@ -120,7 +141,7 @@ impl Shader {
 }
 
 /// Keyboard stuff
-/// 
+///
 #[pyclass(unsendable)]
 struct Keyboard {
     r_display: Rc<RefCell<pi3d::display::Display>>,
@@ -144,9 +165,8 @@ impl Keyboard {
     }
 }
 
-
 /// Mouse stuff
-/// 
+///
 #[pyclass(unsendable)]
 struct Mouse {
     r_display: Rc<RefCell<pi3d::display::Display>>,
@@ -166,7 +186,6 @@ impl Mouse {
         (disp.mouse_x, disp.mouse_y)
     }
 }
-
 
 /// Texture stuff
 ///
@@ -190,11 +209,7 @@ impl Texture {
     fn get_image(&mut self) -> PyResult<Py<PyArray3<u8>>> {
         let gil = pyo3::Python::acquire_gil();
         let py = gil.python();
-        Ok(self.r_texture.image
-            .clone()
-            .into_pyarray(py)
-            .to_owned()
-        )
+        Ok(self.r_texture.image.clone().into_pyarray(py).to_owned())
     }
     #[setter]
     fn set_image(&mut self, im_arr: &PyArray3<u8>) -> PyResult<()> {
@@ -203,7 +218,9 @@ impl Texture {
             let new_shape = new_im_arr.shape();
             let old_shape = self.r_texture.image.shape();
             if new_shape[0] != old_shape[0] || new_shape[1] != old_shape[1] {
-                return Err(PyErr::new::<exceptions::RuntimeError, _>("array wrong shape"));
+                return Err(PyErr::new::<exceptions::RuntimeError, _>(
+                    "array wrong shape",
+                ));
             }
             //TODO fix different 3rd dim size (1,3,4)
             self.r_texture.image = new_im_arr;
@@ -211,7 +228,6 @@ impl Texture {
         self.r_texture.update_ndarray();
         Ok(())
     }
-
 }
 
 #[pymodule]

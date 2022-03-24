@@ -1,14 +1,13 @@
-extern crate sdl2;
 extern crate gl;
+extern crate sdl2;
 
-use std;
 use gl::types::*;
-use std::time::{Instant, Duration};
-use std::thread::sleep;
+use std;
 use std::error::Error;
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 const GL_POINT_SPRITE: GLenum = 0x8861; // needed for NVIDIA driver
-
 
 pub struct Display {
     sdl: sdl2::Sdl,
@@ -21,7 +20,7 @@ pub struct Display {
     pub far: f32,
     pub fov: f32,
     pub keys_pressed: Vec<sdl2::keyboard::Keycode>, // since last frame
-    pub keys_down: Vec<sdl2::keyboard::Keycode>, // currently down, not released
+    pub keys_down: Vec<sdl2::keyboard::Keycode>,    // currently down, not released
     pub mouse_moved: bool,
     pub mouse_x: i32,
     pub mouse_y: i32,
@@ -50,11 +49,15 @@ impl Display {
         self.mouse_moved = false;
         for event in self.event_pump.poll_iter() {
             match event {
-                sdl2::event::Event::Quit {..} => {return false;},
-                sdl2::event::Event::KeyDown {keycode, ..} => {
+                sdl2::event::Event::Quit { .. } => {
+                    return false;
+                }
+                sdl2::event::Event::KeyDown { keycode, .. } => {
                     let key = keycode.unwrap();
                     // ESC is hard coded so that window doesn't get stuck with no cursor
-                    if self.mouse_relative && key == sdl2::keyboard::Keycode::Escape {return false;}
+                    if self.mouse_relative && key == sdl2::keyboard::Keycode::Escape {
+                        return false;
+                    }
                     if !self.keys_pressed.contains(&key) {
                         self.keys_pressed.push(key);
                     }
@@ -62,11 +65,13 @@ impl Display {
                         self.keys_down.push(key);
                     }
                 }
-                sdl2::event::Event::KeyUp {keycode, ..} => {
+                sdl2::event::Event::KeyUp { keycode, .. } => {
                     let key = keycode.unwrap();
                     self.keys_down.retain(|&x| x != key);
                 }
-                sdl2::event::Event::MouseMotion {x, y, xrel, yrel, ..} => {
+                sdl2::event::Event::MouseMotion {
+                    x, y, xrel, yrel, ..
+                } => {
                     self.mouse_moved = true;
                     if self.mouse_relative {
                         self.mouse_x += xrel;
@@ -78,7 +83,7 @@ impl Display {
                 }
                 //sdl2::event::Event::MouseButtonDown {} => { //TODO
                 //}
-                sdl2::event::Event::Window {..} => {
+                sdl2::event::Event::Window { .. } => {
                     let (w, h) = self.window.drawable_size();
                     if w != self.width as u32 || h != self.height as u32 {
                         self.width = w as f32;
@@ -88,13 +93,13 @@ impl Display {
                             /* to change camera lens settings you need to check Display::was_resized()
                             in the main loop and if true call:
                             Camera.set_lens_from_display(display: &::display::Display)
-                            if 2d camera also used it also needs to be set. 
+                            if 2d camera also used it also needs to be set.
                             */
                         }
                         self.resized = true;
                     }
                 }
-                _ => {},
+                _ => {}
             }
         }
         true
@@ -113,8 +118,11 @@ impl Display {
     pub fn set_target_fps(&mut self, target_fps: f32) {
         self.target_frame_tm = if target_fps < 1.0 {
             99999999 // min speed 999 ms per frame
-         } else if target_fps < 1e9 {1000000000 / target_fps as u32
-         } else { 1 }; // max speed 1ns per frame
+        } else if target_fps < 1e9 {
+            1000000000 / target_fps as u32
+        } else {
+            1
+        }; // max speed 1ns per frame
     }
 
     pub fn fps(&mut self) -> f32 {
@@ -132,21 +140,23 @@ impl Display {
     }
 
     pub fn set_fullscreen(&mut self, on: bool) {
-        match self.window.set_fullscreen(
-            if on {sdl2::video::FullscreenType::Desktop} 
-            else {sdl2::video::FullscreenType::Off}) {
-                Ok(_) => {
-                    let (w, h) = self.window.drawable_size();
-                    unsafe {
-                        gl::Viewport(0, 0, w as GLsizei, h as GLsizei);
-                    }
-                    self.resized = true;
-                    self.width = w as f32;
-                    self.height = h as f32;
+        match self.window.set_fullscreen(if on {
+            sdl2::video::FullscreenType::Desktop
+        } else {
+            sdl2::video::FullscreenType::Off
+        }) {
+            Ok(_) => {
+                let (w, h) = self.window.drawable_size();
+                unsafe {
+                    gl::Viewport(0, 0, w as GLsizei, h as GLsizei);
                 }
-                Err(e) => {
-                    println!("Error toggleing fullscreen - {:?}", e);
-                },
+                self.resized = true;
+                self.width = w as f32;
+                self.height = h as f32;
+            }
+            Err(e) => {
+                println!("Error toggleing fullscreen - {:?}", e);
+            }
         }
     }
 
@@ -155,22 +165,31 @@ impl Display {
     }
 } // TODO other functions to change background, w, h near, far etc. put gl stuff in reset fn?
 
-pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, minor: u8
-              ) -> Result<Display, Box<dyn Error>> {
-    let sdl = sdl2::init()?;//.unwrap();
-    let video_subsystem = sdl.video()?;//.unwrap();
+pub fn create(
+    name: &str,
+    width: f32,
+    height: f32,
+    profile: &str,
+    major: u8,
+    minor: u8,
+) -> Result<Display, Box<dyn Error>> {
+    let sdl = sdl2::init()?; //.unwrap();
+    let video_subsystem = sdl.video()?; //.unwrap();
     let gl_attr = video_subsystem.gl_attr();
-        gl_attr.set_context_profile(match profile {
-          "GLES" => sdl2::video::GLProfile::GLES,
-          _      => sdl2::video::GLProfile::Core});
-        gl_attr.set_context_version(major, minor);
-        gl_attr.set_double_buffer(true);
+    gl_attr.set_context_profile(match profile {
+        "GLES" => sdl2::video::GLProfile::GLES,
+        _ => sdl2::video::GLProfile::Core,
+    });
+    gl_attr.set_context_version(major, minor);
+    gl_attr.set_double_buffer(true);
     let window = video_subsystem
         .window(name, width as u32, height as u32)
-        .opengl().resizable()
-        .build()?;//.unwrap();
-    let _gl_context = window.gl_create_context()?;//.unwrap();
-    let _gl = gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
+        .opengl()
+        .resizable()
+        .build()?; //.unwrap();
+    let _gl_context = window.gl_create_context()?; //.unwrap();
+    let _gl =
+        gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
     unsafe {
         gl::Viewport(0, 0, width as GLsizei, height as GLsizei);
         gl::ClearColor(0.3, 0.3, 0.5, 1.0);
@@ -185,15 +204,19 @@ pub fn create(name: &str, width: f32, height: f32, profile: &str, major: u8, min
         gl::Enable(GL_POINT_SPRITE);
         gl::DepthFunc(gl::LESS);
         gl::DepthMask(1);
-        gl::BlendFuncSeparate(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA, 
-                                                1, gl::ONE_MINUS_SRC_ALPHA);
+        gl::BlendFuncSeparate(
+            gl::SRC_ALPHA,
+            gl::ONE_MINUS_SRC_ALPHA,
+            1,
+            gl::ONE_MINUS_SRC_ALPHA,
+        );
         gl::Enable(gl::BLEND);
         gl::ColorMask(1, 1, 1, 0);
     }
 
     Ok(Display {
         window,
-        event_pump: sdl.event_pump()?,//.unwrap(),
+        event_pump: sdl.event_pump()?, //.unwrap(),
         sdl,
         _gl_context,
         width,

@@ -1,18 +1,18 @@
-extern crate ndarray;
 extern crate image;
+extern crate ndarray;
 
 use ndarray as nd;
 use std::cell::RefCell;
 use std::rc::Rc;
-use ::util::resources;
+use util::resources;
 
-// create a new struct definition 
+// create a new struct definition
 pub struct ElevationMap {
     pub shape: ::shape::Shape,
-    ix:f32,
-    iz:f32,
-    width:f32,
-    depth:f32,
+    ix: f32,
+    iz: f32,
+    width: f32,
+    depth: f32,
 }
 
 /// generate an elevation map Shape
@@ -22,20 +22,27 @@ pub struct ElevationMap {
 /// * `width` edge to edge in x direction
 /// * `depth` in z direction
 /// * `height` in y direction scaled by pixel values 0 to 255
-/// * `ix` number of polygons in x direction 
+/// * `ix` number of polygons in x direction
 /// * `iz` polygons in z direction
 /// * `ntiles` uv repeats for texture mapping
 /// * `_texmap` TODO used for allocating multiple textures to the map
 /// NB for no image scaling the mapfile should be one more pixel than ix and iz
 /// i.e. 33x33 image for 32x32 squares in grid
-/// 
+///
 /// TODO put this as class method (i.e. ::new())
-pub fn new(cam: Rc<RefCell<::camera::CameraInternals>>,
-               mapfile: &str, width: f32, depth: f32, height: f32, ix: usize, iz: usize,
-               ntiles: f32, _texmap: &str) -> ElevationMap {
-
-    let ix = if ix < 200 {ix + 1} else {200}; // one more vertex in each direction than number of divisions
-    let iz = if iz < 200 {iz + 1} else {200};
+pub fn new(
+    cam: Rc<RefCell<::camera::CameraInternals>>,
+    mapfile: &str,
+    width: f32,
+    depth: f32,
+    height: f32,
+    ix: usize,
+    iz: usize,
+    ntiles: f32,
+    _texmap: &str,
+) -> ElevationMap {
+    let ix = if ix < 200 { ix + 1 } else { 200 }; // one more vertex in each direction than number of divisions
+    let iz = if iz < 200 { iz + 1 } else { 200 };
     //let res = ::util::resources::from_exe_path().unwrap();
     let f = resources::resource_name_to_path(mapfile);
     //println!("f={:?}", f);
@@ -68,9 +75,11 @@ pub fn new(cam: Rc<RefCell<::camera::CameraInternals>>,
     for z in 0..iz {
         for x in 0..ix {
             //println!("z,x {:?},{:?}", z, x);
-            verts.extend_from_slice(&[-wh + x as f32 * ws,
-                                       pixels[[z, x, 0]] as f32 * ht, 
-                                      -hh + z as f32 * hs]);
+            verts.extend_from_slice(&[
+                -wh + x as f32 * ws,
+                pixels[[z, x, 0]] as f32 * ht,
+                -hh + z as f32 * hs,
+            ]);
             tex_coords.extend_from_slice(&[(ix - x) as f32 * tx, (iz - z) as f32 * tz]);
         }
     }
@@ -86,11 +95,14 @@ pub fn new(cam: Rc<RefCell<::camera::CameraInternals>>,
 
     let nverts = verts.len() / 3;
     let nfaces = faces.len() / 3;
-    let new_buffer = ::buffer::create(&::shader::Program::new(),
-                nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(),
-                nd::Array2::<f32>::zeros((0, 3)),
-                nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
-                nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(), true);
+    let new_buffer = ::buffer::create(
+        &::shader::Program::new(),
+        nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(),
+        nd::Array2::<f32>::zeros((0, 3)),
+        nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
+        nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(),
+        true,
+    );
     let shape = ::shape::create(vec![new_buffer], cam);
     ElevationMap {
         shape,
@@ -117,17 +129,27 @@ impl ElevationMap {
         let px = px - self.shape.unif[[0, 0]];
         let pz = pz - self.shape.unif[[0, 2]];
         let skip_n = (((pz + self.depth * 0.5) * self.iz / self.depth).floor() * self.ix * 2.0
-                    + ((px + self.width * 0.5) * self.ix / self.width).floor() * 2.0) as usize;
-        for f in self.shape.buf[0].element_array_buffer.axis_iter(nd::Axis(0)).skip(skip_n) {
+            + ((px + self.width * 0.5) * self.ix / self.width).floor() * 2.0)
+            as usize;
+        for f in self.shape.buf[0]
+            .element_array_buffer
+            .axis_iter(nd::Axis(0))
+            .skip(skip_n)
+        {
             let mut v: Vec<Vec<f32>> = vec![vec![0.0; 3]; 3];
-            for i in 0..3 { // the three vertices of this element
-                for j in 0..3 { // the x, y, z components of each vertex
+            for i in 0..3 {
+                // the three vertices of this element
+                for j in 0..3 {
+                    // the x, y, z components of each vertex
                     v[i][j] = self.shape.buf[0].array_buffer[[f[[i]] as usize, j]];
                 }
             }
-            if ((v[1][2] - v[0][2]) * (px - v[0][0]) + (-v[1][0] + v[0][0]) * (pz - v[0][2]) >= 0.0) &&
-            ((v[2][2] - v[1][2]) * (px - v[1][0]) + (-v[2][0] + v[1][0]) * (pz - v[1][2]) >= 0.0) &&
-            ((v[0][2] - v[2][2]) * (px - v[2][0]) + (-v[0][0] + v[2][0]) * (pz - v[2][2]) >= 0.0) {
+            if ((v[1][2] - v[0][2]) * (px - v[0][0]) + (-v[1][0] + v[0][0]) * (pz - v[0][2]) >= 0.0)
+                && ((v[2][2] - v[1][2]) * (px - v[1][0]) + (-v[2][0] + v[1][0]) * (pz - v[1][2])
+                    >= 0.0)
+                && ((v[0][2] - v[2][2]) * (px - v[2][0]) + (-v[0][0] + v[2][0]) * (pz - v[2][2])
+                    >= 0.0)
+            {
                 let v0 = nd::arr1(&v[0]);
                 let v1 = nd::arr1(&v[1]);
                 let v2 = nd::arr1(&v[2]);
@@ -136,7 +158,10 @@ impl ElevationMap {
                 //equation of plane: Ax + By + Cz = k_val where A,B,C are components of normal. x,y,z for point v1 to find k_val
                 let k_val = ::util::vec3::dot(&n_vec, &v1);
                 //return y val i.e. y = (k_val - Ax - Cz)/B also the normal vector seeing as this has been calculated
-                return ((k_val - n_vec[[0]] * px - n_vec[[2]] * pz) / n_vec[[1]], n_vec.to_vec());
+                return (
+                    (k_val - n_vec[[0]] * px - n_vec[[2]] * pz) / n_vec[[1]],
+                    n_vec.to_vec(),
+                );
             }
         }
         //TODO fn should return Option<> and need to be unwrapped rather than return something

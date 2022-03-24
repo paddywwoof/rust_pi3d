@@ -1,10 +1,10 @@
 extern crate gl;
 extern crate ndarray;
 
-use std;
-use std::f32;
 use gl::types::*;
 use ndarray as nd;
+use std;
+use std::f32;
 
 #[derive(Clone)]
 pub struct Buffer {
@@ -33,31 +33,54 @@ impl Buffer {
             for (i, v) in self.attribute_values.iter().enumerate() {
                 if *v > -1 {
                     gl::EnableVertexAttribArray(*v as GLuint);
-                    gl::VertexAttribPointer(*v as GLuint, 3, gl::FLOAT, gl::FALSE,
-                                          self.stride, (i * 12) as *const GLvoid);
+                    gl::VertexAttribPointer(
+                        *v as GLuint,
+                        3,
+                        gl::FLOAT,
+                        gl::FALSE,
+                        self.stride,
+                        (i * 12) as *const GLvoid,
+                    );
                 }
             }
-            gl::UniformMatrix4fv(self.get_uniform_location("modelviewmatrix\0"),
-                3 as GLsizei, 0 as GLboolean, matrix.as_ptr() as *const GLfloat);
-            gl::Uniform3fv(self.get_uniform_location("unif\0"),
-                20 as GLsizei, unif.as_ptr() as *const GLfloat);
-            gl::Uniform3fv(self.get_uniform_location("unib\0"),
-                5 as GLsizei, self.unib.as_ptr() as *const GLfloat);
+            gl::UniformMatrix4fv(
+                self.get_uniform_location("modelviewmatrix\0"),
+                3 as GLsizei,
+                0 as GLboolean,
+                matrix.as_ptr() as *const GLfloat,
+            );
+            gl::Uniform3fv(
+                self.get_uniform_location("unif\0"),
+                20 as GLsizei,
+                unif.as_ptr() as *const GLfloat,
+            );
+            gl::Uniform3fv(
+                self.get_uniform_location("unib\0"),
+                5 as GLsizei,
+                self.unib.as_ptr() as *const GLfloat,
+            );
             for (i, tex) in self.textures.iter().enumerate() {
                 gl::ActiveTexture(gl::TEXTURE0 + i as u32);
                 //assert texture.tex(), 'There was an empty texture in your Buffer.'
                 gl::BindTexture(gl::TEXTURE_2D, *tex);
-                gl::Uniform1i(self.get_uniform_location(&format!("tex{}\0", i)),
-                    i as GLint);
+                gl::Uniform1i(
+                    self.get_uniform_location(&format!("tex{}\0", i)),
+                    i as GLint,
+                );
             }
-            gl::DrawElements(self.draw_method, self.element_array_buffer.len() as GLsizei,
-                                gl::UNSIGNED_SHORT, 0 as *const GLvoid);
+            gl::DrawElements(
+                self.draw_method,
+                self.element_array_buffer.len() as GLsizei,
+                gl::UNSIGNED_SHORT,
+                0 as *const GLvoid,
+            );
             gl::BindBuffer(gl::ARRAY_BUFFER, 0);
             gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, 0);
         }
     }
 
-    fn get_uniform_location(&self, unif_name: &str) -> GLint { // this needs to be int but attribs need uint!!
+    fn get_uniform_location(&self, unif_name: &str) -> GLint {
+        // this needs to be int but attribs need uint!!
         for i in 0..self.uniform_names.len() {
             if self.uniform_names[i] == unif_name {
                 return self.uniform_values[i];
@@ -79,12 +102,21 @@ impl Buffer {
     }
 
     pub fn set_material(&mut self, material: &[f32]) {
-        for i in 0..3 {self.unib[[1, i]] = material[i];}
+        for i in 0..3 {
+            self.unib[[1, i]] = material[i];
+        }
     }
 
-    pub fn set_draw_details(&mut self, shader_program: &::shader::Program,
-        textures: &Vec<GLuint>, ntiles: f32, shiny: f32, umult: f32,
-        vmult:f32, bump_factor: f32) {
+    pub fn set_draw_details(
+        &mut self,
+        shader_program: &::shader::Program,
+        textures: &Vec<GLuint>,
+        ntiles: f32,
+        shiny: f32,
+        umult: f32,
+        vmult: f32,
+        bump_factor: f32,
+    ) {
         //self.shader_program = shader_program;
         self.shader_id = shader_program.id();
         self.attribute_names = shader_program.attribute_names();
@@ -100,26 +132,43 @@ impl Buffer {
     }
 
     pub fn set_specular(&mut self, specular: &[f32]) {
-        for i in 0..3 {self.unib[[4, i]] = specular[i];}
+        for i in 0..3 {
+            self.unib[[4, i]] = specular[i];
+        }
     }
 
     pub fn set_point_size(&mut self, point_size: f32) {
         self.unib[[2, 2]] = point_size;
-        self.draw_method = if point_size > 0.0 {gl::POINTS} else {gl::TRIANGLES};
+        self.draw_method = if point_size > 0.0 {
+            gl::POINTS
+        } else {
+            gl::TRIANGLES
+        };
     }
 
     pub fn set_line_width(&mut self, line_width: f32, strip: bool, closed: bool) {
         self.unib[[3, 2]] = line_width;
-        unsafe {gl::LineWidth(line_width);}
-        self.draw_method =  if line_width > 0.0 {
-                                if strip {
-                                    if closed {gl::LINE_LOOP} else {gl::LINE_STRIP}
-                                } else {gl::LINES}
-                            } else {gl::TRIANGLES};
+        unsafe {
+            gl::LineWidth(line_width);
+        }
+        self.draw_method = if line_width > 0.0 {
+            if strip {
+                if closed {
+                    gl::LINE_LOOP
+                } else {
+                    gl::LINE_STRIP
+                }
+            } else {
+                gl::LINES
+            }
+        } else {
+            gl::TRIANGLES
+        };
     }
 
-    pub fn set_blend(&mut self, blend: bool) { // logically Buffer holds blend status not Texture
-        self.unib[[0, 2]] = if blend {0.05} else {0.6};
+    pub fn set_blend(&mut self, blend: bool) {
+        // logically Buffer holds blend status not Texture
+        self.unib[[0, 2]] = if blend { 0.05 } else { 0.6 };
     }
 
     /// select buffers
@@ -135,13 +184,19 @@ impl Buffer {
     ///
     pub fn load_opengl(&mut self) {
         unsafe {
-        gl::BufferData(
-          gl::ARRAY_BUFFER, (self.array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
-          //TODO why does the last value (tex_coord) get set to 0.0?
-          self.array_buffer.as_ptr() as *const GLvoid, gl::DYNAMIC_DRAW);
-        gl::BufferData(
-          gl::ELEMENT_ARRAY_BUFFER, (self.element_array_buffer.len() * std::mem::size_of::<u16>()) as GLsizeiptr,
-          self.element_array_buffer.as_ptr() as *const GLvoid, gl::STATIC_DRAW);
+            gl::BufferData(
+                gl::ARRAY_BUFFER,
+                (self.array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
+                //TODO why does the last value (tex_coord) get set to 0.0?
+                self.array_buffer.as_ptr() as *const GLvoid,
+                gl::DYNAMIC_DRAW,
+            );
+            gl::BufferData(
+                gl::ELEMENT_ARRAY_BUFFER,
+                (self.element_array_buffer.len() * std::mem::size_of::<u16>()) as GLsizeiptr,
+                self.element_array_buffer.as_ptr() as *const GLvoid,
+                gl::STATIC_DRAW,
+            );
         }
     }
 
@@ -151,9 +206,12 @@ impl Buffer {
         //self.load_opengl() # has to be called prior to _select
         self.select();
         unsafe {
-            gl::BufferSubData(gl::ARRAY_BUFFER, 0 as GLintptr,
-                      (self.array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
-                      self.array_buffer.as_ptr() as *const GLvoid);
+            gl::BufferSubData(
+                gl::ARRAY_BUFFER,
+                0 as GLintptr,
+                (self.array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
+                self.array_buffer.as_ptr() as *const GLvoid,
+            );
         }
     }
 }
@@ -170,16 +228,23 @@ impl Drop for Buffer {
     }
 }
 
-pub fn create(shader_program: &::shader::Program, verts: nd::Array2<f32>,
-                  norms: nd::Array2<f32>, texcoords: nd::Array2<f32>,
-                  faces: nd::Array2<u16>, calc_norms: bool) -> Buffer {
+pub fn create(
+    shader_program: &::shader::Program,
+    verts: nd::Array2<f32>,
+    norms: nd::Array2<f32>,
+    texcoords: nd::Array2<f32>,
+    faces: nd::Array2<u16>,
+    calc_norms: bool,
+) -> Buffer {
     let mut stride: GLint = 32; // default vertex, normal and texcoords
     let mut bufw = 8;
     if texcoords.shape()[0] != verts.shape()[0] {
-        if (norms.shape()[0] != verts.shape()[0]) && !calc_norms { // just use vertex
+        if (norms.shape()[0] != verts.shape()[0]) && !calc_norms {
+            // just use vertex
             stride = 12;
             bufw = 3;
-        } else { // use vertex and normal
+        } else {
+            // use vertex and normal
             stride = 24;
             bufw = 6;
         }
@@ -207,11 +272,13 @@ pub fn create(shader_program: &::shader::Program, verts: nd::Array2<f32>,
     }
 
     let mut buf = Buffer {
-        unib: nd::arr2(&[[0.0, 0.0, 0.6],  //00 ntile, shiny, blend
-                         [0.5, 0.5, 0.5],  //01 material RGB
-                         [1.0, 1.0, 0.0],  //02 umult, vmult, point_size
-                         [0.0, 0.0, 1.0],  //03 u_off, v_off, line_width/bump
-                         [0.5, 0.5, 0.5]]),//04 specular rgb values
+        unib: nd::arr2(&[
+            [0.0, 0.0, 0.6], //00 ntile, shiny, blend
+            [0.5, 0.5, 0.5], //01 material RGB
+            [1.0, 1.0, 0.0], //02 umult, vmult, point_size
+            [0.0, 0.0, 1.0], //03 u_off, v_off, line_width/bump
+            [0.5, 0.5, 0.5],
+        ]), //04 specular rgb values
         array_buffer: array_buffer,
         element_array_buffer: element_array_buffer,
         arr_b: arr_b,
@@ -232,36 +299,38 @@ pub fn create(shader_program: &::shader::Program, verts: nd::Array2<f32>,
 }
 
 pub fn create_empty() -> Buffer {
-    create(&::shader::Program::new(),
-                    nd::Array2::<f32>::zeros((0, 3)),
-                    nd::Array2::<f32>::zeros((0, 3)),
-                    nd::Array2::<f32>::zeros((0, 2)),
-                    nd::Array2::<u16>::zeros((0, 3)), false)
+    create(
+        &::shader::Program::new(),
+        nd::Array2::<f32>::zeros((0, 3)),
+        nd::Array2::<f32>::zeros((0, 3)),
+        nd::Array2::<f32>::zeros((0, 2)),
+        nd::Array2::<u16>::zeros((0, 3)),
+        false,
+    )
 }
-                
+
 fn calc_normals(a_b: &mut nd::Array2<f32>, e_a_b: &nd::Array2<u16>) {
     // update array_buffer in place TODO element_normals array
     let n_elements = e_a_b.shape()[0];
     for i in 0..n_elements {
-        for j in 0..3 { // for each corner of element
+        for j in 0..3 {
+            // for each corner of element
             let u: usize = (j + 1) % 3;
             let v: usize = (j + 2) % 3;
-            for k in 0..3 { // for each component of vector
+            for k in 0..3 {
+                // for each component of vector
                 let x: usize = (k + 1) % 3;
                 let y: usize = (k + 2) % 3;
-                a_b[[e_a_b[[i, j]] as usize, k + 3]] += ( // cross product
-                         a_b[[e_a_b[[i, u]] as usize, x]] - a_b[[e_a_b[[i, j]] as usize, x]]
-                        ) * (
-                         a_b[[e_a_b[[i, v]] as usize, y]] - a_b[[e_a_b[[i, j]] as usize, y]]
-                        ) - (
-                         a_b[[e_a_b[[i, u]] as usize, y]] - a_b[[e_a_b[[i, j]] as usize, y]]
-                        ) * (
-                         a_b[[e_a_b[[i, v]] as usize, x]] - a_b[[e_a_b[[i, j]] as usize, x]]
-                        );
+                a_b[[e_a_b[[i, j]] as usize, k + 3]] += (
+                    // cross product
+                    a_b[[e_a_b[[i, u]] as usize, x]] - a_b[[e_a_b[[i, j]] as usize, x]]
+                ) * (a_b[[e_a_b[[i, v]] as usize, y]]
+                    - a_b[[e_a_b[[i, j]] as usize, y]])
+                    - (a_b[[e_a_b[[i, u]] as usize, y]] - a_b[[e_a_b[[i, j]] as usize, y]])
+                        * (a_b[[e_a_b[[i, v]] as usize, x]] - a_b[[e_a_b[[i, j]] as usize, x]]);
             }
         }
     }
     // now normalize in place
     ::util::vec3::normalize_slice(a_b, 3); //a_b is already &mut so not needed in fn call arg
 }
-

@@ -49,6 +49,6 @@ pub mod shader;
 pub mod shape;
 pub mod texture;
 
-pub mod util;
 pub mod shaders;
 pub mod shapes;
+pub mod util;

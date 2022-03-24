@@ -1,5 +1,5 @@
-use std::rc::Rc;
 use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct TextBlock {
     x: f32,
@@ -26,8 +26,13 @@ pub struct PointText {
 
 impl PointText {
     //pub fn add_text_block(&mut self,
-    pub fn add_text_block(&mut self, font: &::util::font::TextureFont,
-                        position: &[f32; 3], capacity: usize, text: &str) -> usize {
+    pub fn add_text_block(
+        &mut self,
+        font: &::util::font::TextureFont,
+        position: &[f32; 3],
+        capacity: usize,
+        text: &str,
+    ) -> usize {
         if text.chars().count() > capacity {
             panic!("text won't fit into capacity for this TextBlock");
         }
@@ -55,7 +60,7 @@ impl PointText {
         };
         self.blocks.push(new_block);
         let block_id = self.blocks.len() - 1;
-        self.regen(font, block_id); 
+        self.regen(font, block_id);
         block_id
     }
 
@@ -69,25 +74,29 @@ impl PointText {
 
     // these all apply to one of the TextBlocks
     //pub fn set_position(&mut self,
-    pub fn set_position(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, position: &[f32; 3]) {
+    pub fn set_position(
+        &mut self,
+        font: &::util::font::TextureFont,
+        block_id: usize,
+        position: &[f32; 3],
+    ) {
         self.blocks[block_id].x = position[0];
         self.blocks[block_id].y = position[1];
         self.blocks[block_id].z = position[2];
-        
+
         self.regen(font, block_id);
     }
 
     //pub fn set_text(&mut self,
-    pub fn set_text(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, text: &str) {
+    pub fn set_text(&mut self, font: &::util::font::TextureFont, block_id: usize, text: &str) {
         let start = self.blocks[block_id].start;
         let capacity = self.blocks[block_id].capacity;
         let end = start + capacity;
         if text.chars().count() >= capacity {
             panic!("text won't fit into capacity for this TextBlock");
         }
-        for i in start..end { // set alpha to zero first
+        for i in start..end {
+            // set alpha to zero first
             self.points.buf[0].array_buffer[[i, 5]] = 0.0;
         }
         self.blocks[block_id].text = text.to_string();
@@ -95,48 +104,55 @@ impl PointText {
     }
 
     //pub fn set_rgba(&mut self,
-    pub fn set_rgba(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, rgba: &[f32; 4]) {
+    pub fn set_rgba(&mut self, font: &::util::font::TextureFont, block_id: usize, rgba: &[f32; 4]) {
         self.blocks[block_id].rgba = *rgba;
         self.regen(font, block_id);
     }
 
-    pub fn set_rot(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, rot: f32) {
+    pub fn set_rot(&mut self, font: &::util::font::TextureFont, block_id: usize, rot: f32) {
         self.blocks[block_id].rot = rot;
         self.regen(font, block_id);
     }
 
-    pub fn set_char_rot(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, char_rot: f32) {
+    pub fn set_char_rot(
+        &mut self,
+        font: &::util::font::TextureFont,
+        block_id: usize,
+        char_rot: f32,
+    ) {
         self.blocks[block_id].char_rot = char_rot;
         self.regen(font, block_id);
     }
 
-    pub fn set_spacing(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, spacing: char) {
+    pub fn set_spacing(
+        &mut self,
+        font: &::util::font::TextureFont,
+        block_id: usize,
+        spacing: char,
+    ) {
         self.blocks[block_id].spacing = spacing;
         self.regen(font, block_id);
     }
 
-    pub fn set_justification(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, justification: f32) {
+    pub fn set_justification(
+        &mut self,
+        font: &::util::font::TextureFont,
+        block_id: usize,
+        justification: f32,
+    ) {
         self.blocks[block_id].justification = justification;
         self.regen(font, block_id);
     }
 
-    pub fn set_size(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, size: f32) {
+    pub fn set_size(&mut self, font: &::util::font::TextureFont, block_id: usize, size: f32) {
         self.blocks[block_id].size = size;
         self.regen(font, block_id);
     }
 
-    pub fn set_space(&mut self, font: &::util::font::TextureFont,
-                                    block_id: usize, space: f32) {
+    pub fn set_space(&mut self, font: &::util::font::TextureFont, block_id: usize, space: f32) {
         self.blocks[block_id].space = space;
         self.regen(font, block_id);
     }
-
 
     //fn regen(&mut self, block_id: usize) {
     fn regen(&mut self, font: &::util::font::TextureFont, block_id: usize) {
@@ -158,23 +174,25 @@ impl PointText {
         for c in blk.text.chars() {
             let glyph = match &font.glyph_table.get(&c) {
                 &Some(g) => g,
-                _ => default
+                _ => default,
             };
             let vi = blk.start + n_char; // index within array_buffer
             self.points.buf[0].array_buffer[[vi, 0]] = offset;
             self.points.buf[0].array_buffer[[vi, 1]] = glyph.verts[2][1] * g_scale * blk.size;
             self.points.buf[0].array_buffer[[vi, 2]] = (blk.z * 10.0).trunc() + blk.size.fract();
             self.points.buf[0].array_buffer[[vi, 3]] = blk.rot + blk.char_rot;
-            self.points.buf[0].array_buffer[[vi, 4]] = (blk.rgba[0] * 1000.0).trunc() + blk.rgba[1] * 0.999;
-            self.points.buf[0].array_buffer[[vi, 5]] = (blk.rgba[2] * 1000.0).trunc() + blk.rgba[3] * 0.999;
+            self.points.buf[0].array_buffer[[vi, 4]] =
+                (blk.rgba[0] * 1000.0).trunc() + blk.rgba[1] * 0.999;
+            self.points.buf[0].array_buffer[[vi, 5]] =
+                (blk.rgba[2] * 1000.0).trunc() + blk.rgba[3] * 0.999;
             self.points.buf[0].array_buffer[[vi, 6]] = glyph.x; // uv positions
             self.points.buf[0].array_buffer[[vi, 7]] = glyph.y;
-            if blk.spacing == 'F' { //char centre to right
+            if blk.spacing == 'F' {
+                //char centre to right
                 offset += glyph.w * g_scale * blk.size * 0.5;
             }
             offset += glyph.w * g_scale * vari_w + const_w;
             n_char += 1;
-            
         }
         let x_off = blk.justification * offset;
         let sin_r = blk.rot.sin();
@@ -190,13 +208,17 @@ impl PointText {
     }
 }
 
-pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>,
-              font: &::util::font::TextureFont, max_chars: usize, point_size: f32) -> PointText {
+pub fn create(
+    cam: Rc<RefCell<::camera::CameraInternals>>,
+    font: &::util::font::TextureFont,
+    max_chars: usize,
+    point_size: f32,
+) -> PointText {
     let verts: Vec<f32> = vec![0.0; max_chars * 3];
     let mut new_shape = ::shapes::points::create(cam, &verts, point_size);
     new_shape.buf[0].set_textures(&vec![font.tex.id]);
     new_shape.buf[0].set_blend(true);
-    new_shape.unif[[16, 0]] = 0.05; //TODO base on point_size and 
+    new_shape.unif[[16, 0]] = 0.05; //TODO base on point_size and
     PointText {
         points: new_shape,
         blocks: vec![],

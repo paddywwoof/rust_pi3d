@@ -1,8 +1,8 @@
 extern crate gl;
 extern crate ndarray;
 
-use std::f32;
 use ndarray as nd;
+use std::f32;
 
 use gl::types::*;
 use std::cell::RefCell;
@@ -30,7 +30,8 @@ impl Shape {
     }
 
     fn draw_with_children(&mut self, next_m: &nd::Array2<f32>) {
-        { // borrow mut just for this block, and later due to recursive draw for children
+        {
+            // borrow mut just for this block, and later due to recursive draw for children
             let mut cam = self.cam.borrow_mut();
             if !cam.mtrx_made {
                 cam.make_mtrx();
@@ -38,18 +39,19 @@ impl Shape {
             self.unif.slice_mut(s![6, ..]).assign(&cam.eye);
         }
         let m = &self.tr2.dot(
-                &self.scl.dot(
-                &self.roy.dot(
-                &self.rox.dot(
-                    &self.roz.dot(
-                    &self.tr1.dot(
-                    next_m))))));
+            &self.scl.dot(
+                &self
+                    .roy
+                    .dot(&self.rox.dot(&self.roz.dot(&self.tr1.dot(next_m)))),
+            ),
+        );
         for i in 0..self.children.len() {
             self.children[i].borrow_mut().draw_with_children(m);
         }
         self.matrix.slice_mut(s![0, .., ..]).assign(m);
-        self.matrix.slice_mut(s![1, .., ..]).assign(
-                                &m.dot(&self.cam.borrow().mtrx));
+        self.matrix
+            .slice_mut(s![1, .., ..])
+            .assign(&m.dot(&self.cam.borrow().mtrx));
         for i in 0..self.buf.len() {
             self.buf[i].draw(&self.matrix, &self.unif);
         }
@@ -65,12 +67,26 @@ impl Shape {
             self.buf[i].set_textures(tex_ids);
         }
     }
-    pub fn set_draw_details(&mut self, shader_program: &::shader::Program,
-        tex_ids: &Vec<GLuint>, ntiles: f32, shiny: f32, umult: f32,
-        vmult:f32, bump_factor: f32) {
+    pub fn set_draw_details(
+        &mut self,
+        shader_program: &::shader::Program,
+        tex_ids: &Vec<GLuint>,
+        ntiles: f32,
+        shiny: f32,
+        umult: f32,
+        vmult: f32,
+        bump_factor: f32,
+    ) {
         for i in 0..self.buf.len() {
-            self.buf[i].set_draw_details(&shader_program.clone(), tex_ids,
-                ntiles, shiny, umult, vmult, bump_factor);
+            self.buf[i].set_draw_details(
+                &shader_program.clone(),
+                tex_ids,
+                ntiles,
+                shiny,
+                umult,
+                vmult,
+                bump_factor,
+            );
         }
     }
     pub fn set_material(&mut self, material: &[f32]) {
@@ -81,10 +97,18 @@ impl Shape {
             self.unif[[5, 2]] = material[3];
         }
     }
-    pub fn set_normal_shine(&mut self, tex_ids: &Vec<GLuint>, ntiles: f32,
-        shiny: f32, umult: f32, vmult:f32, bump_factor: f32, is_uv: bool) {
+    pub fn set_normal_shine(
+        &mut self,
+        tex_ids: &Vec<GLuint>,
+        ntiles: f32,
+        shiny: f32,
+        umult: f32,
+        vmult: f32,
+        bump_factor: f32,
+        is_uv: bool,
+    ) {
         for i in 0..self.buf.len() {
-            let first_tex = if is_uv {1} else {0}; // uv has diffuse texture first mat doesn't
+            let first_tex = if is_uv { 1 } else { 0 }; // uv has diffuse texture first mat doesn't
             for j in 0..tex_ids.len() {
                 if self.buf[i].textures.len() > (j + first_tex) {
                     self.buf[i].textures[j + first_tex] = tex_ids[j];
@@ -121,22 +145,28 @@ impl Shape {
         self.unif[[1, 0]] = a;
         let c = self.unif[[1, 0]].cos();
         let s = self.unif[[1, 0]].sin();
-        self.rox[[1, 1]] = c; self.rox[[2, 2]] = c;
-        self.rox[[1, 2]] = s; self.rox[[2, 1]] = -s;
+        self.rox[[1, 1]] = c;
+        self.rox[[2, 2]] = c;
+        self.rox[[1, 2]] = s;
+        self.rox[[2, 1]] = -s;
     }
     pub fn rotate_to_y(&mut self, a: f32) {
         self.unif[[1, 1]] = a;
         let c = self.unif[[1, 1]].cos();
         let s = self.unif[[1, 1]].sin();
-        self.roy[[0, 0]] = c; self.roy[[2, 2]] = c;
-        self.roy[[0, 2]] = s; self.roy[[2, 0]] = -s;
+        self.roy[[0, 0]] = c;
+        self.roy[[2, 2]] = c;
+        self.roy[[0, 2]] = s;
+        self.roy[[2, 0]] = -s;
     }
     pub fn rotate_to_z(&mut self, a: f32) {
         self.unif[[1, 2]] = a;
         let c = self.unif[[1, 2]].cos();
         let s = self.unif[[1, 2]].sin();
-        self.roz[[0, 0]] = c; self.roz[[1, 1]] = c;
-        self.roz[[0, 1]] = s; self.roz[[1, 0]] = -s;
+        self.roz[[0, 0]] = c;
+        self.roz[[1, 1]] = c;
+        self.roz[[0, 1]] = s;
+        self.roz[[1, 0]] = -s;
     }
 
     pub fn position_x(&mut self, pos: f32) {
@@ -167,12 +197,17 @@ impl Shape {
         self.scl[[2, 2]] = scale[2];
     }
 
-    pub fn set_light(&mut self, num: usize, posn: &[f32],
-                    rgb: &[f32], amb: &[f32], point: bool) {
-        self.unif[[7, num]] = if point {1.0} else {0.0};
-        self.unif.slice_mut(s![8 + num * 2, ..]).assign(&nd::arr1(posn));
-        self.unif.slice_mut(s![9 + num * 2, ..]).assign(&nd::arr1(rgb));
-        self.unif.slice_mut(s![10 + num * 2, ..]).assign(&nd::arr1(amb));
+    pub fn set_light(&mut self, num: usize, posn: &[f32], rgb: &[f32], amb: &[f32], point: bool) {
+        self.unif[[7, num]] = if point { 1.0 } else { 0.0 };
+        self.unif
+            .slice_mut(s![8 + num * 2, ..])
+            .assign(&nd::arr1(posn));
+        self.unif
+            .slice_mut(s![9 + num * 2, ..])
+            .assign(&nd::arr1(rgb));
+        self.unif
+            .slice_mut(s![10 + num * 2, ..])
+            .assign(&nd::arr1(amb));
     }
 
     pub fn set_fog(&mut self, shade: &[f32], dist: f32, alpha: f32) {
@@ -191,7 +226,8 @@ impl Shape {
         self.children.push(child);
     }
 
-    pub fn reference(self) -> Rc<RefCell<Shape>> { //consumes itself!!
+    pub fn reference(self) -> Rc<RefCell<Shape>> {
+        //consumes itself!!
         Rc::new(RefCell::new(self))
     }
 }
@@ -200,27 +236,27 @@ impl Shape {
 pub fn create(buf: Vec<::buffer::Buffer>, cam: Rc<RefCell<::camera::CameraInternals>>) -> Shape {
     Shape {
         unif: nd::arr2(&[
-                [0.0, 0.0, 0.0], //00 location
-                [0.0, 0.0, 0.0], //01 rotation
-                [1.0, 1.0, 1.0], //02 scale
-                [0.0, 0.0, 0.0], //03 offset
-                [0.4, 0.4, 0.6], //04 fog shade
-                [500.0, 0.6, 1.0], //05 fog dist, fog alpha, shape alpha
-                [0.0, 0.0, -0.1], //06 camera position (eye location) TODO pick up from camera default
-                [0.0, 0.0, 0.0], //07 point light flags: light0, light1, unused
-                [10.0, -10.0, -5.0], //08 light0 position or direction vector
-                [1.0, 1.0, 1.0], //09 light0 RGB strength
-                [0.1, 0.1, 0.2], //10 light0 ambient RBG strength
-                [0.0, 0.0, 0.0], //11 light1 position or direction vector - TODO shaders to use light > 0
-                [0.0, 0.0, 0.0], //12 light1 RGB strength
-                [0.0, 0.0, 0.0], //13 light1 ambient RBG strength
-                [0.0, 0.0, 0.0], //14 defocus [dist from, dist to, amount] also 2D x, y
-                [0.0, 0.0, 0.0], //15 defocus [blur width, blur height, unused] also 2D w, h, tot_h
-                [0.0, 0.0, 0.0], //16 available for custom shaders
-                [0.0, 0.0, 0.0], //17 available
-                [0.0, 0.0, 0.0], //18 available
-                [0.0, 0.0, 0.0], //19 available
-                ]),//
+            [0.0, 0.0, 0.0],     //00 location
+            [0.0, 0.0, 0.0],     //01 rotation
+            [1.0, 1.0, 1.0],     //02 scale
+            [0.0, 0.0, 0.0],     //03 offset
+            [0.4, 0.4, 0.6],     //04 fog shade
+            [500.0, 0.6, 1.0],   //05 fog dist, fog alpha, shape alpha
+            [0.0, 0.0, -0.1], //06 camera position (eye location) TODO pick up from camera default
+            [0.0, 0.0, 0.0],  //07 point light flags: light0, light1, unused
+            [10.0, -10.0, -5.0], //08 light0 position or direction vector
+            [1.0, 1.0, 1.0],  //09 light0 RGB strength
+            [0.1, 0.1, 0.2],  //10 light0 ambient RBG strength
+            [0.0, 0.0, 0.0], //11 light1 position or direction vector - TODO shaders to use light > 0
+            [0.0, 0.0, 0.0], //12 light1 RGB strength
+            [0.0, 0.0, 0.0], //13 light1 ambient RBG strength
+            [0.0, 0.0, 0.0], //14 defocus [dist from, dist to, amount] also 2D x, y
+            [0.0, 0.0, 0.0], //15 defocus [blur width, blur height, unused] also 2D w, h, tot_h
+            [0.0, 0.0, 0.0], //16 available for custom shaders
+            [0.0, 0.0, 0.0], //17 available
+            [0.0, 0.0, 0.0], //18 available
+            [0.0, 0.0, 0.0], //19 available
+        ]), //
         buf,
         tr1: nd::Array::eye(4),
         rox: nd::Array::eye(4),

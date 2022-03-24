@@ -1,16 +1,25 @@
+extern crate gl;
 extern crate pi3d;
 extern crate sdl2;
-extern crate gl;
 
 use std::ffi::CString;
 
 fn main() {
     // initially set up display, shader, camera, texture and shapes
-    let mut display = pi3d::display::create("shader source in code ESC to quit", 800.0, 500.0, "GLES", 3, 0).unwrap();
-            display.set_background(&[0.4, 0.5, 0.4, 1.0]);
-            display.set_opacity(0.9);
-    let v_shader = pi3d::shader::Shader::from_source(&CString::new(
-"#version 300 es
+    let mut display = pi3d::display::create(
+        "shader source in code ESC to quit",
+        800.0,
+        500.0,
+        "GLES",
+        3,
+        0,
+    )
+    .unwrap();
+    display.set_background(&[0.4, 0.5, 0.4, 1.0]);
+    display.set_opacity(0.9);
+    let v_shader = pi3d::shader::Shader::from_source(
+        &CString::new(
+            "#version 300 es
 precision mediump float;
 
 layout(location = 0) in vec3 vertex; /// called vertex in pi3d
@@ -18,35 +27,41 @@ layout(location = 0) in vec3 vertex; /// called vertex in pi3d
 void main()
 {
     gl_Position = vec4(vertex, 1.0);
-}").unwrap(), gl::VERTEX_SHADER).unwrap();
-/*
-    // simple setup from github.com/Blakkis/GLSL_Python
-    let f_shader = pi3d::shader::Shader::from_source(&CString::new(
-"#version 300 es
-precision mediump float;
-#define fragCoord gl_FragCoord.xy
-//uniform vec2  iMouse;
-//uniform float iTime; /// unif[19].z
-//uniform vec2  iResolution; /// unif[19].xy
-uniform vec3 unif[20];
-out vec4 fragColor;
-void main()
-{
-    vec2 iResolution = unif[19].xy;
-    float iTime = unif[19][2];
-    // Set origin to center of the screen
-    vec2 uv = fragCoord/iResolution.xy * 2.0 - 1.0;
-    // Fix aspect ratio
-    uv.x *= iResolution.x / iResolution.y;
-    // Time varying pixel color (Copied from ShaderToy default scene)
-    vec3 color = 0.5 + 0.5 * cos(iTime + uv.xyx + vec3(0.0, 2.0, 4.0));
-    fragColor = vec4(color, 1.0);
-    //fragColor = vec4(1.0, 1.0, 0.5, 1.0);
-}").unwrap(), gl::FRAGMENT_SHADER).unwrap();
-*/
+}",
+        )
+        .unwrap(),
+        gl::VERTEX_SHADER,
+    )
+    .unwrap();
+    /*
+        // simple setup from github.com/Blakkis/GLSL_Python
+        let f_shader = pi3d::shader::Shader::from_source(&CString::new(
+    "#version 300 es
+    precision mediump float;
+    #define fragCoord gl_FragCoord.xy
+    //uniform vec2  iMouse;
+    //uniform float iTime; /// unif[19].z
+    //uniform vec2  iResolution; /// unif[19].xy
+    uniform vec3 unif[20];
+    out vec4 fragColor;
+    void main()
+    {
+        vec2 iResolution = unif[19].xy;
+        float iTime = unif[19][2];
+        // Set origin to center of the screen
+        vec2 uv = fragCoord/iResolution.xy * 2.0 - 1.0;
+        // Fix aspect ratio
+        uv.x *= iResolution.x / iResolution.y;
+        // Time varying pixel color (Copied from ShaderToy default scene)
+        vec3 color = 0.5 + 0.5 * cos(iTime + uv.xyx + vec3(0.0, 2.0, 4.0));
+        fragColor = vec4(color, 1.0);
+        //fragColor = vec4(1.0, 1.0, 0.5, 1.0);
+    }").unwrap(), gl::FRAGMENT_SHADER).unwrap();
+    */
     // raymarch_mod setup from github.com/Blakkis/GLSL_Python
-    let f_shader = pi3d::shader::Shader::from_source(&CString::new(
-"#version 300 es
+    let f_shader = pi3d::shader::Shader::from_source(
+        &CString::new(
+            "#version 300 es
 precision mediump float;
 #define fragCoord gl_FragCoord.xy
 //uniform vec2  iMouse;      /// unif[18].xy
@@ -115,21 +130,27 @@ void main() {
     vec3 result = ray_march(ray_origin, ray_direction);
     fragColor = vec4(result, 1.0);
 }
-").unwrap(), gl::FRAGMENT_SHADER).unwrap();
+",
+        )
+        .unwrap(),
+        gl::FRAGMENT_SHADER,
+    )
+    .unwrap();
 
     let shader = pi3d::shader::Program::from_shaders(&[v_shader, f_shader]).unwrap();
     let mut camera = pi3d::camera::create(&display);
-            camera.set_3d(false); // make it a 2D shader
+    camera.set_3d(false); // make it a 2D shader
     let (w, h) = display.get_size();
     let mut slide = pi3d::shapes::plane::create(camera.reference(), 0.5 * w as f32, 0.5 * h as f32); // fullscreen
-            slide.set_draw_details(&shader, &vec![], 1.0, 1.0, 1.0, 1.0, 1.0);
-            slide.unif[[19, 0]] = w as f32;
-            slide.unif[[19, 1]] = h as f32;
+    slide.set_draw_details(&shader, &vec![], 1.0, 1.0, 1.0, 1.0, 1.0);
+    slide.unif[[19, 0]] = w as f32;
+    slide.unif[[19, 1]] = h as f32;
     let mut t: f32 = 0.0;
     let mut mx: f32 = 0.0;
     let mut my: f32 = 0.0;
     // draw in a loop
-    while display.loop_running() { // default sdl2 check for ESC or click cross
+    while display.loop_running() {
+        // default sdl2 check for ESC or click cross
         t += 0.0001; // v. approx time
         slide.unif[[19, 2]] = t;
         if display.mouse_moved {

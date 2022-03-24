@@ -1,17 +1,17 @@
-extern crate pyo3;
-extern crate pi3d;
 extern crate gl;
 extern crate numpy;
+extern crate pi3d;
+extern crate pyo3;
 
-use pyo3::prelude::*;
-use pyo3::exceptions;
-use numpy::{IntoPyArray, PyArray2};
 use gl::types::GLuint;
+use numpy::{IntoPyArray, PyArray2};
+use pyo3::exceptions;
+use pyo3::prelude::*;
 
-use std::collections::HashMap;
 use std::cell::RefCell;
-use std::rc::Rc;
 use std::clone::Clone;
+use std::collections::HashMap;
+use std::rc::Rc;
 
 #[pyclass(unsendable)]
 pub struct Shape {
@@ -21,13 +21,33 @@ pub struct Shape {
 
 #[pymethods]
 impl Shape {
-    #[args(ntiles="1.0", shiny="0.0", umult="1.0", vmult="1.0", bump_factor="1.0")]
-    fn set_draw_details(&mut self, shader: &::core::Shader, textures: Vec<PyRef<::core::Texture>>,
-                ntiles: f32, shiny: f32, umult: f32,
-                vmult:f32, bump_factor: f32) -> PyResult<()>{
+    #[args(
+        ntiles = "1.0",
+        shiny = "0.0",
+        umult = "1.0",
+        vmult = "1.0",
+        bump_factor = "1.0"
+    )]
+    fn set_draw_details(
+        &mut self,
+        shader: &::core::Shader,
+        textures: Vec<PyRef<::core::Texture>>,
+        ntiles: f32,
+        shiny: f32,
+        umult: f32,
+        vmult: f32,
+        bump_factor: f32,
+    ) -> PyResult<()> {
         let texlist = textures.iter().map(|t| t.r_texture.id).collect();
-        self.r_shape.set_draw_details(&shader.r_shader, &texlist, ntiles, shiny,
-                            umult, vmult, bump_factor);
+        self.r_shape.set_draw_details(
+            &shader.r_shader,
+            &texlist,
+            ntiles,
+            shiny,
+            umult,
+            vmult,
+            bump_factor,
+        );
         Ok(())
     }
     fn list_tex(&self) {
@@ -46,18 +66,31 @@ impl Shape {
     fn set_material(&mut self, material: Vec<f32>) {
         self.r_shape.set_material(&material);
     }
-    #[args(ntiles="1.0", shinetex="None", shiny="0.0", bump_factor="1.0", is_uv="true")]
-    fn set_normal_shine(&mut self, normtex: &::core::Texture, ntiles: f32,
-            shinetex: Option<&::core::Texture>, shiny: f32, bump_factor: f32, is_uv: bool) {
+    #[args(
+        ntiles = "1.0",
+        shinetex = "None",
+        shiny = "0.0",
+        bump_factor = "1.0",
+        is_uv = "true"
+    )]
+    fn set_normal_shine(
+        &mut self,
+        normtex: &::core::Texture,
+        ntiles: f32,
+        shinetex: Option<&::core::Texture>,
+        shiny: f32,
+        bump_factor: f32,
+        is_uv: bool,
+    ) {
         let mut texlist: Vec<GLuint> = vec![normtex.r_texture.id];
         match shinetex {
             Some(tex) => {
                 texlist.push(tex.r_texture.id);
-            },
-            None => {},
+            }
+            None => {}
         };
-        self.r_shape.set_normal_shine(&texlist, ntiles, shiny,
-                            1.0, 1.0, bump_factor, is_uv);
+        self.r_shape
+            .set_normal_shine(&texlist, ntiles, shiny, 1.0, 1.0, bump_factor, is_uv);
     }
     fn set_specular(&mut self, specular: Vec<f32>) {
         self.r_shape.set_specular(&specular);
@@ -98,9 +131,8 @@ impl Shape {
     fn scale(&mut self, scale: Vec<f32>) {
         self.r_shape.scale(&scale);
     }
-    #[args(point="false")]
-    fn set_light(&mut self, num: usize, posn: Vec<f32>,
-                    rgb: Vec<f32>, amb: Vec<f32>, point: bool) {
+    #[args(point = "false")]
+    fn set_light(&mut self, num: usize, posn: Vec<f32>, rgb: Vec<f32>, amb: Vec<f32>, point: bool) {
         self.r_shape.set_light(num, &posn, &rgb, &amb, point);
     }
     fn set_fog(&mut self, shade: Vec<f32>, dist: f32, alpha: f32) {
@@ -134,37 +166,74 @@ impl Shape {
         Ok(())
     }*/
 
-    fn add_shapes(&mut self, new_shapes: Vec<PyRef<Shape>>,
-                    loc: Vec<Vec<f32>>, rot: Vec<Vec<f32>>, scl: Vec<Vec<f32>>,
-                    num: Vec<usize>) {
-        if new_shapes.len() != loc.len() || loc.len() != rot.len() ||
-             rot.len() != scl.len() || scl.len() != num.len() {
+    fn add_shapes(
+        &mut self,
+        new_shapes: Vec<PyRef<Shape>>,
+        loc: Vec<Vec<f32>>,
+        rot: Vec<Vec<f32>>,
+        scl: Vec<Vec<f32>>,
+        num: Vec<usize>,
+    ) {
+        if new_shapes.len() != loc.len()
+            || loc.len() != rot.len()
+            || rot.len() != scl.len()
+            || scl.len() != num.len()
+        {
             return;
         }
-        let new_shapes_vec: Vec<&pi3d::shape::Shape> = new_shapes.iter().map(|s| &s.r_shape).collect();
+        let new_shapes_vec: Vec<&pi3d::shape::Shape> =
+            new_shapes.iter().map(|s| &s.r_shape).collect();
         let new_loc: Vec<[f32; 3]> = loc.iter().map(|v| [v[0], v[1], v[2]]).collect();
         let new_rot: Vec<[f32; 3]> = rot.iter().map(|v| [v[0], v[1], v[2]]).collect();
         let new_scl: Vec<[f32; 3]> = scl.iter().map(|v| [v[0], v[1], v[2]]).collect();
-        pi3d::shapes::merge_shape::add_shapes(&mut self.r_shape, new_shapes_vec,
-                                              new_loc, new_rot, new_scl, num);
+        pi3d::shapes::merge_shape::add_shapes(
+            &mut self.r_shape,
+            new_shapes_vec,
+            new_loc,
+            new_rot,
+            new_scl,
+            num,
+        );
     }
-    fn cluster(&mut self, new_shape: &Shape, map: &ElevationMap,
-                 xpos: f32, zpos: f32, w: f32, d: f32, minscl: f32, maxscl: f32, count: usize) {
-        pi3d::shapes::merge_shape::cluster(&mut self.r_shape, &new_shape.r_shape, &map.r_elevation_map,
-                                           xpos, zpos, w, d, minscl, maxscl, count);
+    fn cluster(
+        &mut self,
+        new_shape: &Shape,
+        map: &ElevationMap,
+        xpos: f32,
+        zpos: f32,
+        w: f32,
+        d: f32,
+        minscl: f32,
+        maxscl: f32,
+        count: usize,
+    ) {
+        pi3d::shapes::merge_shape::cluster(
+            &mut self.r_shape,
+            &new_shape.r_shape,
+            &map.r_elevation_map,
+            xpos,
+            zpos,
+            w,
+            d,
+            minscl,
+            maxscl,
+            count,
+        );
     }
 
     fn get_buffer_num(&mut self, n: usize) -> PyResult<Py<PyArray2<f32>>> {
         if self.r_shape.buf.len() < (n + 1) {
-            return Err(PyErr::new::<exceptions::RuntimeError, _>("array index too big"));
+            return Err(PyErr::new::<exceptions::RuntimeError, _>(
+                "array index too big",
+            ));
         }
         let gil = pyo3::Python::acquire_gil();
         let py = gil.python();
-        Ok(self.r_shape.buf[n].array_buffer
+        Ok(self.r_shape.buf[n]
+            .array_buffer
             .clone()
             .into_pyarray(py)
-            .to_owned()
-        )
+            .to_owned())
     }
 
     #[getter]
@@ -174,14 +243,18 @@ impl Shape {
 
     fn set_buffer_num(&mut self, n: usize, buff: &PyArray2<f32>) -> PyResult<()> {
         if self.r_shape.buf.len() < (n + 1) {
-            return Err(PyErr::new::<exceptions::RuntimeError, _>("there aren't that many buffers"));
+            return Err(PyErr::new::<exceptions::RuntimeError, _>(
+                "there aren't that many buffers",
+            ));
         }
         unsafe {
             let new_buff = buff.as_array().to_owned();
             let new_shape = new_buff.shape();
             let old_shape = self.r_shape.buf[n].array_buffer.shape();
             if new_shape[0] != old_shape[0] || new_shape[1] != old_shape[1] {
-                return Err(PyErr::new::<exceptions::RuntimeError, _>("array wrong shape"));
+                return Err(PyErr::new::<exceptions::RuntimeError, _>(
+                    "array wrong shape",
+                ));
             }
             self.r_shape.buf[n].array_buffer = new_buff;
         }
@@ -190,7 +263,7 @@ impl Shape {
     }
 
     #[setter]
-    fn set_array_buffer(&mut self, buff: &PyArray2<f32>)  -> PyResult<()> {
+    fn set_array_buffer(&mut self, buff: &PyArray2<f32>) -> PyResult<()> {
         self.set_buffer_num(0, buff)
     }
 }
@@ -209,14 +282,14 @@ macro_rules! shape_from { // NB the : and => below are arbitrary dividers in the
                     _texlist: HashMap::<String, pi3d::texture::Texture>::new(),
                 }
             }
-        } 
+        }
     };
 }
 
 shape_from! (Cone, cone, radius:f32=>"1.0", height:f32=>"2.0", sides:usize=>"12");
 shape_from! (Cylinder, cylinder, radius:f32=>"1.0", height:f32=>"2.0", sides:usize=>"12");
 shape_from! (Cuboid, cuboid, w:f32=>"1.0", h:f32=>"1.0", d:f32=>"1.0", tw:f32=>"1.0", th:f32=>"1.0", td:f32=>"1.0");
-shape_from! (MergeShape, merge_shape,);
+shape_from!(MergeShape, merge_shape,);
 shape_from! (Plane, plane, w:f32=>"1.0", h:f32=>"1.0");
 shape_from! (Sphere, sphere, radius:f32=>"1.0", slices:usize=>"16", sides:usize=>"12", hemi:f32=>"0.0", invert:bool=>"false");
 shape_from! (Torus, torus, radius:f32=>"2.0", thickness:f32=>"0.5", ringrots:usize=>"6", sides:usize=>"12");
@@ -231,11 +304,23 @@ pub struct Lathe {}
 #[pymethods]
 impl Lathe {
     #[new]
-    #[args(sides="12",rise="0.0", loops="1.0")]
-    fn new(camera: &mut ::core::Camera, path: Vec<Vec<f32>>, sides: usize, rise: f32, loops: f32) -> Shape {
-        let vec_arr: Vec<[f32; 2]> = path.iter().map(|v| [v[0], v[1]]).collect(); //TODO error if wrong dim 
+    #[args(sides = "12", rise = "0.0", loops = "1.0")]
+    fn new(
+        camera: &mut ::core::Camera,
+        path: Vec<Vec<f32>>,
+        sides: usize,
+        rise: f32,
+        loops: f32,
+    ) -> Shape {
+        let vec_arr: Vec<[f32; 2]> = path.iter().map(|v| [v[0], v[1]]).collect(); //TODO error if wrong dim
         Shape {
-            r_shape: pi3d::shapes::lathe::create(camera.r_camera.reference(), vec_arr, sides, rise, loops),
+            r_shape: pi3d::shapes::lathe::create(
+                camera.r_camera.reference(),
+                vec_arr,
+                sides,
+                rise,
+                loops,
+            ),
             _texlist: HashMap::<String, pi3d::texture::Texture>::new(),
         }
     }
@@ -247,7 +332,12 @@ impl Lines {
     #[new]
     fn new(camera: &mut ::core::Camera, verts: Vec<f32>, line_width: f32, closed: bool) -> Shape {
         Shape {
-            r_shape: pi3d::shapes::lines::create(camera.r_camera.reference(), &verts, line_width, closed),
+            r_shape: pi3d::shapes::lines::create(
+                camera.r_camera.reference(),
+                &verts,
+                line_width,
+                closed,
+            ),
             _texlist: HashMap::<String, pi3d::texture::Texture>::new(),
         }
     }
@@ -272,11 +362,9 @@ pub struct Model {}
 impl Model {
     #[new]
     fn new(camera: &mut ::core::Camera, file_name: &str) -> Shape {
-        let (r_shape, _texlist) = pi3d::shapes::model_obj::create(camera.r_camera.reference(), file_name);
-        Shape {
-            r_shape,
-            _texlist,
-        }
+        let (r_shape, _texlist) =
+            pi3d::shapes::model_obj::create(camera.r_camera.reference(), file_name);
+        Shape { r_shape, _texlist }
     }
 }
 
@@ -286,11 +374,9 @@ pub struct EnvironmentCube {}
 impl EnvironmentCube {
     #[new]
     fn new(camera: &mut ::core::Camera, size: f32, stem: &str, suffix: &str) -> Shape {
-        let (r_shape, _texlist) = pi3d::shapes::environment_cube::create(camera.r_camera.reference(), size, stem, suffix);
-        Shape {
-            r_shape,
-            _texlist,
-        }
+        let (r_shape, _texlist) =
+            pi3d::shapes::environment_cube::create(camera.r_camera.reference(), size, stem, suffix);
+        Shape { r_shape, _texlist }
     }
 }
 
@@ -301,7 +387,12 @@ impl PyString {
     #[new]
     fn new(camera: &mut ::core::Camera, font: &::util::Font, string: &str, justify: f32) -> Shape {
         Shape {
-            r_shape: pi3d::shapes::string::create(camera.r_camera.reference(), &font.r_font, string, justify),
+            r_shape: pi3d::shapes::string::create(
+                camera.r_camera.reference(),
+                &font.r_font,
+                string,
+                justify,
+            ),
             _texlist: HashMap::<String, pi3d::texture::Texture>::new(),
         }
     }
@@ -314,24 +405,61 @@ pub struct ElevationMap {
 #[pymethods]
 impl ElevationMap {
     #[new]
-    fn new(camera: &mut ::core::Camera,
-               mapfile: &str, width: f32, depth: f32, height: f32, ix: usize, iz: usize,
-               ntiles: f32, _texmap: &str) -> Self {
+    fn new(
+        camera: &mut ::core::Camera,
+        mapfile: &str,
+        width: f32,
+        depth: f32,
+        height: f32,
+        ix: usize,
+        iz: usize,
+        ntiles: f32,
+        _texmap: &str,
+    ) -> Self {
         ElevationMap {
-            r_elevation_map: pi3d::shapes::elevation_map::new(camera.r_camera.reference(),
-                            mapfile, width, depth, height, ix, iz, ntiles, _texmap),
+            r_elevation_map: pi3d::shapes::elevation_map::new(
+                camera.r_camera.reference(),
+                mapfile,
+                width,
+                depth,
+                height,
+                ix,
+                iz,
+                ntiles,
+                _texmap,
+            ),
         }
     }
     fn calc_height(&self, px: f32, pz: f32) -> (f32, Vec<f32>) {
         self.r_elevation_map.calc_height(px, pz)
     }
-    #[args(ntiles="1.0", shiny="0.0", umult="1.0", vmult="1.0", bump_factor="1.0")]
-    fn set_draw_details(&mut self, shader: &::core::Shader, textures: Vec<PyRef<::core::Texture>>,
-                ntiles: f32, shiny: f32, umult: f32,
-                vmult:f32, bump_factor: f32) -> PyResult<()>{
+    #[args(
+        ntiles = "1.0",
+        shiny = "0.0",
+        umult = "1.0",
+        vmult = "1.0",
+        bump_factor = "1.0"
+    )]
+    fn set_draw_details(
+        &mut self,
+        shader: &::core::Shader,
+        textures: Vec<PyRef<::core::Texture>>,
+        ntiles: f32,
+        shiny: f32,
+        umult: f32,
+        vmult: f32,
+        bump_factor: f32,
+    ) -> PyResult<()> {
         let texlist = textures.iter().map(|t| t.r_texture.id).collect();
-        self.r_elevation_map.shape.set_draw_details(&shader.r_shader, &texlist, ntiles, shiny,
-                            umult, vmult, bump_factor);
+        self.r_elevation_map.shape.set_draw_details(
+            &shader.r_shader,
+            &texlist,
+            ntiles,
+            shiny,
+            umult,
+            vmult,
+            bump_factor,
+        );
         Ok(())
     }
     fn draw(&mut self) {
@@ -403,6 +531,8 @@ impl RefShape {
         self.r_shape_ref.borrow_mut().scale(&scale);
     }
     fn add_child(&mut self, child: &RefShape) {
-        self.r_shape_ref.borrow_mut().add_child(child.r_shape_ref.clone());
+        self.r_shape_ref
+            .borrow_mut()
+            .add_child(child.r_shape_ref.clone());
     }
 }
