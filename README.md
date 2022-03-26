@@ -24,7 +24,7 @@ patrick@thiscomputer:~/rust/rust_pi3d$ sudo apt-get install libsdl2-dev
 ```
 
 See the tutorial link at the top or the rust sdl2 crate site for what to
-do for windows. PS I have added the SDL2.dll v2.0.10 x86 but you should
+do for windows. PS I have added the SDL2.dll v2.0.20 wind32 x64 but you should
 download and install the one appropriate for your windows and machine.
 
 Then in the terminal navigate to wherever you cloned or extracted this
