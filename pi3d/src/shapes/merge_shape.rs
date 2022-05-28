@@ -118,8 +118,8 @@ pub fn add_buffers(
         // copy over shader, textures, unib, draw_method
         let ix = new_buf_ix[i];
         extended_buf.unib = new_bufs[ix].unib.clone();
-        extended_buf.draw_method = new_bufs[ix].draw_method.clone();
-        extended_buf.shader_id = new_bufs[ix].shader_id.clone();
+        extended_buf.draw_method = new_bufs[ix].draw_method;
+        extended_buf.shader_id = new_bufs[ix].shader_id;
         extended_buf.attribute_names = new_bufs[ix].attribute_names.clone();
         extended_buf.attribute_values = new_bufs[ix].attribute_values.clone();
         extended_buf.uniform_names = new_bufs[ix].uniform_names.clone();

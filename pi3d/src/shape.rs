@@ -91,7 +91,7 @@ impl Shape {
     }
     pub fn set_material(&mut self, material: &[f32]) {
         for i in 0..self.buf.len() {
-            self.buf[i].set_material(&material);
+            self.buf[i].set_material(material);
         }
         if material.len() > 3 {
             self.unif[[5, 2]] = material[3];
@@ -99,7 +99,7 @@ impl Shape {
     }
     pub fn set_normal_shine(
         &mut self,
-        tex_ids: &Vec<GLuint>,
+        tex_ids: &[GLuint],
         ntiles: f32,
         shiny: f32,
         umult: f32,
@@ -109,11 +109,11 @@ impl Shape {
     ) {
         for i in 0..self.buf.len() {
             let first_tex = if is_uv { 1 } else { 0 }; // uv has diffuse texture first mat doesn't
-            for j in 0..tex_ids.len() {
+            for (j, tex_id) in tex_ids.iter().enumerate() {
                 if self.buf[i].textures.len() > (j + first_tex) {
-                    self.buf[i].textures[j + first_tex] = tex_ids[j];
+                    self.buf[i].textures[j + first_tex] = *tex_id;
                 } else {
-                    self.buf[i].textures.push(tex_ids[j]);
+                    self.buf[i].textures.push(*tex_id);
                 }
             }
             self.buf[i].unib[[0, 0]] = ntiles;
@@ -125,7 +125,7 @@ impl Shape {
     }
     pub fn set_specular(&mut self, specular: &[f32]) {
         for i in 0..self.buf.len() {
-            self.buf[i].set_specular(&specular);
+            self.buf[i].set_specular(specular);
         }
     }
 

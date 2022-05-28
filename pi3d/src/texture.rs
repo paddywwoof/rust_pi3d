@@ -87,7 +87,7 @@ pub fn create_from_array(image: nd::Array3<u8>) -> Texture {
     let (height, width, _d) = image.dim();
     let mut tex = Texture {
         id: new_id,
-        image: image,
+        image,
         width,
         height,
         repeat: gl::REPEAT as GLint,

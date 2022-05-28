@@ -136,7 +136,7 @@ impl Display {
     }
 
     pub fn get_size(&mut self) -> (f32, f32) {
-        (self.width.clone(), self.height.clone())
+        (self.width, self.height)
     }
 
     pub fn set_fullscreen(&mut self, on: bool) {

@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 pub fn create(
     cam: Rc<RefCell<::camera::CameraInternals>>,
-    verts: &Vec<f32>,
+    verts: &[f32],
     point_size: f32,
 ) -> ::shape::Shape {
     //TODO sort out reason for extra vertex (uv point)

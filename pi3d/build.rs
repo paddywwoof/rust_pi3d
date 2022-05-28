@@ -16,14 +16,15 @@ fn main() {
     let mut options = fs_extra::dir::CopyOptions::new();
     options.overwrite = true;
 
-    let mut from_paths = Vec::new();
-    from_paths.push("examples/textures");
-    from_paths.push("examples/shaders");
-    from_paths.push("examples/models");
-    from_paths.push("examples/fonts");
-    from_paths.push("examples/ecubes");
-    from_paths.push("examples/cities");
-    if !(targ_triple.find("windows") == None) {
+    let mut from_paths = vec![
+        "examples/textures",
+        "examples/shaders",
+        "examples/models",
+        "examples/fonts",
+        "examples/ecubes",
+        "examples/cities",
+    ];
+    if targ_triple.find("windows") != None {
         // will need dll for windows
         from_paths.push("../SDL2.dll");
     }

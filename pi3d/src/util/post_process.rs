@@ -52,7 +52,7 @@ pub fn create(
     cam: Rc<RefCell<::camera::CameraInternals>>,
     display: &::display::Display,
     shader: &::shader::Program,
-    add_tex: &Vec<GLuint>,
+    add_tex: &[GLuint],
     scale: f32,
 ) -> PostProcess {
     let offscreen_texture = ::util::offscreen_texture::create(display);
@@ -65,8 +65,8 @@ pub fn create(
         offscreen_texture.color_tex_id,
         offscreen_texture.depth_tex_id,
     ];
-    sprite.buf[0].textures.extend(add_tex.clone());
-    sprite.buf[0].set_shader(&shader);
+    sprite.buf[0].textures.extend(add_tex);
+    sprite.buf[0].set_shader(shader);
     sprite.position_z(20.0);
     PostProcess {
         offscreen_texture,

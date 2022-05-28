@@ -65,8 +65,8 @@ impl OffscreenTexture {
     ///
     pub fn delete_buffers(&mut self) {
         unsafe {
-            gl::DeleteFramebuffers(1, &mut self.framebuffer);
-            gl::DeleteRenderbuffers(1, &mut self.depthbuffer);
+            gl::DeleteFramebuffers(1, &self.framebuffer);
+            gl::DeleteRenderbuffers(1, &self.depthbuffer);
             gl::BindTexture(gl::TEXTURE, 0);
             gl::DeleteTextures(1, &self.color_tex_id);
             gl::DeleteTextures(1, &self.depth_tex_id);

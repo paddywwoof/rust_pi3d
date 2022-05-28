@@ -273,17 +273,17 @@ fn look_at_matrix(
     up: &nd::Array1<f32>,
 ) -> nd::Array2<f32> {
     let mut matrix: nd::Array2<f32> = nd::Array::eye(4);
-    let zaxis = vec3::norm(&vec3::sub(&at, &eye)); // unit vec direction cam pointing
-    let xaxis = vec3::norm(&vec3::cross(&up, &zaxis)); // local horizontal vec
+    let zaxis = vec3::norm(&vec3::sub(at, eye)); // unit vec direction cam pointing
+    let xaxis = vec3::norm(&vec3::cross(up, &zaxis)); // local horizontal vec
     let yaxis = vec3::cross(&zaxis, &xaxis); // local vert vec
     for i in 0..3 {
         matrix[[i, 0]] = xaxis[i];
         matrix[[i, 1]] = yaxis[i];
         matrix[[i, 2]] = zaxis[i];
     }
-    matrix[[3, 0]] = -vec3::dot(&xaxis, &eye); // translations
-    matrix[[3, 1]] = -vec3::dot(&yaxis, &eye);
-    matrix[[3, 2]] = -vec3::dot(&zaxis, &eye);
+    matrix[[3, 0]] = -vec3::dot(&xaxis, eye); // translations
+    matrix[[3, 1]] = -vec3::dot(&yaxis, eye);
+    matrix[[3, 2]] = -vec3::dot(&zaxis, eye);
 
     matrix
 }

@@ -97,8 +97,8 @@ impl Buffer {
         self.uniform_values = shader_program.uniform_values();
     }
 
-    pub fn set_textures(&mut self, textures: &Vec<GLuint>) {
-        self.textures = textures.clone();
+    pub fn set_textures(&mut self, textures: &[GLuint]) {
+        self.textures = textures.to_vec();
     }
 
     pub fn set_material(&mut self, material: &[f32]) {
@@ -110,7 +110,7 @@ impl Buffer {
     pub fn set_draw_details(
         &mut self,
         shader_program: &::shader::Program,
-        textures: &Vec<GLuint>,
+        textures: &[GLuint],
         ntiles: f32,
         shiny: f32,
         umult: f32,
@@ -123,7 +123,7 @@ impl Buffer {
         self.attribute_values = shader_program.attribute_values();
         self.uniform_names = shader_program.uniform_names();
         self.uniform_values = shader_program.uniform_values();
-        self.textures = textures.clone();
+        self.textures = textures.to_vec();
         self.unib[[0, 0]] = ntiles;
         self.unib[[0, 1]] = shiny;
         self.unib[[2, 0]] = umult;
@@ -208,7 +208,7 @@ impl Buffer {
         unsafe {
             gl::BufferSubData(
                 gl::ARRAY_BUFFER,
-                0 as GLintptr,
+                0 as GLintptr, // casting unnecessary but makes GL function clear
                 (self.array_buffer.len() * std::mem::size_of::<f32>()) as GLsizeiptr,
                 self.array_buffer.as_ptr() as *const GLvoid,
             );
@@ -279,17 +279,17 @@ pub fn create(
             [0.0, 0.0, 1.0], //03 u_off, v_off, line_width/bump
             [0.5, 0.5, 0.5],
         ]), //04 specular rgb values
-        array_buffer: array_buffer,
-        element_array_buffer: element_array_buffer,
-        arr_b: arr_b,
-        ear_b: ear_b,
+        array_buffer,
+        element_array_buffer,
+        arr_b,
+        ear_b,
         //shader_program: shader_program,
         shader_id: shader_program.id(),
         attribute_names: shader_program.attribute_names(),
         attribute_values: shader_program.attribute_values(),
         uniform_names: shader_program.uniform_names(),
         uniform_values: shader_program.uniform_values(),
-        stride: stride,
+        stride,
         textures: vec![],
         draw_method: gl::TRIANGLES,
     };

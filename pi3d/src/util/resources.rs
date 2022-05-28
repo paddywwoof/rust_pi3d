@@ -25,7 +25,7 @@ impl From<io::Error> for Error {
 
 pub fn load_string(resource_name: &str) -> Result<String, Error> {
     let mut listing = Vec::<String>::new();
-    load_includes(&resource_name, &mut listing, 0)?;
+    load_includes(resource_name, &mut listing, 0)?;
     Ok(listing.join("\n"))
 }
 /*
@@ -56,11 +56,7 @@ pub fn resource_name_to_path(location: &str) -> PathBuf {
     exe_path
 }
 
-fn load_includes(
-    resource_name: &str,
-    mut listing: &mut Vec<String>,
-    depth: u32,
-) -> Result<(), Error> {
+fn load_includes(resource_name: &str, listing: &mut Vec<String>, depth: u32) -> Result<(), Error> {
     if depth > 16 {
         return Err(Error::RecursionDepth);
     }
@@ -72,7 +68,7 @@ fn load_includes(
             break;
         }
     }
-    if text_chunk == "" {
+    if text_chunk.is_empty() {
         // now check file path
         let path_buf = resource_name_to_path(resource_name);
         if !path_buf.is_file() {
@@ -81,14 +77,14 @@ fn load_includes(
         let mut file = fs::File::open(path_buf).unwrap();
         file.read_to_string(&mut text_chunk)?;
     }
-    if text_chunk == "" {
-        return Err(Error::MissingResource);
-    } // still not got anything
+    if text_chunk.is_empty() {
+        return Err(Error::MissingResource); // still not got anything so stop now
+    }
     for s in (&text_chunk).lines() {
         match s.find("#include") {
             Some(ix) => {
                 let (_, new_key) = s.split_at(ix + 9);
-                load_includes(&new_key, &mut listing, depth + 1)?;
+                load_includes(new_key, listing, depth + 1)?;
             }
             None => {
                 listing.push(s.to_string());

@@ -39,7 +39,7 @@ pub fn create(file_name: &str, glyphs: &str, add_glyphs: &str, size: f32) -> Tex
 
     let scale = Scale { x: size, y: size };
     //TODO space needed
-    let glyph_list = if glyphs == "" {
+    let glyph_list = if glyphs.is_empty() {
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`1234567890-=~!@#$%^&*()_+[]\\{}|;':,./<>?\""
     } else {
         glyphs

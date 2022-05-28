@@ -24,18 +24,19 @@ pub fn parse_vertex(text: &str) -> (i32, i32, i32) {
      *  vertex index / texture index / normal index
      *  vertex index / / normal index
      */
-    let chunks: Vec<&str> = text.split("/").collect();
-    let v = i32::from_str_radix(chunks[0].trim(), 10).unwrap();
-    let t = if chunks.len() > 1 {
-        match i32::from_str_radix(chunks[1].trim(), 10) {
+    let chunks: Vec<&str> = text.split('/').collect();
+    let v = chunks[0].trim().parse::<i32>().unwrap();
+    let chunks_len = chunks.len();
+    let t = if chunks_len > 1 {
+        match chunks[1].trim().parse::<i32>() {
             Ok(x) => x,
             _ => 0i32,
         }
     } else {
         0
     };
-    let n = if chunks.len() > 2 {
-        match i32::from_str_radix(chunks[2].trim(), 10) {
+    let n = if chunks_len > 2 {
+        match chunks[2].trim().parse::<i32>() {
             Ok(x) => x,
             _ => 0i32,
         }
@@ -71,29 +72,30 @@ pub fn create(
     for l in file.lines() {
         let l_string = l.unwrap();
         let chunks: Vec<String> = l_string.split_whitespace().map(|x| x.to_string()).collect();
-        if chunks.len() > 0 {
+        let chunks_len = chunks.len();
+        if chunks_len > 0 {
             //# Vertices as (x,y,z) coordinates
             //# v 0.123 0.234 0.345
-            if chunks[0] == "v" && chunks.len() >= 4 {
+            if chunks[0] == "v" && chunks_len >= 4 {
                 vertices.push(f32::from_str(&chunks[1]).unwrap()); // x TODO no error catching (maybe not worth it here for speed)
                 vertices.push(f32::from_str(&chunks[2]).unwrap()); // y
                 vertices.push(-f32::from_str(&chunks[3]).unwrap()); // z away
             }
             //# Normals in (x, y, z) form; normals might not be unit
             //# vn 0.707 0.000 0.707
-            if chunks[0] == "vn" && chunks.len() >= 4 {
+            if chunks[0] == "vn" && chunks_len >= 4 {
                 normals.push(f32::from_str(&chunks[1]).unwrap()); // x
                 normals.push(f32::from_str(&chunks[2]).unwrap()); // y
                 normals.push(-f32::from_str(&chunks[3]).unwrap()); // z -ve too
             }
             //# Texture coordinates in (u,v)
             //# vt 0.500 -1.352
-            if chunks[0] == "vt" && chunks.len() >= 3 {
+            if chunks[0] == "vt" && chunks_len >= 3 {
                 uvs.push(f32::from_str(&chunks[1]).unwrap()); // u
                 uvs.push(f32::from_str(&chunks[2]).unwrap()); // v
             }
             //# Face see comments in fn parse_vertex()
-            if chunks[0] == "f" && chunks.len() >= 4 {
+            if chunks[0] == "f" && chunks_len >= 4 {
                 let mut vertex_index: Vec<i32> = vec![];
                 let mut uv_index: Vec<i32> = vec![];
                 let mut normal_index: Vec<i32> = vec![];
@@ -104,7 +106,7 @@ pub fn create(
                 let normlen = normals.len() as i32 / 3 + 1; // 3 per norm
                 let uvlen = uvs.len() as i32 / 2 + 1; // 2 per uv
 
-                for i in 1..chunks.len() {
+                for i in 1..chunks_len {
                     // could be variable sides of polygon
                     let (v, t, n) = parse_vertex(&chunks[i]);
                     if v != 0 {
@@ -130,13 +132,13 @@ pub fn create(
             }
 
             //# Materials definition
-            if chunks[0] == "mtllib" && chunks.len() == 2 {
+            if chunks[0] == "mtllib" && chunks_len == 2 {
                 mtllib = chunks[1].to_string(); // can't borrow ref
             }
 
             //# Material
             if chunks[0] == "usemtl" {
-                if chunks.len() > 1 {
+                if chunks_len > 1 {
                     material = chunks[1].to_string(); // can't borrow ref
                 } else {
                     material = "".to_string();
@@ -209,11 +211,7 @@ pub fn create(
             m_tex_coords.push(0.0);
         }
 
-        let calc_normals = if m_normals.len() == m_vertices.len() {
-            false
-        } else {
-            true
-        };
+        let calc_normals = m_normals.len() != m_vertices.len();
 
         bufs.push(::buffer::create(
             &::shader::Program::new(),
@@ -248,11 +246,12 @@ pub fn create(
     for l in file.lines() {
         let l_string = l.unwrap();
         let chunks: Vec<String> = l_string.split_whitespace().map(|x| x.to_string()).collect();
-        if chunks.len() > 0 {
-            if chunks[0] == "newmtl" && chunks.len() == 2 {
+        let chunks_len = chunks.len();
+        if chunks_len > 0 {
+            if chunks[0] == "newmtl" && chunks_len == 2 {
                 mtl_ref = chunks[1].to_string();
             }
-            if chunks[0] == "Kd" && chunks.len() >= 4 {
+            if chunks[0] == "Kd" && chunks_len >= 4 {
                 color_diffuse.insert(
                     mtl_ref.to_string(),
                     [
@@ -262,7 +261,7 @@ pub fn create(
                     ],
                 );
             }
-            if chunks[0] == "map_Kd" && chunks.len() >= 2 {
+            if chunks[0] == "map_Kd" && chunks_len >= 2 {
                 map_diffuse.insert(mtl_ref.to_string(), chunks[1].to_string());
                 if !tex_list.contains_key(&chunks[1]) {
                     let mut tmp_f = file_path.clone();

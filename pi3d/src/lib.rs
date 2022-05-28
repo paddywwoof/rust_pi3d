@@ -12,8 +12,7 @@ lazy_static! {
     static ref EXE_PATH: PathBuf = std::env::current_exe().unwrap()
                         .parent().unwrap()
                         .into();
-    static ref CURRENT_DIR: PathBuf = std::env::current_dir().unwrap()
-                        .into();
+    static ref CURRENT_DIR: PathBuf = std::env::current_dir().unwrap();
     static ref GL_ID: String = {
         // NB must be run after GL initialized
         let mut gl_str = String::from("");
@@ -30,9 +29,9 @@ lazy_static! {
         if gl_str.contains("ES") {
             gl_id.push_str("ES");
         }
-        for s in gl_str.split(" ") {
-            if s.contains(".") {
-                for n in s.split(".").take(2) {
+        for s in gl_str.split(' ') {
+            if s.contains('.') {
+                for n in s.split('.').take(2) {
                     gl_id.push_str(n);
                 }
                 break;

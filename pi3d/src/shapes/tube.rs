@@ -28,7 +28,7 @@ pub fn create(
             [radius - t, height * 0.5],
         ];
 
-        return ::shapes::lathe::create(cam, path, sides, 0.0, 1.0);
+        ::shapes::lathe::create(cam, path, sides, 0.0, 1.0)
     } else {
         let step = consts::PI * 2.0 / sides as f32;
         let otr = radius + t;
@@ -103,6 +103,6 @@ pub fn create(
             nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(),
             false,
         );
-        return ::shape::create(vec![new_buffer], cam);
+        ::shape::create(vec![new_buffer], cam)
     }
 }

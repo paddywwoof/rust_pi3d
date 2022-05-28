@@ -22,7 +22,7 @@ pub fn create(
 
     let mut xoff = 0.0;
     let mut yoff = 0.0;
-    let nlines = string.matches("\n").count() + 1;
+    let nlines = string.matches('\n').count() + 1;
     let default = &font.glyph_table[&' '];
     let mut temp_verts = Vec::<[f32; 3]>::new();
     let mut lines = 0;
@@ -65,10 +65,10 @@ pub fn create(
         }
         if i == last_char || c == '\n' {
             let cx = xoff * justify;
-            for j in 0..temp_verts.len() {
-                let x = (temp_verts[j][0] - cx) * sx;
-                let y = (temp_verts[j][1] + nlines as f32 * font.height * GAP / 2.0 - yoff) * sy;
-                let z = temp_verts[j][2];
+            for temp_vert in &temp_verts {
+                let x = (temp_vert[0] - cx) * sx;
+                let y = (temp_vert[1] + nlines as f32 * font.height * GAP / 2.0 - yoff) * sy;
+                let z = temp_vert[2];
                 if x < minx {
                     minx = x;
                 }

@@ -6,7 +6,7 @@ use std::rc::Rc;
 
 pub fn create(
     cam: Rc<RefCell<::camera::CameraInternals>>,
-    verts: &Vec<f32>,
+    verts: &[f32],
     line_width: f32,
     closed: bool,
 ) -> ::shape::Shape {
