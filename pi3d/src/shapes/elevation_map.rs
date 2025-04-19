@@ -1,14 +1,12 @@
-extern crate image;
-extern crate ndarray;
-
 use ndarray as nd;
 use std::cell::RefCell;
 use std::rc::Rc;
-use util::resources;
+use crate::util::{resources, vec3};
+use crate::{camera, shape, shader, buffer};
 
 // create a new struct definition
 pub struct ElevationMap {
-    pub shape: ::shape::Shape,
+    pub shape: shape::Shape,
     ix: f32,
     iz: f32,
     width: f32,
@@ -31,7 +29,7 @@ pub struct ElevationMap {
 ///
 /// TODO put this as class method (i.e. ::new())
 pub fn new(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
     mapfile: &str,
     width: f32,
     depth: f32,
@@ -95,15 +93,15 @@ pub fn new(
 
     let nverts = verts.len() / 3;
     let nfaces = faces.len() / 3;
-    let new_buffer = ::buffer::create(
-        &::shader::Program::new(),
+    let new_buffer = buffer::create(
+        &shader::Program::new(),
         nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(),
         nd::Array2::<f32>::zeros((0, 3)),
         nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
         nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(),
         true,
     );
-    let shape = ::shape::create(vec![new_buffer], cam);
+    let shape = shape::create(vec![new_buffer], cam);
     ElevationMap {
         shape,
         ix: ix as f32 - 1.0, // hold these for calc_height in additional attributes
@@ -154,9 +152,9 @@ impl ElevationMap {
                 let v1 = nd::arr1(&v[1]);
                 let v2 = nd::arr1(&v[2]);
                 //calc normal from two edge vectors v2-v1 and v3-v1
-                let n_vec = ::util::vec3::cross(&(&v1 - &v0), &(v2 - v0));
+                let n_vec = vec3::cross(&(&v1 - &v0), &(v2 - v0));
                 //equation of plane: Ax + By + Cz = k_val where A,B,C are components of normal. x,y,z for point v1 to find k_val
-                let k_val = ::util::vec3::dot(&n_vec, &v1);
+                let k_val = vec3::dot(&n_vec, &v1);
                 //return y val i.e. y = (k_val - Ax - Cz)/B also the normal vector seeing as this has been calculated
                 return (
                     (k_val - n_vec[[0]] * px - n_vec[[2]] * pz) / n_vec[[1]],

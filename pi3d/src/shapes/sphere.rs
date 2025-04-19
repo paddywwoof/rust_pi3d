@@ -1,15 +1,16 @@
 use std::cell::RefCell;
 use std::f32::consts;
 use std::rc::Rc;
+use crate::{camera, shape, shapes};
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
     radius: f32,
     slices: usize,
     sides: usize,
     hemi: f32,
     invert: bool,
-) -> ::shape::Shape {
+) -> shape::Shape {
     let mut path = Vec::<[f32; 2]>::new();
     // extra points added at poles to reduce distortion (mainly normals)
     let st = ((consts::PI - 0.002) * (1.0 - hemi)) / slices as f32; // angular step
@@ -27,5 +28,5 @@ pub fn create(
     if invert {
         path.reverse();
     }
-    ::shapes::lathe::create(cam, path, sides, 0.0, 1.0)
+    shapes::lathe::create(cam, path, sides, 0.0, 1.0)
 }

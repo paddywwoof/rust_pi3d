@@ -23,7 +23,7 @@ fn main() {
     let mut camera = pi3d::camera::create(&display);
     camera.set_3d(false);
 
-    let mut rng = thread_rng(); // one instance of random number gen passed as argument to methods
+    let mut rng = thread_rng(); // one instance of random number generation passed as argument to methods
                                 //parsing text from file
     let mut cities: Vec<Point> = vec![];
     match File::open("cities/cities80.txt") {
@@ -115,7 +115,7 @@ fn main() {
     let mut best_final = best_dist;
     let mut best_nine: Vec<Organism> = vec![];
     let mut last_improve = 0;
-    let mut gen: usize = 0;
+    let mut generation: usize = 0;
     let mut recalc = true;
 
     while display.loop_running() {
@@ -125,8 +125,8 @@ fn main() {
         labels.draw();
         score.draw();
         if recalc {
-            gen += 1;
-            //for gen in 0..5000 {
+            generation += 1;
+            //for generation in 0..5000 {
             let mut mating_pool = population.to_vec(); // clone vec
             for i in 0..POP_N {
                 // recalc path lengths
@@ -136,7 +136,7 @@ fn main() {
             if mating_pool[0].length < best_dist {
                 best_organism = mating_pool[0].clone();
                 best_dist = best_organism.length;
-                last_improve = gen;
+                last_improve = generation;
                 for i in 0..N_CITIES {
                     route.buf[0].array_buffer[[i, 0]] = cities[best_organism.genes[i]].x;
                     route.buf[0].array_buffer[[i, 1]] = cities[best_organism.genes[i]].y;
@@ -150,7 +150,7 @@ fn main() {
                 mating_pool[i].mutate(i / 3 + 1, &mut rng)
             }
 
-            if gen > (last_improve + 25) {
+            if generation > (last_improve + 25) {
                 if best_nine.len() < 12 {
                     println!("stalled at {:?}", best_dist);
                     best_nine.push(best_organism.clone());

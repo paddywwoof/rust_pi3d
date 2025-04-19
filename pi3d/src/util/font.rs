@@ -1,11 +1,10 @@
-extern crate ndarray as nd;
-extern crate rusttype;
-
+use ndarray as nd;
 use rusttype::{point, Font, Scale};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::Read;
-use util::resources;
+use crate::util::resources;
+use crate::texture;
 
 const TEX_SZ: usize = 1024;
 
@@ -19,7 +18,7 @@ pub struct GlyphTable {
 }
 
 pub struct TextureFont {
-    pub tex: ::texture::Texture,
+    pub tex: texture::Texture,
     pub glyph_table: HashMap<char, GlyphTable>,
     pub height: f32,
     pub size: f32,
@@ -116,7 +115,7 @@ pub fn create(file_name: &str, glyphs: &str, add_glyphs: &str, size: f32) -> Tex
             }
         }
     }
-    let tex = ::texture::create_from_array(image);
+    let tex = texture::create_from_array(image);
     TextureFont {
         tex,
         glyph_table,

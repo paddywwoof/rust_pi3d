@@ -1,15 +1,13 @@
-extern crate gl;
-extern crate image;
-extern crate ndarray;
-
 use gl::types::*;
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::util::offscreen_texture;
+use crate::{shape, camera, shapes, display, shader};
 
 pub struct PostProcess {
-    pub offscreen_texture: ::util::offscreen_texture::OffscreenTexture,
-    pub sprite: ::shape::Shape,
+    pub offscreen_texture: offscreen_texture::OffscreenTexture,
+    pub sprite: shape::Shape,
     pub scale: f32,
 }
 
@@ -49,14 +47,14 @@ impl PostProcess {
 }
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
-    display: &::display::Display,
-    shader: &::shader::Program,
+    cam: Rc<RefCell<camera::CameraInternals>>,
+    display: &display::Display,
+    shader: &shader::Program,
     add_tex: &[GLuint],
     scale: f32,
 ) -> PostProcess {
-    let offscreen_texture = ::util::offscreen_texture::create(display);
-    let mut sprite = ::shapes::plane::create(cam, display.width, display.height);
+    let offscreen_texture = offscreen_texture::create(display);
+    let mut sprite = shapes::plane::create(cam, display.width, display.height);
     sprite.buf[0].unib[[2, 0]] = scale;
     sprite.buf[0].unib[[2, 1]] = scale;
     sprite.buf[0].unib[[3, 0]] = (1.0 - scale) * 0.5;

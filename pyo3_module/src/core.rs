@@ -1,7 +1,3 @@
-extern crate gl;
-extern crate pi3d;
-extern crate pyo3;
-
 use pyo3::exceptions;
 use pyo3::prelude::*;
 use pyo3::PyObject; //, PyRawObject};
@@ -10,6 +6,7 @@ use numpy::{IntoPyArray, PyArray3};
 
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::{util, shapes};
 
 #[pyclass(unsendable)] // think SDL requires this to stay in main thread
 pub struct Display {
@@ -239,27 +236,27 @@ fn rpi3d(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_class::<Mouse>()?;
     m.add_class::<Texture>()?;
 
-    m.add_class::<::util::Font>()?;
-    m.add_class::<::util::PostProcess>()?;
+    m.add_class::<util::Font>()?;
+    m.add_class::<util::PostProcess>()?;
 
-    m.add_class::<::shapes::Shape>()?;
-    m.add_class::<::shapes::Cone>()?;
-    m.add_class::<::shapes::Cuboid>()?;
-    m.add_class::<::shapes::Cylinder>()?;
-    m.add_class::<::shapes::ElevationMap>()?;
-    m.add_class::<::shapes::EnvironmentCube>()?;
-    m.add_class::<::shapes::Lathe>()?;
-    m.add_class::<::shapes::Lines>()?;
-    m.add_class::<::shapes::MergeShape>()?;
-    m.add_class::<::shapes::Model>()?;
-    m.add_class::<::shapes::Plane>()?;
-    m.add_class::<::shapes::Points>()?;
-    m.add_class::<::shapes::PyString>()?;
-    m.add_class::<::shapes::Sphere>()?;
-    m.add_class::<::shapes::TCone>()?;
-    m.add_class::<::shapes::Torus>()?;
-    m.add_class::<::shapes::Tube>()?;
+    m.add_class::<shapes::Shape>()?;
+    m.add_class::<shapes::Cone>()?;
+    m.add_class::<shapes::Cuboid>()?;
+    m.add_class::<shapes::Cylinder>()?;
+    m.add_class::<shapes::ElevationMap>()?;
+    m.add_class::<shapes::EnvironmentCube>()?;
+    m.add_class::<shapes::Lathe>()?;
+    m.add_class::<shapes::Lines>()?;
+    m.add_class::<shapes::MergeShape>()?;
+    m.add_class::<shapes::Model>()?;
+    m.add_class::<shapes::Plane>()?;
+    m.add_class::<shapes::Points>()?;
+    m.add_class::<shapes::PyString>()?;
+    m.add_class::<shapes::Sphere>()?;
+    m.add_class::<shapes::TCone>()?;
+    m.add_class::<shapes::Torus>()?;
+    m.add_class::<shapes::Tube>()?;
 
-    m.add_class::<::shapes::RefShape>()?;
+    m.add_class::<shapes::RefShape>()?;
     Ok(())
 }

@@ -1,19 +1,19 @@
-extern crate ndarray;
-
 use ndarray as nd;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::{camera, shape, buffer, shader};
+use crate::util::font;
 
 const GAP: f32 = 1.0; // line spacing
 const SPACE: f32 = 0.03; // between char (proportion of line space)
 const NORMALS: [[f32; 3]; 4] = [[0.0, 0.0, -1.0]; 4];
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
-    font: &::util::font::TextureFont,
+    cam: Rc<RefCell<camera::CameraInternals>>,
+    font: &font::TextureFont,
     string: &str,
     justify: f32,
-) -> ::shape::Shape {
+) -> shape::Shape {
     //TODO sort out reason for extra vertex (uv point)
     let mut verts = Vec::<f32>::new();
     let mut norms = Vec::<f32>::new();
@@ -104,8 +104,8 @@ pub fn create(
         verts[i * 3] -= av_x; // shift x values
         verts[i * 3 + 1] -= av_y; // shift y values and flip
     }
-    let mut new_buffer = ::buffer::create(
-        &::shader::Program::new(),
+    let mut new_buffer = buffer::create(
+        &shader::Program::new(),
         nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(), //TODO make functions return Result and feedback errors
         nd::Array::from_shape_vec((nverts, 3usize), norms).unwrap(),
         nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
@@ -114,5 +114,5 @@ pub fn create(
     );
     new_buffer.set_textures(&vec![font.tex.id]);
     new_buffer.set_blend(true);
-    ::shape::create(vec![new_buffer], cam)
+    shape::create(vec![new_buffer], cam)
 }

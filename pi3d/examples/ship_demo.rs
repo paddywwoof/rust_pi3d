@@ -3,8 +3,8 @@ extern crate rand;
 extern crate sdl2;
 use sdl2::keyboard::Keycode;
 
-const W: f32 = 960.0;
-const H: f32 = 960.0;
+const W: f32 = 1920.0;
+const H: f32 = 1080.0;
 
 fn main() {
     let mut display =

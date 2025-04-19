@@ -1,17 +1,15 @@
-extern crate gl;
-extern crate ndarray;
-
 use ndarray as nd;
 use std::f32;
 
 use gl::types::*;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::{buffer, camera, shader};
 
 #[derive(Clone)]
 pub struct Shape {
     pub unif: nd::Array2<f32>,
-    pub buf: Vec<::buffer::Buffer>,
+    pub buf: Vec<buffer::Buffer>,
     tr1: nd::Array2<f32>, //TODO offset and scale matrices
     rox: nd::Array2<f32>,
     roy: nd::Array2<f32>,
@@ -21,7 +19,7 @@ pub struct Shape {
     pub m_flag: bool,
     pub matrix: nd::Array3<f32>,
     pub children: Vec<Rc<RefCell<Shape>>>, //children have to be reference counted Shape instances
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
 }
 
 impl Shape {
@@ -57,7 +55,7 @@ impl Shape {
         }
     }
 
-    pub fn set_shader(&mut self, shader_program: &::shader::Program) {
+    pub fn set_shader(&mut self, shader_program: &shader::Program) {
         for i in 0..self.buf.len() {
             self.buf[i].set_shader(&shader_program.clone());
         }
@@ -69,7 +67,7 @@ impl Shape {
     }
     pub fn set_draw_details(
         &mut self,
-        shader_program: &::shader::Program,
+        shader_program: &shader::Program,
         tex_ids: &Vec<GLuint>,
         ntiles: f32,
         shiny: f32,
@@ -233,7 +231,7 @@ impl Shape {
 }
 
 // TODO impl this as ::new() ?
-pub fn create(buf: Vec<::buffer::Buffer>, cam: Rc<RefCell<::camera::CameraInternals>>) -> Shape {
+pub fn create(buf: Vec<buffer::Buffer>, cam: Rc<RefCell<camera::CameraInternals>>) -> Shape {
     Shape {
         unif: nd::arr2(&[
             [0.0, 0.0, 0.0],     //00 location

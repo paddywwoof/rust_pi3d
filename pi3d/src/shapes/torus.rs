@@ -1,14 +1,15 @@
 use std::cell::RefCell;
 use std::f32::consts;
 use std::rc::Rc;
+use crate::{camera, shape, shapes};
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
     radius: f32,
     thickness: f32,
     ringrots: usize,
     sides: usize,
-) -> ::shape::Shape {
+) -> shape::Shape {
     let st = consts::PI * 2.0 / ringrots as f32;
     let path: Vec<[f32; 2]> = (0..=ringrots)
         .map(|i| {
@@ -17,5 +18,5 @@ pub fn create(
         })
         .collect();
 
-    ::shapes::lathe::create(cam, path, sides, 0.0, 1.0)
+    shapes::lathe::create(cam, path, sides, 0.0, 1.0)
 }

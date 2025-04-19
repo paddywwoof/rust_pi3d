@@ -1,10 +1,9 @@
-extern crate ndarray;
-
 use ndarray as nd;
 use std::cell::RefCell;
 use std::f32;
 use std::rc::Rc;
-use util::vec3;
+use crate::util::vec3;
+use crate::display;
 
 pub struct CameraInternals {
     pub eye: nd::Array1<f32>,
@@ -62,7 +61,7 @@ impl CameraInternals {
         self.rotated = true;
     }
 
-    pub fn set_lens_from_display(&mut self, display: &::display::Display) {
+    pub fn set_lens_from_display(&mut self, display: &display::Display) {
         self.lens = nd::arr1(&[
             display.near,
             display.far,
@@ -84,7 +83,7 @@ impl Camera {
         self.cam.borrow_mut().reset();
     }
 
-    pub fn set_lens_from_display(&mut self, display: &::display::Display) {
+    pub fn set_lens_from_display(&mut self, display: &display::Display) {
         self.cam.borrow_mut().set_lens_from_display(display);
     }
 
@@ -234,7 +233,7 @@ impl Camera {
     }
 }
 
-pub fn create(display: &::display::Display) -> Camera {
+pub fn create(display: &display::Display) -> Camera {
     let eye: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, -0.1]);
     let reset_eye = eye.clone();
     let at: nd::Array1<f32> = nd::arr1(&[0.0, 0.0, 0.0]);

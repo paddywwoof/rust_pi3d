@@ -1,9 +1,6 @@
-extern crate pi3d;
-extern crate pyo3;
-//extern crate gl;
-
 use pyo3::prelude::*;
 use pyo3::PyObject;
+use crate::core;
 
 //use numpy::{IntoPyArray, PyArray3};
 
@@ -34,10 +31,10 @@ pub struct PostProcess {
 impl PostProcess {
     #[new]
     fn new(
-        camera: &mut ::core::Camera,
-        display: &::core::Display,
-        shader: &::core::Shader,
-        add_tex: Vec<PyRef<::core::Texture>>,
+        camera: &mut core::Camera,
+        display: &core::Display,
+        shader: &core::Shader,
+        add_tex: Vec<PyRef<core::Texture>>,
         scale: f32,
     ) -> Self {
         let texlist:Vec<u32> = add_tex.iter().map(|t| t.r_texture.id).collect();

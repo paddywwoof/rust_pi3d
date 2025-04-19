@@ -1,15 +1,14 @@
-extern crate ndarray;
-
 use ndarray as nd;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::{camera, shape, buffer, shader};
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
     verts: &[f32],
     line_width: f32,
     closed: bool,
-) -> ::shape::Shape {
+) -> shape::Shape {
     //TODO sort out reason for extra vertex (uv point)
     let norms = nd::Array2::<f32>::zeros((0, 3));
     let tex_coords = nd::Array2::<f32>::zeros((0, 2));
@@ -23,8 +22,8 @@ pub fn create(
         }
     }
 
-    let mut new_buffer = ::buffer::create(
-        &::shader::Program::new(),
+    let mut new_buffer = buffer::create(
+        &shader::Program::new(),
         nd::Array::from_shape_vec((nverts, 3usize), verts.to_vec()).unwrap(), //TODO make functions return Result and feedback errors
         norms,
         tex_coords,
@@ -34,5 +33,5 @@ pub fn create(
 
     new_buffer.set_line_width(line_width, true, closed);
 
-    ::shape::create(vec![new_buffer], cam)
+    shape::create(vec![new_buffer], cam)
 }

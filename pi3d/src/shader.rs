@@ -2,8 +2,8 @@ use gl;
 use gl::types::*;
 use std;
 use std::ffi::{CStr, CString};
-use util::resources;
-use GL_ID;
+use crate::util::resources;
+use crate::GL_ID;
 
 #[derive(Debug)]
 pub enum Error {

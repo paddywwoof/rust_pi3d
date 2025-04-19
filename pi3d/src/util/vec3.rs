@@ -26,7 +26,7 @@ pub fn norm(a: &nd::Array1<f32>) -> nd::Array1<f32> {
 }
 
 pub fn dot(a: &nd::Array1<f32>, b: &nd::Array1<f32>) -> f32 {
-    (a * b).scalar_sum()
+    (a * b).sum() // ndarray has .dot()
 }
 
 pub fn cross(a: &nd::Array1<f32>, b: &nd::Array1<f32>) -> nd::Array1<f32> {

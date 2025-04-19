@@ -1,10 +1,8 @@
-extern crate image;
-extern crate ndarray;
-
 use ndarray as nd;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use crate::{camera, shape, buffer, texture, shader};
 
 /// generate an enviroment cube which uses six textures
 ///
@@ -17,19 +15,19 @@ use std::rc::Rc;
 /// as they will need to live as long as the enviroment cube is used
 ///
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
     size: f32,
     stem: &str,
     suffix: &str,
-) -> (::shape::Shape, HashMap<String, ::texture::Texture>) {
+) -> (shape::Shape, HashMap<String, texture::Texture>) {
     let parts = vec!["front", "right", "top", "bottom", "left", "back"];
-    let mut bufs = Vec::<::buffer::Buffer>::new();
+    let mut bufs = Vec::<buffer::Buffer>::new();
     let ww = size / 2.0;
     let hh = size / 2.0;
     let dd = size / 2.0;
     //TODO why does the uv array need a 'sacrificial' entry on the end?
-    bufs.push(::buffer::create(
-        &::shader::Program::new(),
+    bufs.push(buffer::create(
+        &shader::Program::new(),
         nd::arr2(&[
             [-ww, hh, dd],
             [ww, hh, dd],
@@ -55,8 +53,8 @@ pub fn create(
         false,
     )); //front
 
-    bufs.push(::buffer::create(
-        &::shader::Program::new(),
+    bufs.push(buffer::create(
+        &shader::Program::new(),
         nd::arr2(&[
             [ww, hh, dd],
             [ww, hh, -dd],
@@ -82,8 +80,8 @@ pub fn create(
         false,
     )); //right
 
-    bufs.push(::buffer::create(
-        &::shader::Program::new(),
+    bufs.push(buffer::create(
+        &shader::Program::new(),
         nd::arr2(&[
             [-ww, hh, dd],
             [-ww, hh, -dd],
@@ -109,8 +107,8 @@ pub fn create(
         false,
     )); //top
 
-    bufs.push(::buffer::create(
-        &::shader::Program::new(),
+    bufs.push(buffer::create(
+        &shader::Program::new(),
         nd::arr2(&[
             [ww, -hh, dd],
             [ww, -hh, -dd],
@@ -136,8 +134,8 @@ pub fn create(
         false,
     )); //bottom
 
-    bufs.push(::buffer::create(
-        &::shader::Program::new(),
+    bufs.push(buffer::create(
+        &shader::Program::new(),
         nd::arr2(&[
             [-ww, -hh, dd],
             [-ww, -hh, -dd],
@@ -163,8 +161,8 @@ pub fn create(
         false,
     )); //left
 
-    bufs.push(::buffer::create(
-        &::shader::Program::new(),
+    bufs.push(buffer::create(
+        &shader::Program::new(),
         nd::arr2(&[
             [-ww, hh, -dd],
             [ww, hh, -dd],
@@ -190,16 +188,16 @@ pub fn create(
         false,
     )); //back
 
-    let mut tex_list = HashMap::<String, ::texture::Texture>::new();
+    let mut tex_list = HashMap::<String, texture::Texture>::new();
 
     for i in 0..bufs.len() {
         //let path_str = path_buf.to_str().unwrap();
         let fname = format!("{}_{}.{}", &stem, &parts[i], &suffix);
-        let tex = ::texture::create_from_file(&fname);
+        let tex = texture::create_from_file(&fname);
         bufs[i].set_textures(&vec![tex.id]);
         tex_list.insert(parts[i].to_string(), tex);
     }
-    let mut new_shape = ::shape::create(bufs, cam);
+    let mut new_shape = shape::create(bufs, cam);
     new_shape.set_fog(&[0.5, 0.5, 0.5], 5000.0, 1.0);
     (new_shape, tex_list)
 }

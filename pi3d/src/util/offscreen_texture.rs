@@ -1,9 +1,5 @@
-extern crate gl;
-extern crate image;
-extern crate ndarray;
-
 use gl::types::*;
-//use ndarray as nd;
+use crate::display;
 
 pub struct OffscreenTexture {
     pub color_tex_id: GLuint,
@@ -82,7 +78,7 @@ impl Drop for OffscreenTexture {
 }
 
 ///
-pub fn create(display: &::display::Display) -> OffscreenTexture {
+pub fn create(display: &display::Display) -> OffscreenTexture {
     let height = display.height as usize;
     let width = display.width as usize;
     let mut color_tex_id: GLuint = 0;

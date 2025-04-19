@@ -1,11 +1,7 @@
-extern crate gl;
-extern crate image;
-extern crate ndarray;
-
+use crate::image::GenericImageView;
 use gl::types::*;
 use ndarray as nd;
-use texture::image::GenericImage; // confusing name texture
-use util::resources;
+use crate::util::resources;
 
 pub struct Texture {
     pub id: GLuint,

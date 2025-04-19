@@ -2,15 +2,16 @@ use ndarray as nd;
 use std::cell::RefCell;
 use std::f32::consts;
 use std::rc::Rc;
+use crate::{camera, shape, shapes, buffer, shader};
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
     radius: f32,
     thickness: f32,
     height: f32,
     sides: usize,
     use_lathe: bool,
-) -> ::shape::Shape {
+) -> shape::Shape {
     let t = thickness * 0.5;
     if use_lathe {
         let path: Vec<[f32; 2]> = vec![
@@ -28,7 +29,7 @@ pub fn create(
             [radius - t, height * 0.5],
         ];
 
-        ::shapes::lathe::create(cam, path, sides, 0.0, 1.0)
+        shapes::lathe::create(cam, path, sides, 0.0, 1.0)
     } else {
         let step = consts::PI * 2.0 / sides as f32;
         let otr = radius + t;
@@ -95,14 +96,14 @@ pub fn create(
         }
         let nverts = verts.len() / 3;
         let nfaces = faces.len() / 3;
-        let new_buffer = ::buffer::create(
-            &::shader::Program::new(),
+        let new_buffer = buffer::create(
+            &shader::Program::new(),
             nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(), //TODO make functions return Result and feedback errors
             nd::Array::from_shape_vec((nverts, 3usize), norms).unwrap(),
             nd::Array::from_shape_vec((nverts, 2usize), uvs).unwrap(),
             nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(),
             false,
         );
-        ::shape::create(vec![new_buffer], cam)
+        shape::create(vec![new_buffer], cam)
     }
 }

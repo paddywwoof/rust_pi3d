@@ -4,7 +4,7 @@ import time
 import numpy as np
 from PIL import Image
 
-display = rpi3d.Display.create("pyo3 minimal", w=800, h=600, profile="GLES", major=2, minor=0)
+display = rpi3d.Display.create("pyo3 minimal", w=1920, h=1080, profile="GLES", major=2, minor=0)
 shader = rpi3d.Shader("uv_light")
 shader_flat = rpi3d.Shader("uv_flat")
 shader_mat = rpi3d.Shader("mat_reflect")

@@ -1,5 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::{camera, shape, shapes, shader};
+use crate::util::font;
 
 pub struct TextBlock {
     x: f32,
@@ -18,7 +20,7 @@ pub struct TextBlock {
 }
 
 pub struct PointText {
-    pub points: ::shape::Shape,
+    pub points: shape::Shape,
     blocks: Vec<TextBlock>,
     max_chars: usize,
     point_size: f32,
@@ -28,7 +30,7 @@ impl PointText {
     //pub fn add_text_block(&mut self,
     pub fn add_text_block(
         &mut self,
-        font: &::util::font::TextureFont,
+        font: &font::TextureFont,
         position: &[f32; 3],
         capacity: usize,
         text: &str,
@@ -68,7 +70,7 @@ impl PointText {
         self.points.draw();
     }
 
-    pub fn set_shader(&mut self, shader: &::shader::Program) {
+    pub fn set_shader(&mut self, shader: &shader::Program) {
         self.points.set_shader(shader);
     }
 
@@ -76,7 +78,7 @@ impl PointText {
     //pub fn set_position(&mut self,
     pub fn set_position(
         &mut self,
-        font: &::util::font::TextureFont,
+        font: &font::TextureFont,
         block_id: usize,
         position: &[f32; 3],
     ) {
@@ -88,7 +90,7 @@ impl PointText {
     }
 
     //pub fn set_text(&mut self,
-    pub fn set_text(&mut self, font: &::util::font::TextureFont, block_id: usize, text: &str) {
+    pub fn set_text(&mut self, font: &font::TextureFont, block_id: usize, text: &str) {
         let start = self.blocks[block_id].start;
         let capacity = self.blocks[block_id].capacity;
         let end = start + capacity;
@@ -104,19 +106,19 @@ impl PointText {
     }
 
     //pub fn set_rgba(&mut self,
-    pub fn set_rgba(&mut self, font: &::util::font::TextureFont, block_id: usize, rgba: &[f32; 4]) {
+    pub fn set_rgba(&mut self, font: &font::TextureFont, block_id: usize, rgba: &[f32; 4]) {
         self.blocks[block_id].rgba = *rgba;
         self.regen(font, block_id);
     }
 
-    pub fn set_rot(&mut self, font: &::util::font::TextureFont, block_id: usize, rot: f32) {
+    pub fn set_rot(&mut self, font: &font::TextureFont, block_id: usize, rot: f32) {
         self.blocks[block_id].rot = rot;
         self.regen(font, block_id);
     }
 
     pub fn set_char_rot(
         &mut self,
-        font: &::util::font::TextureFont,
+        font: &font::TextureFont,
         block_id: usize,
         char_rot: f32,
     ) {
@@ -126,7 +128,7 @@ impl PointText {
 
     pub fn set_spacing(
         &mut self,
-        font: &::util::font::TextureFont,
+        font: &font::TextureFont,
         block_id: usize,
         spacing: char,
     ) {
@@ -136,7 +138,7 @@ impl PointText {
 
     pub fn set_justification(
         &mut self,
-        font: &::util::font::TextureFont,
+        font: &font::TextureFont,
         block_id: usize,
         justification: f32,
     ) {
@@ -144,18 +146,18 @@ impl PointText {
         self.regen(font, block_id);
     }
 
-    pub fn set_size(&mut self, font: &::util::font::TextureFont, block_id: usize, size: f32) {
+    pub fn set_size(&mut self, font: &font::TextureFont, block_id: usize, size: f32) {
         self.blocks[block_id].size = size;
         self.regen(font, block_id);
     }
 
-    pub fn set_space(&mut self, font: &::util::font::TextureFont, block_id: usize, space: f32) {
+    pub fn set_space(&mut self, font: &font::TextureFont, block_id: usize, space: f32) {
         self.blocks[block_id].space = space;
         self.regen(font, block_id);
     }
 
     //fn regen(&mut self, block_id: usize) {
-    fn regen(&mut self, font: &::util::font::TextureFont, block_id: usize) {
+    fn regen(&mut self, font: &font::TextureFont, block_id: usize) {
         //position, rotation etc
         let blk = &self.blocks[block_id]; // alias for brevity
         let const_w = match blk.spacing {
@@ -209,13 +211,13 @@ impl PointText {
 }
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
-    font: &::util::font::TextureFont,
+    cam: Rc<RefCell<camera::CameraInternals>>,
+    font: &font::TextureFont,
     max_chars: usize,
     point_size: f32,
 ) -> PointText {
     let verts: Vec<f32> = vec![0.0; max_chars * 3];
-    let mut new_shape = ::shapes::points::create(cam, &verts, point_size);
+    let mut new_shape = shapes::points::create(cam, &verts, point_size);
     new_shape.buf[0].set_textures(&vec![font.tex.id]);
     new_shape.buf[0].set_blend(true);
     new_shape.unif[[16, 0]] = 0.05; //TODO base on point_size and

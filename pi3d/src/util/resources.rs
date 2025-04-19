@@ -1,11 +1,9 @@
-extern crate gl;
-
 use std::fs;
 use std::io::{self, Read};
 use std::path::PathBuf;
 
-use shaders::built_in_shaders::CODES;
-use shaders::built_in_shaders::NAMES;
+use crate::shaders::built_in_shaders::{CODES, NAMES};
+use crate::{EXE_PATH, CURRENT_DIR};
 
 #[derive(Debug)]
 pub enum Error {
@@ -40,9 +38,9 @@ pub fn resource_name_to_path(location: &str) -> PathBuf {
 */
 pub fn resource_name_to_path(location: &str) -> PathBuf {
     //let new_path = PathBuf::from(location);
-    let mut exe_path = (*::EXE_PATH).to_path_buf();
+    let mut exe_path = (*EXE_PATH).to_path_buf();
     exe_path.push(location);
-    let mut cur_path = (*::CURRENT_DIR).to_path_buf();
+    let mut cur_path = (*CURRENT_DIR).to_path_buf();
     cur_path.push(location);
     if cur_path.is_file() {
         return cur_path;

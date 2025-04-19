@@ -1,4 +1,5 @@
 [package]
+edition = "2024"
 name = "rpi3d"
 version = "0.1.0"
 authors = ["paddywwof <support@eldwick.org.uk>"]
@@ -8,13 +9,13 @@ name = "rpi3d"
 crate-type = ["cdylib"]
 
 [dependencies]
-numpy = ">=0.11"
-ndarray = "^0.13"
+numpy = "0.22"
+ndarray = "0.16"
 pi3d = {path = "../pi3d"}
 gl = "^0.10"
 
 [dependencies.pyo3]
-version = ">=0.11.1"
+version = "0.22"
 features = ["extension-module"]
 
 [profile.release]

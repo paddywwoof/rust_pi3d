@@ -1,17 +1,16 @@
-extern crate ndarray;
-
 use ndarray as nd;
 use std::cell::RefCell;
 use std::f32::consts;
 use std::rc::Rc;
+use crate::{camera, shape, buffer, shader};
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
     path: Vec<[f32; 2]>,
     sides: usize,
     rise: f32,
     loops: f32,
-) -> ::shape::Shape {
+) -> shape::Shape {
     let s = path.len(); // iterations along path
     let rl = sides * loops as usize; // iterations around axis
 
@@ -69,13 +68,13 @@ pub fn create(
     }
     let nverts = verts.len() / 3;
     let nfaces = faces.len() / 3;
-    let new_buffer = ::buffer::create(
-        &::shader::Program::new(),
+    let new_buffer = buffer::create(
+        &shader::Program::new(),
         nd::Array::from_shape_vec((nverts, 3usize), verts).unwrap(), //TODO make functions return Result and feedback errors
         nd::Array::from_shape_vec((nverts, 3usize), norms).unwrap(),
         nd::Array::from_shape_vec((nverts, 2usize), tex_coords).unwrap(),
         nd::Array::from_shape_vec((nfaces, 3usize), faces).unwrap(),
         false,
     );
-    ::shape::create(vec![new_buffer], cam)
+    shape::create(vec![new_buffer], cam)
 }

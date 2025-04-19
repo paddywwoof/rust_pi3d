@@ -1,10 +1,9 @@
-extern crate ndarray;
-
 use ndarray as nd;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::{camera, shape, buffer, shader};
 
-pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>, w: f32, h: f32) -> ::shape::Shape {
+pub fn create(cam: Rc<RefCell<camera::CameraInternals>>, w: f32, h: f32) -> shape::Shape {
     let wh = w * 0.5;
     let hh = h * 0.5;
     //TODO sort out reason for extra vertex (uv point)
@@ -43,13 +42,13 @@ pub fn create(cam: Rc<RefCell<::camera::CameraInternals>>, w: f32, h: f32) -> ::
     ]);
     let faces: nd::Array2<u16> = nd::arr2(&[[3, 0, 1], [1, 2, 3], [7, 6, 5], [5, 4, 7]]);
 
-    let new_buffer = ::buffer::create(
-        &::shader::Program::new(),
+    let new_buffer = buffer::create(
+        &shader::Program::new(),
         verts,
         norms,
         texcoords,
         faces,
         true,
     );
-    ::shape::create(vec![new_buffer], cam)
+    shape::create(vec![new_buffer], cam)
 }

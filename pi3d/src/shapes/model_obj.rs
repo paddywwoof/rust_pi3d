@@ -1,5 +1,3 @@
-extern crate ndarray;
-
 use ndarray as nd;
 use std::cell::RefCell;
 use std::collections::HashMap;
@@ -8,7 +6,8 @@ use std::io::{self, BufRead};
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::str::FromStr;
-use util::resources;
+use crate::util::resources;
+use crate::{camera, shape, buffer, texture, shader};
 
 struct Face {
     vertex: Vec<i32>,
@@ -47,13 +46,13 @@ pub fn parse_vertex(text: &str) -> (i32, i32, i32) {
 }
 
 pub fn create(
-    cam: Rc<RefCell<::camera::CameraInternals>>,
+    cam: Rc<RefCell<camera::CameraInternals>>,
     file_name: &str,
-) -> (::shape::Shape, HashMap<String, ::texture::Texture>) {
+) -> (shape::Shape, HashMap<String, texture::Texture>) {
     /*Loads an obj file with associated mtl file to produce Buffer object
     as part of a Shape. Arguments:
     */
-    let mut bufs: Vec<::buffer::Buffer> = vec![];
+    let mut bufs: Vec<buffer::Buffer> = vec![];
     let mut vertices: Vec<f32> = vec![];
     let mut normals: Vec<f32> = vec![];
     let mut uvs: Vec<f32> = vec![];
@@ -213,8 +212,8 @@ pub fn create(
 
         let calc_normals = m_normals.len() != m_vertices.len();
 
-        bufs.push(::buffer::create(
-            &::shader::Program::new(),
+        bufs.push(buffer::create(
+            &shader::Program::new(),
             nd::Array::from_shape_vec((m_vertices.len() / 3, 3usize), m_vertices).unwrap(), //TODO make functions return Result and feedback errors
             nd::Array::from_shape_vec((m_normals.len() / 3, 3usize), m_normals).unwrap(),
             nd::Array::from_shape_vec((m_tex_coords.len() / 2, 2usize), m_tex_coords).unwrap(),
@@ -233,7 +232,7 @@ pub fn create(
     let mut mtl_ref: String = "".to_string(); // set before each set of specifications
     let mut color_diffuse = HashMap::<String, [f32; 3]>::new(); // map material name to RGB
     let mut map_diffuse = HashMap::<String, String>::new(); // map material name to image file name
-    let mut tex_list = HashMap::<String, ::texture::Texture>::new(); // map image file name to Texture
+    let mut tex_list = HashMap::<String, texture::Texture>::new(); // map image file name to Texture
 
     let mut file_path = PathBuf::from(&file_name);
     file_path.pop(); // now the parent, without filename.
@@ -266,7 +265,7 @@ pub fn create(
                 if !tex_list.contains_key(&chunks[1]) {
                     let mut tmp_f = file_path.clone();
                     tmp_f.push(&chunks[1]);
-                    let mut tex = ::texture::create_from_file(tmp_f.to_str().unwrap());
+                    let mut tex = texture::create_from_file(tmp_f.to_str().unwrap());
                     tex.flip_image(true, false);
                     tex_list.insert(chunks[1].to_string(), tex);
                 }
@@ -274,7 +273,7 @@ pub fn create(
         }
     }
 
-    let mut model = ::shape::create(bufs, cam);
+    let mut model = shape::create(bufs, cam);
     for i in 0..model.buf.len() {
         // buf number -> material name -> image file -> Texture struct
         if i < materials.len() {

@@ -1,8 +1,3 @@
-extern crate gl;
-extern crate numpy;
-extern crate pi3d;
-extern crate pyo3;
-
 use gl::types::GLuint;
 use numpy::{IntoPyArray, PyArray2};
 use pyo3::exceptions;
@@ -12,6 +7,7 @@ use std::cell::RefCell;
 use std::clone::Clone;
 use std::collections::HashMap;
 use std::rc::Rc;
+use crate::{core, util};
 
 #[pyclass(unsendable)]
 pub struct Shape {
@@ -30,8 +26,8 @@ impl Shape {
     )]
     fn set_draw_details(
         &mut self,
-        shader: &::core::Shader,
-        textures: Vec<PyRef<::core::Texture>>,
+        shader: &core::Shader,
+        textures: Vec<PyRef<core::Texture>>,
         ntiles: f32,
         shiny: f32,
         umult: f32,
@@ -56,10 +52,10 @@ impl Shape {
     fn draw(&mut self) {
         self.r_shape.draw();
     }
-    fn set_shader(&mut self, shader: &::core::Shader) {
+    fn set_shader(&mut self, shader: &core::Shader) {
         self.r_shape.set_shader(&shader.r_shader);
     }
-    fn set_textures(&mut self, textures: Vec<PyRef<::core::Texture>>) {
+    fn set_textures(&mut self, textures: Vec<PyRef<core::Texture>>) {
         let texlist = textures.iter().map(|t| t.r_texture.id).collect();
         self.r_shape.set_textures(&texlist);
     }
@@ -75,9 +71,9 @@ impl Shape {
     )]
     fn set_normal_shine(
         &mut self,
-        normtex: &::core::Texture,
+        normtex: &core::Texture,
         ntiles: f32,
-        shinetex: Option<&::core::Texture>,
+        shinetex: Option<&core::Texture>,
         shiny: f32,
         bump_factor: f32,
         is_uv: bool,
@@ -276,7 +272,7 @@ macro_rules! shape_from { // NB the : and => below are arbitrary dividers in the
         impl $sh_cap {
             #[new]
             #[args( $($att=$default,)*)]
-            fn new(camera: &mut ::core::Camera $(,$att: $typ)*) -> Shape {
+            fn new(camera: &mut core::Camera $(,$att: $typ)*) -> Shape {
                 Shape {
                     r_shape: pi3d::shapes::$sh_lwr::create(camera.r_camera.reference() $(,$att)*),
                     _texlist: HashMap::<String, pi3d::texture::Texture>::new(),
@@ -306,7 +302,7 @@ impl Lathe {
     #[new]
     #[args(sides = "12", rise = "0.0", loops = "1.0")]
     fn new(
-        camera: &mut ::core::Camera,
+        camera: &mut core::Camera,
         path: Vec<Vec<f32>>,
         sides: usize,
         rise: f32,
@@ -330,7 +326,7 @@ pub struct Lines {}
 #[pymethods]
 impl Lines {
     #[new]
-    fn new(camera: &mut ::core::Camera, verts: Vec<f32>, line_width: f32, closed: bool) -> Shape {
+    fn new(camera: &mut core::Camera, verts: Vec<f32>, line_width: f32, closed: bool) -> Shape {
         Shape {
             r_shape: pi3d::shapes::lines::create(
                 camera.r_camera.reference(),
@@ -348,7 +344,7 @@ pub struct Points {}
 #[pymethods]
 impl Points {
     #[new]
-    fn new(camera: &mut ::core::Camera, verts: Vec<f32>, point_size: f32) -> Shape {
+    fn new(camera: &mut core::Camera, verts: Vec<f32>, point_size: f32) -> Shape {
         Shape {
             r_shape: pi3d::shapes::points::create(camera.r_camera.reference(), &verts, point_size),
             _texlist: HashMap::<String, pi3d::texture::Texture>::new(),
@@ -361,7 +357,7 @@ pub struct Model {}
 #[pymethods]
 impl Model {
     #[new]
-    fn new(camera: &mut ::core::Camera, file_name: &str) -> Shape {
+    fn new(camera: &mut core::Camera, file_name: &str) -> Shape {
         let (r_shape, _texlist) =
             pi3d::shapes::model_obj::create(camera.r_camera.reference(), file_name);
         Shape { r_shape, _texlist }
@@ -373,7 +369,7 @@ pub struct EnvironmentCube {}
 #[pymethods]
 impl EnvironmentCube {
     #[new]
-    fn new(camera: &mut ::core::Camera, size: f32, stem: &str, suffix: &str) -> Shape {
+    fn new(camera: &mut core::Camera, size: f32, stem: &str, suffix: &str) -> Shape {
         let (r_shape, _texlist) =
             pi3d::shapes::environment_cube::create(camera.r_camera.reference(), size, stem, suffix);
         Shape { r_shape, _texlist }
@@ -385,7 +381,7 @@ pub struct PyString {}
 #[pymethods]
 impl PyString {
     #[new]
-    fn new(camera: &mut ::core::Camera, font: &::util::Font, string: &str, justify: f32) -> Shape {
+    fn new(camera: &mut core::Camera, font: &util::Font, string: &str, justify: f32) -> Shape {
         Shape {
             r_shape: pi3d::shapes::string::create(
                 camera.r_camera.reference(),
@@ -406,7 +402,7 @@ pub struct ElevationMap {
 impl ElevationMap {
     #[new]
     fn new(
-        camera: &mut ::core::Camera,
+        camera: &mut core::Camera,
         mapfile: &str,
         width: f32,
         depth: f32,
@@ -442,8 +438,8 @@ impl ElevationMap {
     )]
     fn set_draw_details(
         &mut self,
-        shader: &::core::Shader,
-        textures: Vec<PyRef<::core::Texture>>,
+        shader: &core::Shader,
+        textures: Vec<PyRef<core::Texture>>,
         ntiles: f32,
         shiny: f32,
         umult: f32,
@@ -465,10 +461,10 @@ impl ElevationMap {
     fn draw(&mut self) {
         self.r_elevation_map.shape.draw();
     }
-    fn set_shader(&mut self, shader: &::core::Shader) {
+    fn set_shader(&mut self, shader: &core::Shader) {
         self.r_elevation_map.shape.set_shader(&shader.r_shader);
     }
-    fn set_textures(&mut self, textures: Vec<PyRef<::core::Texture>>) {
+    fn set_textures(&mut self, textures: Vec<PyRef<core::Texture>>) {
         let texlist = textures.iter().map(|t| t.r_texture.id).collect();
         self.r_elevation_map.shape.set_textures(&texlist);
     }

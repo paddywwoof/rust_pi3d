@@ -1,10 +1,9 @@
-extern crate gl;
-extern crate ndarray;
-
 use gl::types::*;
 use ndarray as nd;
 use std;
 use std::f32;
+use crate::shader;
+use crate::util::vec3;
 
 #[derive(Clone)]
 pub struct Buffer {
@@ -89,7 +88,7 @@ impl Buffer {
         -1
     }
 
-    pub fn set_shader(&mut self, shader_program: &::shader::Program) {
+    pub fn set_shader(&mut self, shader_program: &shader::Program) {
         self.shader_id = shader_program.id();
         self.attribute_names = shader_program.attribute_names();
         self.attribute_values = shader_program.attribute_values();
@@ -109,7 +108,7 @@ impl Buffer {
 
     pub fn set_draw_details(
         &mut self,
-        shader_program: &::shader::Program,
+        shader_program: &shader::Program,
         textures: &[GLuint],
         ntiles: f32,
         shiny: f32,
@@ -229,7 +228,7 @@ impl Drop for Buffer {
 }
 
 pub fn create(
-    shader_program: &::shader::Program,
+    shader_program: &shader::Program,
     verts: nd::Array2<f32>,
     norms: nd::Array2<f32>,
     texcoords: nd::Array2<f32>,
@@ -300,7 +299,7 @@ pub fn create(
 
 pub fn create_empty() -> Buffer {
     create(
-        &::shader::Program::new(),
+        &shader::Program::new(),
         nd::Array2::<f32>::zeros((0, 3)),
         nd::Array2::<f32>::zeros((0, 3)),
         nd::Array2::<f32>::zeros((0, 2)),
@@ -332,5 +331,5 @@ fn calc_normals(a_b: &mut nd::Array2<f32>, e_a_b: &nd::Array2<u16>) {
         }
     }
     // now normalize in place
-    ::util::vec3::normalize_slice(a_b, 3); //a_b is already &mut so not needed in fn call arg
+    vec3::normalize_slice(a_b, 3); //a_b is already &mut so not needed in fn call arg
 }
