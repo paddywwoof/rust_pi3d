@@ -40,7 +40,7 @@ impl PostProcess {
         add_tex: Vec<PyRef<::core::Texture>>,
         scale: f32,
     ) -> Self {
-        let texlist = add_tex.iter().map(|t| t.r_texture.id).collect();
+        let texlist:Vec<u32> = add_tex.iter().map(|t| t.r_texture.id).collect();
         PostProcess {
             r_postprocess: pi3d::util::post_process::create(
                 camera.r_camera.reference(),
