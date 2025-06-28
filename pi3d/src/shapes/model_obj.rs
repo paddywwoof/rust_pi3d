@@ -265,8 +265,8 @@ pub fn create(
                 if !tex_list.contains_key(&chunks[1]) {
                     let mut tmp_f = file_path.clone();
                     tmp_f.push(&chunks[1]);
-                    let mut tex = texture::create_from_file(tmp_f.to_str().unwrap());
-                    tex.flip_image(true, false);
+                    let tex = texture::create_from_file(tmp_f.to_str().unwrap(), "H");
+                    //tex.flip_image(false, true); // TODO texture.flip_image causes segmentation fault
                     tex_list.insert(chunks[1].to_string(), tex);
                 }
             }

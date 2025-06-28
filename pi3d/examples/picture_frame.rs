@@ -81,7 +81,7 @@ fn main() {
                 }
                 if !sfg.is_some() {
                     // as could have been set to None
-                    let mut tex = pi3d::texture::create_from_file(file_list[pic_num].as_str());
+                    let mut tex = pi3d::texture::create_from_file(file_list[pic_num].as_str(), "");
                     tex.set_mirrored_repeat(true);
                     sfg = Some(tex);
                     pic_num += 1;

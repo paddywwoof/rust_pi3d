@@ -11,7 +11,7 @@ fn main() {
     let shader = pi3d::shader::Program::from_res("uv_flat").unwrap();
     let mut camera = pi3d::camera::create(&display);
     camera.set_3d(false); // make it a 2D shader
-    let tex = pi3d::texture::create_from_file("textures/pattern.png");
+    let tex = pi3d::texture::create_from_file("textures/pattern.png", "");
     let mut plane = pi3d::shapes::plane::create(
         camera.reference(),
         display.height * 0.7,

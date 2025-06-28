@@ -3,8 +3,8 @@ extern crate rand;
 extern crate sdl2;
 use sdl2::keyboard::Keycode;
 
-const W: f32 = 960.0;
-const H: f32 = 720.0;
+const W: f32 = 1920.0;
+const H: f32 = 1080.0;
 
 fn main() {
     let mut display = pi3d::display::create("experimental game window", W, H, "GL", 2, 1).unwrap();
@@ -18,10 +18,10 @@ fn main() {
     let mut camera2d = pi3d::camera::create(&display);
     camera2d.set_3d(false);
 
-    let tex = pi3d::texture::create_from_file("textures/pattern.png");
-    let maptex = pi3d::texture::create_from_file("textures/mountains3_512.jpg");
-    let mapnorm = pi3d::texture::create_from_file("textures/grasstile_n.jpg");
-    let stars = pi3d::texture::create_from_file("textures/stars.jpg");
+    let tex = pi3d::texture::create_from_file("textures/pattern.png", "");
+    let maptex = pi3d::texture::create_from_file("textures/mountains3_512.jpg", "");
+    let mapnorm = pi3d::texture::create_from_file("textures/grasstile_n.jpg", "");
+    let stars = pi3d::texture::create_from_file("textures/stars.jpg", "");
     let font = pi3d::util::font::create("fonts/NotoSans-Regular.ttf", "", "ęĻ", 64.0);
     let mut mystring = pi3d::shapes::string::create(
         camera2d.reference(),

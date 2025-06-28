@@ -193,7 +193,7 @@ pub fn create(
     for i in 0..bufs.len() {
         //let path_str = path_buf.to_str().unwrap();
         let fname = format!("{}_{}.{}", &stem, &parts[i], &suffix);
-        let tex = texture::create_from_file(&fname);
+        let tex = texture::create_from_file(&fname, "");
         bufs[i].set_textures(&vec![tex.id]);
         tex_list.insert(parts[i].to_string(), tex);
     }

@@ -2,8 +2,8 @@ extern crate pi3d;
 extern crate sdl2;
 use sdl2::keyboard::Keycode;
 
-const W: f32 = 800.0;
-const H: f32 = 480.0;
+const W: f32 = 1920.0;
+const H: f32 = 1080.0;
 
 fn main() {
     // setup display
@@ -25,12 +25,12 @@ fn main() {
     camera2d.set_3d(false);
 
     // textures
-    let tree2img = pi3d::texture::create_from_file("textures/tree2.png");
-    let tree1img = pi3d::texture::create_from_file("textures/tree1.png");
-    let hb2img = pi3d::texture::create_from_file("textures/hornbeam2.png");
-    let bumpimg = pi3d::texture::create_from_file("textures/grasstile_n.jpg");
-    let reflimg = pi3d::texture::create_from_file("textures/stars.jpg");
-    //let floorimg = pi3d::texture::create_from_file("textures/floor_nm.jpg");
+    let tree2img = pi3d::texture::create_from_file("textures/tree2.png", "");
+    let tree1img = pi3d::texture::create_from_file("textures/tree1.png", "");
+    let hb2img = pi3d::texture::create_from_file("textures/hornbeam2.png", "");
+    let bumpimg = pi3d::texture::create_from_file("textures/grasstile_n.jpg", "");
+    let reflimg = pi3d::texture::create_from_file("textures/stars.jpg", "");
+    //let floorimg = pi3d::texture::create_from_file("textures/floor_nm.jpg", "");
 
     // fog constants
     let (fog_shade, fog_alpha, fog_dist) = ([0.3, 0.3, 0.4], 0.8, 650.0);
@@ -44,7 +44,7 @@ fn main() {
     // elevation map
     let mapsize = 1000.0;
     let halfsize = mapsize * 0.5;
-    let mountimg1 = pi3d::texture::create_from_file("textures/mountains3_512.jpg");
+    let mountimg1 = pi3d::texture::create_from_file("textures/mountains3_512.jpg", "");
     let mut mymap = pi3d::shapes::elevation_map::new(
         camera.reference(),
         "textures/mountainsHgt.png",

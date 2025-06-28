@@ -49,7 +49,7 @@ fn main() {
     camera2d.set_3d(false);
 
     // textures
-    let tex = pi3d::texture::create_from_file("textures/poppy1.jpg");
+    let tex = pi3d::texture::create_from_file("textures/poppy1.jpg", "");
 
     // cube
     let mut cube =

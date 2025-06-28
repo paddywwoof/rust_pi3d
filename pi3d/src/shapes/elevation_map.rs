@@ -3,6 +3,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 use crate::util::{resources, vec3};
 use crate::{camera, shape, shader, buffer};
+use image::imageops::FilterType;
 
 // create a new struct definition
 pub struct ElevationMap {
@@ -50,7 +51,7 @@ pub fn new(
     // resize
     let (w, h) = im.dimensions();
     if w != ix as u32 || h != iz as u32 {
-        im = image::imageops::resize(&im, ix as u32, iz as u32, image::FilterType::Lanczos3);
+        im = image::imageops::resize(&im, ix as u32, iz as u32, FilterType::Lanczos3);
     }
     // flip top to bottom and left to right - which results in 180 degree rotation
     let im = image::imageops::rotate180(&im);

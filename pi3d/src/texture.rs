@@ -48,9 +48,12 @@ impl Texture {
     }
 
     pub fn flip_image(&mut self, vert: bool, horizontal: bool) {
+        // NB for some reason this causes segmentation fault if flipped
+        // vertically
         let v = if vert { -1 } else { 1 };
         let h = if horizontal { -1 } else { 1 };
-        self.image = self.image.slice(s![..;v, ..;h, ..]).to_owned();
+        
+        self.image = self.image.slice(s![..;v, ..;h, ..]).into_owned();
         self.update_ndarray();
     }
 
@@ -92,18 +95,21 @@ pub fn create_from_array(image: nd::Array3<u8>) -> Texture {
     tex
 }
 
-pub fn create_from_file(name: &str) -> Texture {
+pub fn create_from_file(name: &str, flip: &str) -> Texture {
     let pb = resources::resource_name_to_path(name);
     let im = image::open(pb).unwrap();
+    let im = if flip.contains(['h', 'H']) {im.fliph()} else {im};
+    let im = if flip.contains(['v', 'V']) {im.flipv()} else {im};
     let (w, h) = im.dimensions();
     let c_type: usize = match im.color() {
-        image::ColorType::Gray(_u8) => 1,
-        image::ColorType::GrayA(_u8) => 2,
-        image::ColorType::RGB(_u8) => 3,
-        image::ColorType::RGBA(_u8) => 4,
+        image::ColorType::L8 => 1,
+        image::ColorType::La8 => 2,
+        image::ColorType::Rgb8 => 3,
+        image::ColorType::Rgba8 => 4,
         _ => 4, // TODO catch unrecognised types, need to cope with indexed
     };
     let image =
-        nd::Array::from_shape_vec((h as usize, w as usize, c_type), im.raw_pixels()).unwrap();
+        //nd::Array::from_shape_vec((h as usize, w as usize, c_type), im.as_bytes()).unwrap();
+        nd::arr1(im.as_bytes()).to_shape((h as usize, w as usize, c_type)).unwrap().to_owned();
     create_from_array(image)
 }
